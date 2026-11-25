@@ -3909,10 +3909,15 @@ function claudeBypassAvailability(
 }
 
 function requiresClaudeApproval(context: ActiveClaudeTurnContext): boolean {
-  // CLI-forwarded requests need a person's decision even under bypass (ask rules,
-  // safety checks, or settings fallback). Do not wait for queued init/status updates.
+  // CLI-forwarded requests need a person's decision even under bypass or auto: the
+  // CLI only forwards what its classifier, ask rules or safety checks refused to
+  // allow. Do not wait for queued init/status updates.
   const policy = context.queryPolicy;
-  return policy.installPermissionCallback || policy.permissionMode === "bypassPermissions";
+  return (
+    policy.installPermissionCallback ||
+    policy.permissionMode === "bypassPermissions" ||
+    policy.permissionMode === "auto"
+  );
 }
 
 function claudeRuntimeQueryPolicyKey(policy: ClaudeRuntimeQueryPolicy): string {
@@ -4724,11 +4729,11 @@ export function claudeApprovalPresentation(input: {
   const reason = NodeUtil.stripVTControlCharacters(
     input.callbackOptions.decisionReason ?? "",
   ).trim();
-  // Bypass auto-allows everything it can, so any ask that still reaches the
-  // callback is one bypass refused. The SDK drops the CLI's decision_reason_type,
+  // Bypass and auto allow everything they can, so any ask that still reaches the
+  // callback is one the mode refused. The SDK drops the CLI's decision_reason_type,
   // leaving the matched ask rule as the only way to tell the two causes apart.
   const fullAccessOverride: ProviderApprovalFullAccessOverride | undefined =
-    input.permissionMode !== "bypassPermissions"
+    input.permissionMode !== "bypassPermissions" && input.permissionMode !== "auto"
       ? undefined
       : input.callbackOptions.matchedAskRule === undefined
         ? "provider_check"
@@ -13058,7 +13063,7 @@ export const makeClaudeAdapterV2 = Effect.fn("makeClaudeAdapterV2")(function* (
           // The SDK omits the CLI's dangerousRemoval discriminator, so match its removal warnings.
           if (
             toolName === "Bash" &&
-            activePermissionMode === "bypassPermissions" &&
+            (activePermissionMode === "bypassPermissions" || activePermissionMode === "auto") &&
             callbackOptions.matchedAskRule === undefined &&
             (/^Dangerous rm(?:dir)?\b/i.test(safetyReason) ||
               /\bdangerous removal\b/i.test(safetyReason) ||

@@ -8059,6 +8059,78 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       ),
   );
 
+  describe("Auto-mode forwarded asks", () => {
+    // Regression: Auto mode used to answer every ask the CLI forwarded with "allow",
+    // so a classifier block on `git push --force` became an approval nobody gave.
+    it.effect("asks the user before running a command the auto classifier refused", () =>
+      Effect.gen(function* () {
+        const harness = yield* makeWakeHarness;
+        const runtimePolicy = ProviderAdapter.ProviderAdapterV2RuntimePolicy.make({
+          runtimeMode: "auto",
+          interactionMode: "default",
+          cwd: "/workspace",
+        });
+        const input = makeClaudeTestTurnInput({
+          threadId: harness.threadId,
+          providerThread: harness.providerThread,
+          now: yield* DateTime.now,
+          attemptId: RunAttemptId.make("attempt-claude-auto-ask"),
+          text: "Push the branch, retry if it fails.",
+          attachments: [],
+          runtimePolicy,
+        });
+        yield* harness.runtime.startTurn({
+          ...input,
+          appThread: { ...input.appThread, runtimeMode: "auto" },
+        });
+        assert.equal(harness.getOpenedOptions()?.permissionMode, "auto");
+        const canUseTool = harness.getOpenedOptions()?.canUseTool;
+        assert.isDefined(canUseTool);
+        const decision = yield* Effect.promise(() =>
+          canUseTool!(
+            "Bash",
+            { command: "git push --force origin main" },
+            {
+              signal: new AbortController().signal,
+              toolUseID: "tool-auto-force-push",
+              requestId: "request-auto-force-push",
+              decisionReason: "Auto mode classifier blocked a force push",
+            },
+          ),
+        ).pipe(Effect.forkScoped);
+        const first = yield* Effect.raceFirst(
+          Queue.take(harness.runtimeRequestReceipts).pipe(
+            Effect.map((event) => ({ type: "request", event }) as const),
+          ),
+          Fiber.join(decision).pipe(
+            Effect.map((result) => ({ type: "decision", result }) as const),
+          ),
+        );
+        assert.equal(first.type, "request", "auto mode silently approved a forwarded ask");
+        if (first.type !== "request") return;
+        const request = first.event.runtimeRequest;
+        assert.equal(request.status, "pending");
+        assert.equal(request.kind, "command");
+        yield* harness.runtime.respondToRuntimeRequest({
+          requestId: request.id,
+          decision: "decline",
+        });
+        const result = yield* Fiber.join(decision);
+        assert.equal(result?.behavior, "deny");
+      }).pipe(
+        Effect.scoped,
+        Effect.provide(
+          Layer.mergeAll(
+            IdAllocator.layer,
+            McpProviderSessions.layer,
+            NodeServices.layer,
+            NodeCrypto.layer,
+          ),
+        ),
+      ),
+    );
+  });
+
   describe("MCP elicitations", () => {
     const testLayer = Layer.mergeAll(
       IdAllocator.layer,
