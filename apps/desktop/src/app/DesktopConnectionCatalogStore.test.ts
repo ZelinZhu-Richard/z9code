@@ -114,6 +114,28 @@ describe("DesktopConnectionCatalogStore", () => {
     ),
   );
 
+  it.effect("keeps the saved catalog readable only by its owner, whatever the umask", () =>
+    withStore(
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const environment = yield* DesktopEnvironment.DesktopEnvironment;
+        const fileSystem = yield* FileSystem.FileSystem;
+        const store = yield* DesktopConnectionCatalogStore.DesktopConnectionCatalogStore;
+        const catalogPath = path.join(environment.stateDir, "connection-catalog.json");
+        yield* fileSystem.makeDirectory(environment.stateDir, { recursive: true });
+        // A world-readable catalog left by an older build is tightened by the next save.
+        yield* fileSystem.writeFileString(catalogPath, "{}\n", { mode: 0o644 });
+        const umask = process.umask(0o022);
+        try {
+          assert.isTrue(yield* store.set('{"schemaVersion":1,"targets":[]}'));
+        } finally {
+          process.umask(umask);
+        }
+        assert.strictEqual((yield* fileSystem.stat(catalogPath)).mode & 0o777, 0o600);
+      }),
+    ),
+  );
+
   it.effect("does not persist when secure storage is unavailable", () =>
     withStore(
       Effect.gen(function* () {

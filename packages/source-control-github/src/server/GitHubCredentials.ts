@@ -125,21 +125,21 @@ export function isGitHubHost(host: string): boolean {
   return HOSTNAME.test(host);
 }
 
-function isGitHubDotCom(host: string): boolean {
-  return host === "github.com" || host.endsWith(".ghe.com");
-}
-
 /** Restrict GH_ENTERPRISE_TOKEN to GH_HOST to prevent remote URLs from leaking it. */
 export function environmentToken(
   host: string,
   env: Readonly<Record<string, string | undefined>>,
 ): string | null {
   if (!isGitHubHost(host)) return null;
-  const names = isGitHubDotCom(host)
-    ? ["GH_TOKEN", "GITHUB_TOKEN"]
-    : env.GH_HOST?.trim().toLowerCase() === host
-      ? ["GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"]
-      : [];
+  const pinnedHost = env.GH_HOST?.trim().toLowerCase() === host;
+  // Anyone can own a *.ghe.com tenant, so a repository remote there gets GH_TOKEN only when
+  // GH_HOST names that tenant; otherwise the user's github.com token could leak to it.
+  const names =
+    host === "github.com" || (host.endsWith(".ghe.com") && pinnedHost)
+      ? ["GH_TOKEN", "GITHUB_TOKEN"]
+      : pinnedHost
+        ? ["GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"]
+        : [];
   for (const name of names) {
     const value = env[name]?.trim();
     if (value) return value;

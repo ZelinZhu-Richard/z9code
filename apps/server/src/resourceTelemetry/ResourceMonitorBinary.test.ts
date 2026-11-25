@@ -39,6 +39,29 @@ describe("ResourceMonitorBinary", () => {
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
 
+  it.effect.skipIf(windowsHost)("starts no monitor when the opt-out is set", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const baseDir = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "t3-resource-monitor-binary-",
+      });
+      const binaryPath = `${baseDir}/custom-resource-monitor`;
+      yield* fileSystem.writeFileString(binaryPath, "binary");
+      yield* fileSystem.chmod(binaryPath, 0o755);
+
+      const service = yield* ResourceMonitorBinary.make().pipe(
+        Effect.provide(ServerConfig.layerTest(process.cwd(), baseDir)),
+        Effect.provideService(HostProcess.Environment, {
+          T3CODE_RESOURCE_MONITOR_PATH: binaryPath,
+          T3CODE_RESOURCE_MONITOR_DISABLED: "1",
+        }),
+      );
+
+      const error = yield* Effect.flip(service.resolve);
+      assert.instanceOf(error, ResourceMonitorBinary.ResourceMonitorBinaryUnsupported);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
   it.effect("rejects a non-executable POSIX override", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;

@@ -145,7 +145,9 @@ export const make = Effect.fn("resourceTelemetry.resourceMonitorBinary.make")(fu
           path.resolve(import.meta.dirname, "../resource-monitor", executableName),
           ...sourceCandidates,
         ];
-  if (overrideCandidates.length === 0 && bundledCandidates.length === 0) {
+  // An opt-out for machines where even sampling the server's own process tree is unwanted.
+  const disabled = /^(?:1|true|yes)$/i.test(environment.T3CODE_RESOURCE_MONITOR_DISABLED ?? "");
+  if (disabled || (overrideCandidates.length === 0 && bundledCandidates.length === 0)) {
     return ResourceMonitorBinary.of({
       resolve: Effect.fail(
         new ResourceMonitorBinaryUnsupported({
