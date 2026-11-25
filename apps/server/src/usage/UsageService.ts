@@ -297,10 +297,20 @@ export const make = Effect.gen(function* () {
     ),
   );
 
-  const loadRates = Effect.fn("UsageService.loadRates")(function* (force: boolean) {
+  const loadRates = Effect.fn("UsageService.loadRates")(function* (
+    force: boolean,
+    userRequested = false,
+  ) {
     const now = yield* Clock.currentTimeMillis;
     const maxAgeMs = force ? RATES_REFRESH_FLOOR_MS : RATES_TTL_MS;
     yield* loadSavedRates;
+    // Pricing comes from GitHub, so only an explicit refresh or the update-check opt-in fetches it.
+    if (!userRequested) {
+      const settings = yield* settingsService.getSettings.pipe(
+        Effect.catchCause(() => Effect.succeed(null)),
+      );
+      if (settings === null || !settings.enableProviderUpdateChecks) return;
+    }
     if (ratesFetchedAtMs !== null && now - ratesFetchedAtMs < maxAgeMs) return;
     if (ratesLastFailedAtMs !== null && now - ratesLastFailedAtMs < RATES_REFRESH_FLOOR_MS) return;
 
@@ -345,10 +355,9 @@ export const make = Effect.gen(function* () {
     for (const model of unlisted) checkedUnlistedModels.add(model);
   });
 
-  const refreshRates = ensureRates(true).pipe(
-    Effect.map(pricing),
-    Effect.withSpan("UsageService.refreshRates"),
-  );
+  const refreshRates = ratesLock
+    .withPermit(loadRates(true, true))
+    .pipe(Effect.map(pricing), Effect.withSpan("UsageService.refreshRates"));
 
   const readSettings = settingsService.getSettings.pipe(
     Effect.catchCause(

@@ -1,45 +1,41 @@
 import { describe, expect, it } from "@effect/vitest";
 
-import { faviconUrlForOrigin, toolActivityFaviconUrl } from "./favicon.ts";
-
-describe("faviconUrlForOrigin", () => {
-  it("sends only the public hostname and requested size, never the port", () => {
-    expect(faviconUrlForOrigin("https://github.com:8443/pingdotgg/t3code?private=query", 64)).toBe(
-      "https://www.google.com/s2/favicons?domain=github.com&sz=64",
-    );
-  });
-
-  // regression: #5838 no favicon request for missing or non-http origins
-  it.each([null, "invalid URL", "file:///tmp/private"])(
-    "rejects an invalid or unsupported origin %s",
-    (origin) => {
-      expect(faviconUrlForOrigin(origin)).toBeNull();
-    },
-  );
-});
+import { toolActivityFaviconUrl } from "./favicon.ts";
 
 describe("toolActivityFaviconUrl", () => {
-  it("uses the page origin instead of a third-party favicon service", () => {
-    expect(toolActivityFaviconUrl({ pageUrl: "https://example.com/docs/page?q=1" }, "light")).toBe(
-      "https://example.com/favicon.ico",
-    );
-    expect(toolActivityFaviconUrl({ pageUrl: "http://localhost:5173/app" }, "light")).toBe(
-      "http://localhost:5173/favicon.ico",
-    );
+  it("never derives a network favicon from the page the agent visited", () => {
+    expect(
+      toolActivityFaviconUrl({ pageUrl: "https://example.com/docs/page?q=1" }, "light"),
+    ).toBeNull();
+    expect(toolActivityFaviconUrl({ pageUrl: "https://github.com/acme/app" }, "dark")).toBeNull();
   });
 
-  it("accepts provider-supplied image URLs but rejects extension URLs", () => {
+  it("rejects provider-supplied remote and extension URLs", () => {
     expect(
       toolActivityFaviconUrl(
         { pageUrl: "https://example.com/docs", faviconUrl: "https://example.com/icon.png" },
         "light",
       ),
-    ).toBe("https://example.com/icon.png");
+    ).toBeNull();
     expect(
       toolActivityFaviconUrl(
         { pageUrl: "https://example.com/docs", faviconUrl: "chrome-extension://example/_favicon/" },
         "light",
       ),
-    ).toBe("https://example.com/favicon.ico");
+    ).toBeNull();
+  });
+
+  it("shows inline images a provider already sent", () => {
+    const light = "data:image/png;base64,iVBORw0KGgo=";
+    const dark = "data:image/svg+xml;base64,PHN2Zy8+";
+    expect(
+      toolActivityFaviconUrl({ pageUrl: "https://example.com", faviconUrl: light }, "light"),
+    ).toBe(light);
+    expect(
+      toolActivityFaviconUrl(
+        { pageUrl: "https://example.com", faviconUrl: light, faviconUrlDark: dark },
+        "dark",
+      ),
+    ).toBe(dark);
   });
 });

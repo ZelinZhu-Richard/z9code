@@ -554,4 +554,9 @@ describe("server model preferences", () => {
     expect(encodeServerSettings(decodeServerSettings(input))).toMatchObject(input);
     expect(decodeServerSettingsPatch(input)).toEqual(input);
   });
+
+  it("leaves provider update checks off until the user opts in", () => {
+    expect(DEFAULT_SERVER_SETTINGS.enableProviderUpdateChecks).toBe(false);
+    expect(decodeServerSettings({}).enableProviderUpdateChecks).toBe(false);
+  });
 });

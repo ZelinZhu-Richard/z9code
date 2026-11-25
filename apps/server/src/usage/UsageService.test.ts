@@ -216,7 +216,10 @@ const layerService = (input: {
     Layer.provideMerge(Layer.succeed(HostProcess.Platform, input.platform ?? "linux")),
     Layer.provideMerge(Layer.succeed(HostProcess.Hostname, input.hostname ?? "usage-test-host")),
     Layer.provideMerge(Layer.succeed(HostProcess.HomeDirectory, input.home)),
-    Layer.provideMerge(ServerSettings.layerTest(input.settings)),
+    // These tests exercise the opt-in pricing download.
+    Layer.provideMerge(
+      ServerSettings.layerTest({ enableProviderUpdateChecks: true, ...input.settings }),
+    ),
     Layer.provideMerge(
       Layer.succeed(
         HttpClient.HttpClient,
