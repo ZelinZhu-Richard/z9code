@@ -155,7 +155,7 @@ function logWarning(message: string, context: Record<string, unknown>): Effect.E
   return Effect.logWarning(message, context).pipe(Effect.annotateLogs({ scope: LOG_SCOPE }));
 }
 
-function resolveThreadSegment(raw: string | null | undefined): string {
+export function resolveThreadSegment(raw: string | null | undefined): string {
   if (typeof raw !== "string") return GLOBAL_THREAD_SEGMENT;
   const normalized = toSafeThreadAttachmentSegment(raw);
   if (normalized === null) return GLOBAL_THREAD_SEGMENT;

@@ -237,6 +237,7 @@ import * as ThreadPullRequestService from "./orchestration-v2/ThreadPullRequestS
 import * as ThreadIssueService from "./orchestration-v2/ThreadIssueService.ts";
 import * as RunFinalizationService from "./orchestration-v2/RunFinalizationService.ts";
 import * as ProjectionMaintenance from "./orchestration-v2/ProjectionMaintenance.ts";
+import * as ThreadPurge from "./orchestration-v2/ThreadPurge.ts";
 import * as ProjectionStoreV2 from "./orchestration-v2/ProjectionStore.ts";
 import { makePersistedServerRuntimeState } from "./serverRuntimeState.ts";
 import { closeNonPrivateNetworkConnections, loopbackUrlHostForAddress } from "./startupAccess.ts";
@@ -738,6 +739,7 @@ const layerRuntimeCoreDependenciesBase = Layer.mergeAll(
     Layer.provide(layerServerRestart),
   ),
   layerThreadPullRequestWorker,
+  ThreadPurge.layer,
   KeepAwake.layer,
   Layer.effectDiscard(
     Effect.gen(function* () {
