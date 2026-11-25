@@ -864,8 +864,8 @@ describe("formatModelSelectionEffort", () => {
         }),
       },
     ];
-    const antigravitySelection = createModelSelection(
-      ProviderInstanceId.make("antigravity"),
+    const geminiSelection = createModelSelection(
+      ProviderInstanceId.make("acpRegistry_gemini"),
       "gemini-4-neon",
       [{ id: "thought_level", value: "high" }],
     );
@@ -875,18 +875,18 @@ describe("formatModelSelectionEffort", () => {
       [{ id: "custom_thinking_mode", value: "deep" }],
     );
     const uncatalogedSelection = createModelSelection(
-      ProviderInstanceId.make("antigravity"),
+      ProviderInstanceId.make("acpRegistry_gemini"),
       "gemini-4-neon-preview",
       [{ id: "thought_level", value: "high" }],
     );
 
-    expect(formatModelSelectionEffort(antigravitySelection, models)).toBe("High");
+    expect(formatModelSelectionEffort(geminiSelection, models)).toBe("High");
     expect(formatModelSelectionEffort(customSelection, models)).toBe("Deep");
     expect(
       formatSubagentEffort({
         modelSlug: "gemini-4-neon-preview",
         modelSelection: uncatalogedSelection,
-        provider: { driver: ProviderDriverKind.make("antigravity"), models },
+        provider: { driver: ProviderDriverKind.make("acpRegistry"), models },
       }),
     ).toBe("high");
     expect(

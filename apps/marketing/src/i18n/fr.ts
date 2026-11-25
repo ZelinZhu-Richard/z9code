@@ -5,7 +5,7 @@ export const fr: Messages = {
     defaultTitle: "T3 Code",
     defaultDescription: "T3 Code. Le poste de pilotage open source pour agents de codage.",
     socialImageAlt:
-      "T3 Code : le poste de pilotage open source pour agents de codage, avec Claude Code, Codex, Cursor, OpenCode, Grok et Antigravity.",
+      "T3 Code : le poste de pilotage open source pour agents de codage, avec Claude Code, Codex, Cursor, OpenCode et Grok.",
     homeLabel: "Accueil T3 Code",
     download: "Télécharger",
     starsLabel: "Mettre une étoile à T3 Code sur GitHub, {stars} étoiles",
@@ -23,7 +23,7 @@ export const fr: Messages = {
     description: "T3 Code. Le poste de pilotage open source pour agents de codage.",
     heroTitle: ["Le poste de pilotage", "open source", "pour agents de codage."],
     heroSub:
-      "Orchestrez Claude Code, Codex, Antigravity, OpenCode, Cursor et Grok depuis une seule interface. Utilisez votre propre abonnement. Forkez tout le projet.",
+      "Orchestrez Claude Code, Codex, OpenCode, Cursor et Grok depuis une seule interface. Utilisez votre propre abonnement. Forkez tout le projet.",
     downloadForMac: "Télécharger pour macOS",
     downloadForWindows: "Télécharger pour Windows",
     downloadForLinux: "Télécharger pour Linux",
@@ -39,8 +39,7 @@ export const fr: Messages = {
     readPost: "Lire le post de {handle} sur X",
     harnessTitle: "Apportez votre abonnement",
     harnessBody:
-      "T3 Code ne revend pas de tokens. Branchez Claude Code, Codex, Antigravity, OpenCode, Cursor ou Grok avec les identifiants que vous avez déjà. Nous les orchestrons, vous gardez votre abonnement.",
-    googleSignIn: "Connexion Google",
+      "T3 Code ne revend pas de tokens. Branchez Claude Code, Codex, OpenCode, Cursor ou Grok avec les identifiants que vous avez déjà. Nous les orchestrons, vous gardez votre abonnement.",
     harnessPoints: [
       "Aucune clé revendue. Aucun quota imposé.",
       "Changez de modèle en cours de fil.",

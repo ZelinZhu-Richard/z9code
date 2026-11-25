@@ -23,11 +23,7 @@ import {
   ProviderCompatibilityPolicy,
   resolveProviderCompatibility,
 } from "./providerCompatibility.ts";
-import bundledManifest from "./model-manifest.json" with { type: "json" };
 
-const decodeCompatibilityPolicies = Schema.decodeUnknownSync(
-  Schema.Array(ProviderCompatibilityPolicy),
-);
 const driver = ProviderDriverKind.make("codex");
 const policy: ProviderCompatibilityPolicy = {
   driver,
@@ -126,31 +122,6 @@ describe("provider compatibility", () => {
     assert.strictEqual(
       resolveProviderCompatibility([policy], driver, "2.0.0-a1b2c3d")?.status,
       "unknown",
-    );
-  });
-
-  it("marks Antigravity below 1.5 broken and recommends 1.5.12 in the bundled manifest", () => {
-    const policies = decodeCompatibilityPolicies(bundledManifest.compatibility);
-    const antigravity = ProviderDriverKind.make("antigravity");
-    for (const version of [
-      "1.1.1",
-      "1.3.0",
-      "1.4.1",
-      "1.4.5",
-      "1.4.9",
-      "agy_acp_server_1.4.5",
-      "1.4.5-beta",
-    ]) {
-      const advisory = resolveProviderCompatibility(policies, antigravity, version);
-      assert.strictEqual(advisory?.status, "broken", version);
-    }
-    const supported = resolveProviderCompatibility(policies, antigravity, "1.5.11");
-    assert.strictEqual(supported?.status, "supported");
-    assert.strictEqual(supported?.recommendedRange, ">=1.5.12 <2");
-    // Stable releases before 0.1.10 cannot install the CLI, so they keep the policy they shipped with.
-    assert.strictEqual(
-      resolveProviderCompatibility(policies, antigravity, "1.4.5", "0.1.9")?.status,
-      "supported",
     );
   });
 

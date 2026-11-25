@@ -5,7 +5,7 @@ export const ru: Messages = {
     defaultTitle: "T3 Code",
     defaultDescription: "T3 Code. Открытый пульт управления ИИ-агентами для программирования.",
     socialImageAlt:
-      "T3 Code: открытый пульт управления ИИ-агентами для программирования. Claude Code, Codex, Cursor, OpenCode, Grok и Antigravity.",
+      "T3 Code: открытый пульт управления ИИ-агентами для программирования. Claude Code, Codex, Cursor, OpenCode и Grok.",
     homeLabel: "Главная страница T3 Code",
     download: "Скачать",
     starsLabel: "Поставить звезду T3 Code на GitHub, звёзд: {stars}",
@@ -23,7 +23,7 @@ export const ru: Messages = {
     description: "T3 Code. Открытый пульт управления ИИ-агентами для программирования.",
     heroTitle: ["Открытый пульт", "управления", "ИИ-агентами для кода."],
     heroSub:
-      "Управляйте Claude Code, Codex, Antigravity, OpenCode, Cursor и Grok из одного окна. Пользуйтесь своей подпиской. Форкайте всё целиком.",
+      "Управляйте Claude Code, Codex, OpenCode, Cursor и Grok из одного окна. Пользуйтесь своей подпиской. Форкайте всё целиком.",
     downloadForMac: "Скачать для macOS",
     downloadForWindows: "Скачать для Windows",
     downloadForLinux: "Скачать для Linux",
@@ -38,8 +38,7 @@ export const ru: Messages = {
     readPost: "Читать пост {handle} в X",
     harnessTitle: "Со своей подпиской",
     harnessBody:
-      "T3 Code не перепродаёт токены. Подключайте Claude Code, Codex, Antigravity, OpenCode, Cursor или Grok с учётными данными, которые у вас уже есть. Мы управляем агентами, тариф остаётся вашим.",
-    googleSignIn: "Вход через Google",
+      "T3 Code не перепродаёт токены. Подключайте Claude Code, Codex, OpenCode, Cursor или Grok с учётными данными, которые у вас уже есть. Мы управляем агентами, тариф остаётся вашим.",
     harnessPoints: [
       "Никакой перепродажи ключей. Никаких лимитов.",
       "Меняйте модель прямо посреди треда.",

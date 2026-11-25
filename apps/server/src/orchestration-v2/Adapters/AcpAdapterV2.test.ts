@@ -213,7 +213,7 @@ describe("acpPerTurnPromptUsage", () => {
         reasoningTokens: 3,
       },
     );
-    // Antigravity 1.5+: inputTokens excludes cached reads, while outputTokens already includes thinking.
+    // Gemini-style usage: inputTokens excludes cached reads, while outputTokens already includes thinking.
     assert.deepEqual(
       acpPerTurnPromptUsage(
         {
@@ -5209,7 +5209,7 @@ describe("AcpAdapterV2", () => {
         patterns: ["t3 code"],
         results: [{ url: "https://t3.codes" }, { url: "https://github.com/pingdotgg/t3code" }],
       });
-      assert.deepEqual(webItem("antigravity-web-search", "completed"), {
+      assert.deepEqual(webItem("structured-web-search", "completed"), {
         title: "Web search: top story on Hacker News today",
         patterns: ["top story on Hacker News today"],
         results: [
@@ -5218,12 +5218,12 @@ describe("AcpAdapterV2", () => {
           },
         ],
       });
-      assert.deepEqual(webItem("antigravity-run-search-web", "completed"), {
+      assert.deepEqual(webItem("structured-run-search-web", "completed"), {
         title: "Web search: top story on Hacker News today",
         patterns: ["top story on Hacker News today"],
         results: undefined,
       });
-      assert.deepEqual(webItem("antigravity-web-search-streamed", "completed"), {
+      assert.deepEqual(webItem("structured-web-search-streamed", "completed"), {
         title: "Web search: streamed citations",
         patterns: ["streamed citations"],
         results: [{ url: "https://example.com/streamed_(detail)" }],

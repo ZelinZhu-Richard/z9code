@@ -5,7 +5,7 @@ export const ja: Messages = {
     defaultTitle: "T3 Code",
     defaultDescription: "T3 Code。オープンソースのコーディングエージェント制御プレーン。",
     socialImageAlt:
-      "T3 Code：オープンソースのコーディングエージェント制御プレーン。Claude Code、Codex、Cursor、OpenCode、Grok、Antigravity に対応。",
+      "T3 Code：オープンソースのコーディングエージェント制御プレーン。Claude Code、Codex、Cursor、OpenCode、Grok に対応。",
     homeLabel: "T3 Code ホーム",
     download: "ダウンロード",
     starsLabel: "GitHub で T3 Code にスターを付ける（{stars} スター）",
@@ -23,7 +23,7 @@ export const ja: Messages = {
     description: "T3 Code。オープンソースのコーディングエージェント制御プレーン。",
     heroTitle: ["オープンソースの", "コーディングエージェント", "制御プレーン。"],
     heroSub:
-      "Claude Code、Codex、Antigravity、OpenCode、Cursor、Grok をひとつの画面からオーケストレーション。サブスクリプションは手持ちのものをそのまま。まるごとフォークも自由です。",
+      "Claude Code、Codex、OpenCode、Cursor、Grok をひとつの画面からオーケストレーション。サブスクリプションは手持ちのものをそのまま。まるごとフォークも自由です。",
     downloadForMac: "macOS 版をダウンロード",
     downloadForWindows: "Windows 版をダウンロード",
     downloadForLinux: "Linux 版をダウンロード",
@@ -39,8 +39,7 @@ export const ja: Messages = {
     readPost: "X で {handle} の投稿を読む",
     harnessTitle: "サブスクは持ち込みで",
     harnessBody:
-      "T3 Code はトークンの上乗せ販売を行いません。すでにお持ちの認証情報で、Claude Code、Codex、Antigravity、OpenCode、Cursor、Grok をつなぐだけ。T3 Code は制御プレーンのみを提供。プランは今のままで。",
-    googleSignIn: "Google でサインイン",
+      "T3 Code はトークンの上乗せ販売を行いません。すでにお持ちの認証情報で、Claude Code、Codex、OpenCode、Cursor、Grok をつなぐだけ。T3 Code は制御プレーンのみを提供。プランは今のままで。",
     harnessPoints: [
       "キーの再販なし。使用量の上限なし。",
       "スレッドの途中でモデルを切り替え。",

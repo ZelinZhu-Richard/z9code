@@ -44,8 +44,7 @@ Attach up to 100 files per message. Each image can be up to 10 MiB, with at most
 50 MiB each, subject to the environment's upload support and limit. The agent
 receives them on the environment's machine. Provider and model limits still
 apply, including images already in the conversation. A video attachment gives
-the agent a file path; only [Antigravity](./providers-antigravity.md#skills-and-attachments)
-sends supported videos to Gemini models as video.
+the agent a file path.
 
 Uploads begin when you add an attachment. All uploads must finish before the
 message can send. Retry or remove a failed upload. On web and desktop, reloading
@@ -114,8 +113,7 @@ device until you sign back into the same account.
 ## Custom models
 
 On web and desktop, use Settings → Providers → **Models** to add an unlisted model with a custom
-name and options. Only options supported by the provider integration affect turns. Antigravity
-uses its account catalog and does not support custom models.
+name and options. Only options supported by the provider integration affect turns.
 
 To rename a built-in model on every client, edit the server's `settings.json` in its `userdata`
 directory. Add a custom model entry with the built-in model ID and a new name under that provider

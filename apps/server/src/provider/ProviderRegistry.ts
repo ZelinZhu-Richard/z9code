@@ -233,32 +233,25 @@ const shouldRetainMissingProviderModels = (provider: ServerProvider): boolean =>
     return true;
   }
 
-  const isAntigravity = provider.driver === ProviderDriverKind.make("antigravity");
   const isCodex = provider.driver === ProviderDriverKind.make("codex");
   const isOpenCode = provider.driver === ProviderDriverKind.make("opencode");
-  if (!isAntigravity && !isCodex && !isOpenCode) {
+  if (!isCodex && !isOpenCode) {
     // Any other driver must report ready only after a completed model listing, or opt out above:
     // a ready list is authoritative, and warning/error probes keep the old models.
     return !(provider.installed && provider.status === "ready");
   }
 
-  if (
-    (isAntigravity || isCodex) &&
-    (!provider.enabled || provider.auth.status === "unauthenticated")
-  ) {
+  if (isCodex && (!provider.enabled || provider.auth.status === "unauthenticated")) {
     return false;
   }
 
-  // Antigravity's local health check does not authenticate or discover models.
-  const isPendingAntigravityAuthentication =
-    isAntigravity && provider.status === "warning" && provider.auth.status === "unknown";
   const isPendingInitialProbe =
     provider.enabled && !provider.installed && provider.status === "warning";
   // A cold OpenCode server can finish its probe as a warning before it lists any models.
   const isIncompleteInstalledProbe =
     provider.installed &&
     (provider.status === "error" || ((isCodex || isOpenCode) && provider.status === "warning"));
-  return isPendingAntigravityAuthentication || isPendingInitialProbe || isIncompleteInstalledProbe;
+  return isPendingInitialProbe || isIncompleteInstalledProbe;
 };
 
 const shouldRetainMissingOpenCodeMetadata = (provider: ServerProvider): boolean =>
@@ -305,29 +298,6 @@ const mergeProviderModels = (
     : mergedModels;
 };
 
-/** Antigravity health checks only initialize; preserve previously verified Google auth across restarts. */
-const carrySavedAntigravityAccount = (
-  previousProvider: ServerProvider,
-  nextProvider: ServerProvider,
-): Pick<ServerProvider, "auth" | "status"> | undefined => {
-  const antigravity = ProviderDriverKind.make("antigravity");
-  if (
-    nextProvider.driver !== antigravity ||
-    previousProvider.driver !== antigravity ||
-    !nextProvider.enabled ||
-    nextProvider.auth.status !== "unknown" ||
-    previousProvider.auth.status !== "authenticated" ||
-    (nextProvider.auth.type !== undefined &&
-      nextProvider.auth.type !== previousProvider.auth.type) ||
-    (!nextProvider.installed && nextProvider.status !== "warning")
-  ) {
-    return undefined;
-  }
-  const status =
-    nextProvider.installed && nextProvider.status === "warning" ? "ready" : nextProvider.status;
-  return { auth: previousProvider.auth, status };
-};
-
 /** One failed check after a ready one is often transient, so its retained catalog stays offered. */
 const retainsReadyCatalog = (
   previousProvider: ServerProvider,
@@ -352,8 +322,6 @@ export const mergeProviderSnapshot = (
   if (!previousProvider) {
     return nextProvider;
   }
-  const savedAccount = carrySavedAntigravityAccount(previousProvider, nextProvider);
-  const { message: _uncheckedMessage, ...nextWithoutMessage } = nextProvider;
   const models = mergeProviderModels(nextProvider, previousProvider.models, nextProvider.models);
   // Folder catalogs were compared with the old machine catalog, so every folder rescans.
   const previousWorkspaceSnapshots = Equal.equals(models, previousProvider.models)
@@ -377,15 +345,9 @@ export const mergeProviderSnapshot = (
           ...nextWorkspaceSnapshots,
         ].slice(-MAX_WORKSPACE_SNAPSHOTS_PER_PROVIDER);
   return {
-    ...(savedAccount?.status === "ready" ? nextWithoutMessage : nextProvider),
-    ...savedAccount,
+    ...nextProvider,
     models,
-    ...(retainsReadyCatalog(
-      previousProvider,
-      nextProvider,
-      savedAccount?.status ?? nextProvider.status,
-      models,
-    )
+    ...(retainsReadyCatalog(previousProvider, nextProvider, nextProvider.status, models)
       ? { modelsRetained: true }
       : {}),
     ...(workspaceSnapshots === undefined ? {} : { workspaceSnapshots }),

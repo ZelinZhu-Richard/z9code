@@ -1,5 +1,4 @@
 import {
-  AntigravitySettings,
   ClaudeSettings,
   CodexSettings,
   isProviderDriverKind,
@@ -46,13 +45,6 @@ export const providerClients = makeProviderClientRegistry([
   grokClient,
   fxClient,
   openCodeClient,
-  {
-    driverKind: ProviderDriverKind.make("antigravity"),
-    label: "Antigravity",
-    modelFamilies: ["Gemini "],
-    acpRegistryAgentIds: ["antigravity-acp"],
-    settingsSchema: AntigravitySettings,
-  },
   kiroClient,
   museClient,
   piClient,

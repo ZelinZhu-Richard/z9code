@@ -9,12 +9,12 @@ import {
 describe("buildRuntimeInstructions", () => {
   it("leaves PR linking to a session that already carries it, and keeps runtime identity", () => {
     const instructions = buildRuntimeInstructions({
-      harness: "Antigravity",
+      harness: "Gemini CLI",
       model: "gemini-3.8-flash",
       pullRequestLinking: false,
     });
 
-    assert.include(instructions, "through the Antigravity harness, as gemini-3.8-flash.");
+    assert.include(instructions, "through the Gemini CLI harness, as gemini-3.8-flash.");
     assert.notInclude(instructions, "<pull_request_linking>");
   });
 

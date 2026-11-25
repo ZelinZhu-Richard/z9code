@@ -129,13 +129,13 @@ it.effect("reads a collected reference again once it is invalidated", () =>
     const read = () => resolveSourceControlHostSecrets(resolver, hosts, "bitbucket");
     const usageLimitSources = {
       [UsageLimitSourceId.make("referenced")]: {
-        kind: "cliproxy",
+        kind: "http",
         url: "https://hub.test",
-        managementKey: source("cliproxy#key"),
+        managementKey: source("quota#key"),
         enabled: true,
       },
       [UsageLimitSourceId.make("literal")]: {
-        kind: "cliproxy",
+        kind: "http",
         url: "https://hub.test",
         managementKey: "plain-key",
         enabled: true,
@@ -163,7 +163,7 @@ it.effect("reads a collected reference again once it is invalidated", () =>
         maxLeaseMinutes: 60,
       },
     ];
-    cache.set("cliproxy#key", "stale");
+    cache.set("quota#key", "stale");
     cache.set("voice#key", "stale");
     cache.set("expo#token", "stale");
     cache.set("simlock#token", "stale");
@@ -183,7 +183,7 @@ it.effect("reads a collected reference again once it is invalidated", () =>
         simlockDeviceHosts,
       }),
     );
-    assert.isFalse(cache.has("cliproxy#key"));
+    assert.isFalse(cache.has("quota#key"));
     assert.isFalse(cache.has("voice#key"));
     assert.isFalse(cache.has("expo#token"));
     assert.isFalse(cache.has("simlock#token"));

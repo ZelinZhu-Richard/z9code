@@ -254,13 +254,11 @@ describe("mobile model options", () => {
     ).toEqual(["codex", "codex_work"]);
   });
 
-  it("matches the web driver fallback without moving unknown Antigravity history", () => {
+  it("matches the web driver fallback", () => {
     const config = {
       providers: [
         { instanceId: "codex", driver: "codex" },
         { instanceId: "codex_work", driver: "codex" },
-        { instanceId: "google", driver: "antigravity" },
-        { instanceId: "google_work", driver: "antigravity" },
       ].map((provider) => ({
         ...provider,
         enabled: true,
@@ -274,11 +272,6 @@ describe("mobile model options", () => {
         (option) => option.providerKey,
       ),
     ).toEqual(["codex", "codex_work"]);
-    expect(
-      buildModelOptions(config, null, ProviderInstanceId.make("google"), null).map(
-        (option) => option.providerKey,
-      ),
-    ).toEqual(["google"]);
   });
 
   it("carries account badges into catalog and saved fallback models", () => {
@@ -353,7 +346,7 @@ describe("mobile model options", () => {
     ).toEqual([true, true]);
   });
 
-  it.each(["disabled", "unavailable", "missing"] as const)(
+  it.each(["disabled", "unavailable"] as const)(
     "retains the selected %s provider's fallback in a filtered catalog",
     (state) => {
       const selection = {
@@ -363,7 +356,7 @@ describe("mobile model options", () => {
       };
       const provider = {
         instanceId: selection.instanceId,
-        driver: "antigravity",
+        driver: "cursor",
         displayName: "Google Work",
         enabled: state !== "disabled",
         installed: true,
@@ -372,8 +365,8 @@ describe("mobile model options", () => {
         models: [{ slug: selection.model, name: "Saved model", capabilities: null }],
       };
       const config = {
-        providers: state === "missing" ? [] : [provider],
-        settings: { providerInstances: { google_work: { driver: "antigravity" } } },
+        providers: [provider],
+        settings: { providerInstances: { google_work: { driver: "cursor" } } },
       } as unknown as ServerConfig;
       const options = buildModelOptions(config, selection, selection.instanceId, null);
       expect(options).toEqual(buildModelOptions(config, selection, undefined, null));
@@ -423,150 +416,6 @@ describe("mobile model options", () => {
     expect(isModelSelectionUnavailable(config, disabled, null)).toBe(true);
     expect(isModelSelectionUnavailable(config, removed, null)).toBe(false);
     expect(resolveSelectableModelSelection(null, disabled, null)).toBe(disabled);
-  });
-
-  describe("Antigravity selections", () => {
-    const selection = {
-      instanceId: ProviderInstanceId.make("google_work"),
-      model: "gemini-3.1-pro-high",
-      options: [{ id: "native-option", value: "saved/opaque-choice" }],
-    };
-    const model = {
-      slug: selection.model,
-      name: "Gemini 3.1 Pro High",
-      subProvider: "Google",
-      isCustom: false,
-      isDefault: true,
-      isLegacy: true,
-      capabilities: {
-        optionDescriptors: [
-          {
-            id: "native-option",
-            label: "Native option",
-            type: "select",
-            options: [{ id: "current/default", label: "Default", isDefault: true }],
-            currentValue: "current/default",
-          },
-        ],
-      },
-    };
-    const config = {
-      providers: [
-        {
-          instanceId: selection.instanceId,
-          driver: "antigravity",
-          displayName: "Google Work",
-          enabled: true,
-          installed: true,
-          auth: { status: "authenticated" },
-          models: [model],
-        },
-      ],
-    } as unknown as ServerConfig;
-
-    it.each([
-      ["disabled", { enabled: false }],
-      ["signed out", { auth: { status: "unauthenticated" } }],
-    ] as const)("keeps a %s provider's selection and known model details", (_state, update) => {
-      const unavailableConfig = {
-        ...config,
-        providers: config.providers.map((provider) => ({ ...provider, ...update })),
-      };
-
-      expect(resolveSelectableModelSelection(unavailableConfig, selection, null)).toBe(selection);
-      expect(resolveDefaultableModelSelection(unavailableConfig, selection, null)).toBe(selection);
-      expect(isModelSelectionUnavailable(unavailableConfig, selection, null)).toBe(true);
-      expect(buildModelOptions(unavailableConfig, null, undefined, null)).toEqual([]);
-      const [option] = buildModelOptions(unavailableConfig, selection, undefined, null);
-      expect(option).toMatchObject({
-        key: `google_work:${selection.model}`,
-        label: model.name,
-        subtitle: "Google",
-        providerKey: "google_work",
-        providerLabel: "Google Work",
-        providerDriver: "antigravity",
-        isDefault: false,
-        isLegacy: true,
-        isUnavailable: true,
-        capabilities: model.capabilities,
-      });
-      expect(option?.selection).toBe(selection);
-    });
-
-    it("keeps an exact selection when its model leaves and returns to the catalog", () => {
-      const changedConfig = {
-        ...config,
-        providers: config.providers.map((provider) => ({
-          ...provider,
-          models: provider.models.map((model) => ({ ...model, slug: "gemini-3.1-pro-low" })),
-        })),
-      };
-
-      expect(resolveDefaultableModelSelection(changedConfig, selection, null)).toBe(selection);
-      expect(isModelSelectionUnavailable(changedConfig, selection, null)).toBe(true);
-      const options = buildModelOptions(changedConfig, selection, undefined, null);
-      const missing = options.find((option) => option.selection.model === selection.model);
-      expect(missing).toMatchObject({
-        label: selection.model,
-        providerLabel: "Google Work",
-        providerDriver: "antigravity",
-        isUnavailable: true,
-        capabilities: null,
-      });
-      expect(missing?.selection).toBe(selection);
-      expect(
-        resolveNewTaskModelSelection({
-          draftSelection: null,
-          projectDefaultSelection: resolveDefaultableModelSelection(changedConfig, selection, null),
-          stickySelection: null,
-          modelOptions: options,
-        }),
-      ).toBe(selection);
-
-      const [restored] = buildModelOptions(config, selection, undefined, null);
-      expect(isModelSelectionUnavailable(config, selection, null)).toBe(false);
-      expect(restored?.isUnavailable).not.toBe(true);
-      expect(restored?.selection).toBe(selection);
-      expect(resolveDefaultableModelSelection(config, selection, null)).toBe(selection);
-      expect(
-        buildModelOptions(config, null, undefined, null)[0]?.selection.options,
-      ).toBeUndefined();
-    });
-
-    it("uses configured instance metadata when provider status is missing", () => {
-      const missingStatusConfig = {
-        providers: [],
-        settings: {
-          providerInstances: {
-            [selection.instanceId]: { driver: "antigravity", displayName: "Google Work" },
-          },
-        },
-      } as unknown as ServerConfig;
-
-      expect(resolveDefaultableModelSelection(missingStatusConfig, selection, null)).toBe(
-        selection,
-      );
-      expect(isModelSelectionUnavailable(missingStatusConfig, selection, null)).toBe(true);
-      expect(buildModelOptions(missingStatusConfig, selection, undefined, null)).toMatchObject([
-        {
-          providerDriver: "antigravity",
-          providerLabel: "Google Work",
-          isUnavailable: true,
-          selection,
-        },
-      ]);
-    });
-
-    it("keeps offline selections without assuming that an unknown instance is Antigravity", () => {
-      const unknownConfig = { ...config, providers: [] };
-
-      expect(resolveDefaultableModelSelection(null, selection, null)).toBe(selection);
-      expect(isModelSelectionUnavailable(null, selection, null)).toBe(false);
-      expect(buildModelOptions(null, selection, undefined, null)[0]?.selection).toBe(selection);
-      expect(buildModelOptions(null, selection, undefined, null)[0]?.isUnavailable).not.toBe(true);
-      expect(isModelSelectionUnavailable(unknownConfig, selection, null)).toBe(false);
-      expect(resolveSelectableModelSelection(unknownConfig, selection, null)).toBeNull();
-    });
   });
 
   it("keeps legacy models out of implicit defaults", () => {
@@ -658,7 +507,7 @@ describe("mobile model options", () => {
       } as unknown as ServerConfig;
     }
 
-    it("refuses to send a non-Antigravity model the project turned off", () => {
+    it("refuses to send a model the project turned off", () => {
       const settings: ServerSettings = {
         ...DEFAULT_SERVER_SETTINGS,
         providerInstances: {
@@ -735,43 +584,6 @@ describe("mobile model options", () => {
 
       expect(options).toHaveLength(1);
       expect(options[0]).toMatchObject({ selection: fallback, isUnavailable: true });
-    });
-
-    it("rejects a project-disabled antigravity instance's selection instead of keeping it", () => {
-      const antigravityInstanceId = ProviderInstanceId.make("antigravity_work");
-      const config = {
-        providers: [
-          {
-            instanceId: antigravityInstanceId,
-            driver: "antigravity",
-            displayName: "Antigravity Work",
-            enabled: true,
-            installed: true,
-            auth: { status: "authenticated" },
-            availability: "available",
-            models: [{ slug: "model-a", name: "Model A", isCustom: false, capabilities: null }],
-          },
-        ],
-        settings: {
-          ...DEFAULT_SERVER_SETTINGS,
-          providerInstances: {
-            [antigravityInstanceId]: {
-              driver: ProviderDriverKind.make("antigravity"),
-              enabled: true,
-            },
-          },
-          projectSettingsOverrides: {
-            [projectId]: { providerInstances: { [antigravityInstanceId]: { enabled: false } } },
-          },
-        },
-      } as unknown as ServerConfig;
-      const selection = { instanceId: antigravityInstanceId, model: "model-a" };
-
-      expect(resolveSelectableModelSelection(config, selection, projectId)).toBeNull();
-      expect(resolveSelectableModelSelection(config, selection, null)).toBe(selection);
-      expect(
-        resolveSelectableModelSelection({ ...config, providers: [] }, selection, projectId),
-      ).toBeNull();
     });
   });
 });

@@ -903,17 +903,14 @@ function ThreadDetailBody(
         disabled: !props.canOperateThread || goalCommandPending,
         onPress: () => void runGoalCommand(command),
       });
-      // The server rejects Antigravity goal controls and Claude resume. Resume would stop
-      // unrelated work, so it waits for the thread to go idle.
-      const goalActions =
-        goalDriver === "antigravity"
-          ? []
-          : [
-              ...(goal.canResume && goalDriver !== "claudeAgent" && !props.activeThreadBusy
-                ? [goalAction(gt("Resume"), gt("Resume goal"), "/goal resume")]
-                : []),
-              goalAction(gt("Clear"), gt("Clear goal"), "/goal clear"),
-            ];
+      // The server rejects Claude resume. Resume would stop unrelated work, so it waits for the
+      // thread to go idle.
+      const goalActions = [
+        ...(goal.canResume && goalDriver !== "claudeAgent" && !props.activeThreadBusy
+          ? [goalAction(gt("Resume"), gt("Resume goal"), "/goal resume")]
+          : []),
+        goalAction(gt("Clear"), gt("Clear goal"), "/goal clear"),
+      ];
       return {
         kind: "goal",
         label: goal.title,
@@ -1906,14 +1903,6 @@ function ThreadDetailBody(
                           reportedModelSelection,
                         )}
                         status={props.providerSubagentStatus ?? null}
-                        inspect={
-                          providerSubagentProvider?.driver === "antigravity"
-                            ? {
-                                environmentId: props.environmentId,
-                                threadId: props.selectedThread.id,
-                              }
-                            : null
-                        }
                         onOpenParent={
                           props.selectedThread.lineage.parentThreadId === null
                             ? null

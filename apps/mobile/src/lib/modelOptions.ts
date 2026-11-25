@@ -199,19 +199,11 @@ export function isModelSelectionUnavailable(
   if (isDisabledForProject(config, provider, selection.instanceId, projectId)) {
     return true;
   }
+  // A driver this server no longer has stays listed as unavailable.
+  if (provider?.availability === "unavailable") return true;
   const driver =
     provider?.driver ?? config.settings?.providerInstances[selection.instanceId]?.driver;
-  if (isDriverDisallowed(config, driver)) {
-    return true;
-  }
-  return (
-    driver === "antigravity" &&
-    (!provider ||
-      !provider.installed ||
-      provider.auth.status === "unauthenticated" ||
-      provider.availability === "unavailable" ||
-      !provider.models.some((model) => model.slug === selection.model))
-  );
+  return isDriverDisallowed(config, driver);
 }
 
 export function describeUnavailableModelSelection(
@@ -240,19 +232,19 @@ export function describeUnavailableModelSelection(
       ),
     };
   }
-  return isDisabledForProject(config, provider, selection.instanceId, projectId)
-    ? {
-        title: m(msg("Model turned off for this project")),
-        detail: m(msg("Turn it back on from web or desktop, or choose another model.")),
-      }
-    : {
-        title: m(msg("{provider} model unavailable", { provider: "Antigravity" })),
-        detail: m(
-          msg("Set up {provider} on web or desktop, or choose another model.", {
-            provider: "Antigravity",
-          }),
-        ),
-      };
+  if (
+    provider?.availability === "unavailable" &&
+    !isDisabledForProject(config, provider, selection.instanceId, projectId)
+  ) {
+    return {
+      title: m(msg("Provider unavailable")),
+      detail: m(msg("This server no longer offers this provider. Choose another model.")),
+    };
+  }
+  return {
+    title: m(msg("Model turned off for this project")),
+    detail: m(msg("Turn it back on from web or desktop, or choose another model.")),
+  };
 }
 
 export function resolveSelectableModelSelection(
@@ -266,13 +258,9 @@ export function resolveSelectableModelSelection(
   const provider = config.providers.find(
     (candidate) => candidate.instanceId === selection.instanceId,
   );
-  const driver =
-    provider?.driver ?? config.settings?.providerInstances[selection.instanceId]?.driver;
-  if (driver === "antigravity") {
-    return isProjectDisabledOverride(config, selection.instanceId, projectId) ? null : selection;
-  }
   return provider &&
     isProviderEnabledForProject(config, provider, projectId) &&
+    provider.availability !== "unavailable" &&
     provider.installed &&
     provider.auth.status !== "unauthenticated"
     ? selection
@@ -290,7 +278,7 @@ export function resolveDefaultableModelSelection(
   }
   const provider = config.providers.find((candidate) => candidate.instanceId === usable.instanceId);
   const model = provider?.models.find((candidate) => candidate.slug === usable.model);
-  return provider?.driver !== "antigravity" && model?.isLegacy === true ? null : usable;
+  return model?.isLegacy === true ? null : usable;
 }
 
 export function resolveNewTaskModelSelection(input: {
@@ -341,7 +329,7 @@ export function buildModelOptions(
     if (!lockedProvider || provider.driver !== lockedProvider.driver) return false;
     const groupKey = lockedProvider.continuation?.groupKey;
     if (groupKey) return provider.continuation?.groupKey === groupKey;
-    return provider.driver !== "antigravity";
+    return true;
   };
   const registryAgentId = (instanceId: ModelSelection["instanceId"]) => {
     const configValue = config?.settings?.providerInstances[instanceId]?.config;
@@ -392,7 +380,7 @@ export function buildModelOptions(
       !isProviderEnabledForProject(config, provider, projectId) ||
       !provider.installed ||
       provider.auth.status === "unauthenticated" ||
-      (provider.driver === "antigravity" && provider.availability === "unavailable")
+      provider.availability === "unavailable"
     ) {
       continue;
     }
@@ -464,10 +452,7 @@ export function buildModelOptions(
     if (existing) {
       options.set(key, {
         ...existing,
-        selection:
-          existing.providerDriver === "antigravity"
-            ? fallbackModelSelection
-            : normalizeSelectionOptions(fallbackModelSelection, existing.capabilities),
+        selection: normalizeSelectionOptions(fallbackModelSelection, existing.capabilities),
       });
     } else {
       const provider = config?.providers.find(

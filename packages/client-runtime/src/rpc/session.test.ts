@@ -205,7 +205,7 @@ const SOURCE_EVENT: ServerConfigStreamEventType = {
     sources: [
       {
         id: UsageLimitSourceId.make("proxy"),
-        kind: "cliproxy",
+        kind: "http",
         label: "Proxy",
         checkedAt: "2026-09-04T00:00:00Z",
         accounts: [],

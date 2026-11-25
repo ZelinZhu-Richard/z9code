@@ -1089,7 +1089,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/providers",
     searchTerms: [
       msg(
-        "agents cli codex claude cursor grok fx kiro opencode antigravity google sign in sign out install subscription instances authentication api key models configuration binary path config directory codex_home shadow home endpoint arguments environment variables display name accent color custom favorite hidden auto compact native sessions import resume",
+        "agents cli codex claude cursor grok fx kiro opencode sign in sign out install subscription instances authentication api key models configuration binary path config directory codex_home shadow home endpoint arguments environment variables display name accent color custom favorite hidden auto compact native sessions import resume",
       ),
     ],
   },
@@ -1097,11 +1097,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "usage-providers",
     title: msg("Usage providers"),
     to: "/settings/providers",
-    searchTerms: [
-      msg(
-        "usage sources CLIProxyAPI CLI proxy hub quota subscription limits management key add remove",
-      ),
-    ],
+    searchTerms: [msg("usage sources http quota subscription limits token add remove")],
     providerSettingsOnly: true,
   },
   {

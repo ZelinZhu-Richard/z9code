@@ -5,7 +5,7 @@ export const ptBR: Messages = {
     defaultTitle: "T3 Code",
     defaultDescription: "T3 Code. O painel de controle open source para agentes de programação.",
     socialImageAlt:
-      "T3 Code: o painel de controle open source para agentes de programação, com Claude Code, Codex, Cursor, OpenCode, Grok e Antigravity.",
+      "T3 Code: o painel de controle open source para agentes de programação, com Claude Code, Codex, Cursor, OpenCode e Grok.",
     homeLabel: "Página inicial do T3 Code",
     download: "Baixar",
     starsLabel: "Dê uma estrela ao T3 Code no GitHub, {stars} estrelas",
@@ -23,7 +23,7 @@ export const ptBR: Messages = {
     description: "T3 Code. O painel de controle open source para agentes de programação.",
     heroTitle: ["O painel de controle", "open source para", "agentes de código."],
     heroSub:
-      "Orquestre Claude Code, Codex, Antigravity, OpenCode, Cursor e Grok em um só lugar. Use a sua própria assinatura. Faça um fork do projeto inteiro.",
+      "Orquestre Claude Code, Codex, OpenCode, Cursor e Grok em um só lugar. Use a sua própria assinatura. Faça um fork do projeto inteiro.",
     downloadForMac: "Baixar para macOS",
     downloadForWindows: "Baixar para Windows",
     downloadForLinux: "Baixar para Linux",
@@ -39,8 +39,7 @@ export const ptBR: Messages = {
     readPost: "Ler o post de {handle} no X",
     harnessTitle: "Traga sua própria assinatura",
     harnessBody:
-      "O T3 Code não revende tokens. Conecte Claude Code, Codex, Antigravity, OpenCode, Cursor ou Grok com as credenciais que você já tem. Nós orquestramos, você mantém seu plano.",
-    googleSignIn: "Login com Google",
+      "O T3 Code não revende tokens. Conecte Claude Code, Codex, OpenCode, Cursor ou Grok com as credenciais que você já tem. Nós orquestramos, você mantém seu plano.",
     harnessPoints: [
       "Sem revenda de chaves. Sem limite de cota.",
       "Troque de modelo no meio da thread.",

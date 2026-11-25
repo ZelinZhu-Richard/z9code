@@ -8895,7 +8895,7 @@ describe("CodexAdapterV2 post-settle continuation", () => {
       expectedClass: "usage_limit",
     },
     { name: "retry", code: "usageLimitExceeded", notification: true, expectedClass: "usage_limit" },
-    // A proxy such as CLIProxyAPI strips the snapshot, so only the error text carries the reset.
+    // A gateway strips the snapshot, so only the error text carries the reset.
     {
       name: "message-reset",
       code: "usageLimitExceeded",

@@ -15,7 +15,6 @@ import {
   SecretProviderId,
   ServerSettings,
   ServerSettingsPatch,
-  UsageLimitSourceConfig,
   UsageLimitSourceId,
   type SimlockDeviceHostConfig,
 } from "@t3tools/contracts";
@@ -43,15 +42,6 @@ import * as ServerSettingsModule from "./serverSettings.ts";
 import { SECRET_REDACTED } from "./settingsSecrets.ts";
 import * as ManagedPolicy from "./policy/ManagedPolicy.ts";
 import { resolveProviderInstanceTerminalEnvironment } from "./terminal/Manager.ts";
-
-const encodeServerSettings = Schema.encodeSync(ServerSettings);
-// Clients from before HTTP sources decode only "cliproxy" and reject the whole settings payload.
-const decodePreHttpUsageLimitSources = Schema.decodeUnknownSync(
-  Schema.Record(
-    UsageLimitSourceId,
-    Schema.Struct({ ...UsageLimitSourceConfig.fields, kind: Schema.Literal("cliproxy") }),
-  ),
-);
 
 const decodeServerSettings = Schema.decodeUnknownEffect(ServerSettings);
 const decodeServerSettingsJson = Schema.decodeUnknownEffect(Schema.fromJsonString(ServerSettings));
@@ -646,7 +636,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         const sourceId = UsageLimitSourceId.make("hub");
         const usageLimitSources = {
           [sourceId]: {
-            kind: "cliproxy" as const,
+            kind: "http" as const,
             url: "https://hub.example.test",
             managementKey: "",
             enabled: true,
@@ -1468,12 +1458,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         const config = yield* ServerConfig.ServerConfig;
         const fs = yield* FileSystem.FileSystem;
         const store = yield* ServerSecretStore.ServerSecretStore;
-        const instanceId = ProviderInstanceId.make("antigravity_secrets");
+        const instanceId = ProviderInstanceId.make("opencode_secrets");
         const saved = yield* service.updateSettings({
           providerInstances: {
             [instanceId]: {
-              driver: ProviderDriverKind.make("antigravity"),
-              config: { apiKey: "config-secret" },
+              driver: ProviderDriverKind.make("opencode"),
+              config: { serverPassword: "config-secret" },
               environment: [
                 { name: "API_TOKEN", value: "env-secret", sensitive: true },
                 { name: "BASE_URL", value: "https://example.test", sensitive: false },
@@ -1487,7 +1477,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           },
           usageLimitSources: {
             [UsageLimitSourceId.make("hub")]: {
-              kind: "cliproxy",
+              kind: "http",
               url: "https://hub.example.test",
               managementKey: "quota-secret",
               enabled: true,
@@ -1539,7 +1529,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         });
         assert.propertyVal(
           renamed.providerInstances[instanceId]?.config,
-          "apiKey",
+          "serverPassword",
           "config-secret",
         );
 
@@ -1547,15 +1537,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           const changed = yield* service.updateProviderInstance({
             operation: "upsert",
             instanceId,
-            instance: { ...client.providerInstances[instanceId]!, config: { apiKey } },
+            instance: {
+              ...client.providerInstances[instanceId]!,
+              config: { serverPassword: apiKey },
+            },
           });
-          assert.propertyVal(changed.providerInstances[instanceId]?.config, "apiKey", apiKey);
+          assert.propertyVal(
+            changed.providerInstances[instanceId]?.config,
+            "serverPassword",
+            apiKey,
+          );
           const redacted = ServerSettingsModule.redactServerSettingsForClient(changed, {
             secretReferences: true,
           });
           assert.propertyVal(
             redacted.providerInstances[instanceId]?.config,
-            "apiKey",
+            "serverPassword",
             apiKey ? "••••••" : "",
           );
         }
@@ -1567,8 +1564,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         });
 
         const secretNames = [
-          "provider-config-YW50aWdyYXZpdHlfc2VjcmV0cw-YW50aWdyYXZpdHk-YXBpS2V5",
-          "provider-env-YW50aWdyYXZpdHlfc2VjcmV0cw-QVBJX1RPS0VO",
+          "provider-config-b3BlbmNvZGVfc2VjcmV0cw-b3BlbmNvZGU-c2VydmVyUGFzc3dvcmQ",
+          "provider-env-b3BlbmNvZGVfc2VjcmV0cw-QVBJX1RPS0VO",
           sourceControlHostSecretName({
             kind: "github",
             field: "tokens",
@@ -1587,7 +1584,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         }
         const secret = {
           provider: SecretProviderId.make("personal"),
-          reference: "op://Private/Antigravity/token",
+          reference: "op://Private/OpenCode/token",
         };
         const referenced = yield* service.updateProviderInstance({
           operation: "upsert",
@@ -1620,6 +1617,35 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       }).pipe(Effect.provide(layerServerSettingsWithSecrets())),
   );
 
+  it.effect("loads settings that name a removed provider driver or usage limit source kind", () =>
+    Effect.gen(function* () {
+      const service = yield* ServerSettingsModule.ServerSettingsService;
+      const config = yield* ServerConfig.ServerConfig;
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(
+        config.settingsPath,
+        JSON.stringify({
+          fastWorktreeCheckout: true,
+          providerInstances: {
+            retired: { driver: "retiredDriver", config: { authMethod: "oauth-personal" } },
+          },
+          usageLimitSources: {
+            hub: { kind: "retiredKind", url: "http://127.0.0.1:8317", managementKey: "key" },
+            quota: { kind: "http", url: "https://quota.test/v1" },
+          },
+        }),
+      );
+      const saved = yield* service.getSettings;
+      // One retired entry must not reset every other setting to its default.
+      assert.isTrue(saved.fastWorktreeCheckout);
+      assert.equal(
+        saved.providerInstances[ProviderInstanceId.make("retired")]?.driver,
+        ProviderDriverKind.make("retiredDriver"),
+      );
+      assert.deepEqual(Object.keys(saved.usageLimitSources), ["quota"]);
+    }).pipe(Effect.provide(layerServerSettings())),
+  );
+
   it.effect("moves saved provider credentials to the secret store when settings load", () =>
     Effect.gen(function* () {
       const service = yield* ServerSettingsModule.ServerSettingsService;
@@ -1629,7 +1655,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         config.settingsPath,
         JSON.stringify({
           providerInstances: {
-            antigravity: { driver: "antigravity", config: { apiKey: "legacy-api-key" } },
             opencode: {
               driver: "opencode",
               config: { serverUrl: "http://127.0.0.1:4096", serverPassword: "legacy-password" },
@@ -1640,11 +1665,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       const saved = yield* service.getSettings;
       const opencode = ProviderInstanceId.make("opencode");
       assert.propertyVal(
-        saved.providerInstances[ProviderInstanceId.make("antigravity")]?.config,
-        "apiKey",
-        "legacy-api-key",
-      );
-      assert.propertyVal(
         saved.providerInstances[opencode]?.config,
         "serverPassword",
         "legacy-password",
@@ -1652,7 +1672,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       const client = ServerSettingsModule.redactServerSettingsForClient(saved, {
         secretReferences: true,
       });
-      for (const value of ["legacy-api-key", "legacy-password"]) {
+      for (const value of ["legacy-password"]) {
         assert.notInclude(yield* fs.readFileString(config.settingsPath), value);
         assert.notInclude(JSON.stringify(client), value);
       }
@@ -1780,15 +1800,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           provider: SecretProviderId.make("personal"),
           reference: "op://Private/Simlock/token",
         };
-        const antigravityReference = {
-          provider: SecretProviderId.make("personal"),
-          reference: "op://Private/Gemini/key",
-        };
         const openCodeReference = {
           provider: SecretProviderId.make("personal"),
           reference: "op://Private/OpenCode/password",
         };
-        const antigravity = ProviderInstanceId.make("antigravity");
         const openCode = ProviderInstanceId.make("opencode");
         const hub = UsageLimitSourceId.make("hub");
         const quota = UsageLimitSourceId.make("quota");
@@ -1805,7 +1820,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           },
           usageLimitSources: {
             [hub]: {
-              kind: "cliproxy",
+              kind: "http",
               url: "https://hub.test",
               managementKey: usageReference,
               enabled: true,
@@ -1840,10 +1855,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
             },
           ],
           providerInstances: {
-            [antigravity]: {
-              driver: ProviderDriverKind.make("antigravity"),
-              config: { authMethod: "gemini-api-key", apiKey: antigravityReference },
-            },
             [openCode]: {
               driver: ProviderDriverKind.make("opencode"),
               config: { serverUrl: "http://127.0.0.1:4096", serverPassword: openCodeReference },
@@ -1860,26 +1871,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           openrouter: "",
         });
         assert.equal(legacy.sourceControlHosts.bitbucket?.accessToken, SECRET_REDACTED);
-        assert.equal(legacy.usageLimitSources[hub]?.managementKey, SECRET_REDACTED);
-        assert.deepEqual(
-          Object.keys(
-            decodePreHttpUsageLimitSources(encodeServerSettings(legacy).usageLimitSources),
-          ),
-          [hub],
-        );
-        assert.equal(
-          ServerSettingsModule.redactServerSettingsForClient(withUsage, {
-            secretReferences: false,
-            httpUsageLimitSources: true,
-          }).usageLimitSources[quota]?.kind,
-          "http",
-        );
+        // Clients from before HTTP sources reject the whole settings payload over one.
+        assert.deepEqual(legacy.usageLimitSources, {});
+        const withHttpSources = ServerSettingsModule.redactServerSettingsForClient(withUsage, {
+          secretReferences: false,
+          httpUsageLimitSources: true,
+        });
+        assert.equal(withHttpSources.usageLimitSources[hub]?.managementKey, SECRET_REDACTED);
+        assert.equal(withHttpSources.usageLimitSources[quota]?.kind, "http");
         assert.equal(legacy.textGenerators[router]?.apiKey, SECRET_REDACTED);
         assert.equal(legacy.easDeviceHosts[0]?.accessToken, SECRET_REDACTED);
         assert.equal(legacy.simlockDeviceHosts[0]?.agentToken, SECRET_REDACTED);
         const configOf = (settings: ServerSettings, id: ProviderInstanceId) =>
           settings.providerInstances[id]?.config as Record<string, unknown> | undefined;
-        assert.equal(configOf(legacy, antigravity)?.apiKey, SECRET_REDACTED);
         assert.equal(configOf(legacy, openCode)?.serverPassword, SECRET_REDACTED);
         const echoed = yield* serverSettings.updateSettings({
           cloudSpeechCredentials: legacy.cloudSpeechCredentials,
@@ -1905,7 +1909,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         });
         assert.deepEqual(echoed.easDeviceHosts[0]?.accessToken, easReference);
         assert.deepEqual(echoed.simlockDeviceHosts[0]?.agentToken, simlockReference);
-        assert.deepEqual(configOf(echoed, antigravity)?.apiKey, antigravityReference);
         assert.deepEqual(configOf(echoed, openCode)?.serverPassword, openCodeReference);
         assert.isTrue(Option.isSome(yield* stored("github", "tokens", "ghe.acme.test")));
         // A saved token goes only to the gateway it was saved for, however it is echoed.
@@ -1937,7 +1940,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         reference: `op://Private/${reference}`,
       });
       const work = { provider: SecretProviderId.make("work"), reference: "op://Work/token" };
-      const instanceId = ProviderInstanceId.make("antigravity_refs");
+      const instanceId = ProviderInstanceId.make("opencode_refs");
       const hub = UsageLimitSourceId.make("hub");
       yield* decodeServerSettingsPatch({
         secretProviders: {
@@ -1948,9 +1951,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
       yield* service.updateSettings({
         providerInstances: {
           [instanceId]: {
-            driver: ProviderDriverKind.make("antigravity"),
+            driver: ProviderDriverKind.make("opencode"),
             environment: [
-              { name: "API_TOKEN", value: personal("Antigravity/env"), sensitive: true },
+              { name: "API_TOKEN", value: personal("OpenCode/env"), sensitive: true },
               { name: "WORK_TOKEN", value: work, sensitive: true },
               { name: "PLAIN", value: "kept", sensitive: false },
             ],
@@ -1963,7 +1966,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         cloudSpeechCredentials: { openai: personal("Voice/key"), xai: work },
         usageLimitSources: {
           [hub]: {
-            kind: "cliproxy",
+            kind: "http",
             url: "https://hub.test",
             managementKey: personal("Hub/key"),
             enabled: true,
@@ -1987,7 +1990,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         secretProviders: { [SecretProviderId.make("personal")]: null },
         usageLimitSources: {
           [hub]: {
-            kind: "cliproxy",
+            kind: "http",
             url: "https://hub.test",
             managementKey: SECRET_REDACTED,
             enabled: true,
@@ -2175,7 +2178,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
             ? readDuringWrite.pipe(Effect.andThen(Effect.fail(writeFailure)))
             : fileSystem.rename(fromPath, toPath),
       });
-      const instanceId = ProviderInstanceId.make("antigravity_write_failure");
+      const instanceId = ProviderInstanceId.make("opencode_write_failure");
       const layerSettings = layerServerSettings().pipe(
         Layer.provideMerge(Layer.succeed(FileSystem.FileSystem, failingFileSystem)),
       );
@@ -2187,9 +2190,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           operation: "upsert",
           instanceId,
           instance: {
-            driver: ProviderDriverKind.make("antigravity"),
+            driver: ProviderDriverKind.make("opencode"),
             environment: [{ name: "OPENROUTER_API_KEY", value: "sk-kept", sensitive: true }],
-            config: { apiKey: "config-kept" },
+            config: { serverPassword: "config-kept" },
           },
         });
 
@@ -2200,9 +2203,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
             operation: "upsert",
             instanceId,
             instance: {
-              driver: ProviderDriverKind.make("antigravity"),
+              driver: ProviderDriverKind.make("opencode"),
               environment: [{ name: "OPENROUTER_API_KEY", value: "sk-new", sensitive: true }],
-              config: { apiKey: "config-new" },
+              config: { serverPassword: "config-new" },
             },
           })
           .pipe(Effect.result);
@@ -2214,7 +2217,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         );
         assert.propertyVal(
           (yield* serverSettings.getSettings).providerInstances[instanceId]?.config,
-          "apiKey",
+          "serverPassword",
           "config-kept",
         );
 
@@ -2229,7 +2232,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         );
         assert.propertyVal(
           (yield* serverSettings.getSettings).providerInstances[instanceId]?.config,
-          "apiKey",
+          "serverPassword",
           "config-kept",
         );
       }).pipe(Effect.provide(layerSettings));
@@ -2315,9 +2318,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         yield* serverSettings.updateSettings({
           providerInstances: {
             [instanceId]: {
-              driver: ProviderDriverKind.make("antigravity"),
+              driver: ProviderDriverKind.make("opencode"),
               environment: [{ name: "OPENROUTER_API_KEY", value: "sk-kept", sensitive: true }],
-              config: { apiKey: "config-kept" },
+              config: { serverPassword: "config-kept" },
             },
           },
         });
@@ -2327,9 +2330,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
           .updateSettings({
             providerInstances: {
               [instanceId]: {
-                driver: ProviderDriverKind.make("antigravity"),
+                driver: ProviderDriverKind.make("opencode"),
                 environment: [{ name: "OPENROUTER_API_KEY", value: "sk-new", sensitive: true }],
-                config: { apiKey: "config-new" },
+                config: { serverPassword: "config-new" },
               },
             },
           })
@@ -2344,7 +2347,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("server settings"
         );
         assert.propertyVal(
           (yield* serverSettings.getSettings).providerInstances[instanceId]?.config,
-          "apiKey",
+          "serverPassword",
           "config-kept",
         );
       }).pipe(Effect.provide(layerSettings));

@@ -17,7 +17,6 @@ import type * as AcpCompat from "effect-acp/compat";
 import { beginAcpMockPrompt } from "./acpMockCancellationState.ts";
 
 const requestLogPath = process.env.T3_ACP_REQUEST_LOG_PATH;
-const antigravityProfile = process.env.T3_ACP_ANTIGRAVITY === "1";
 // GitHub Copilot CLI advertises URL-shaped session mode ids.
 const copilotModesProfile = process.env.T3_ACP_COPILOT_MODES === "1";
 const copilotModeId = (name: string) =>
@@ -59,7 +58,6 @@ const completeFirstPromptOnCancel = process.env.T3_ACP_COMPLETE_FIRST_PROMPT_ON_
 const floodStderr = process.env.T3_ACP_FLOOD_STDERR === "1";
 const hangPromptForever = process.env.T3_ACP_HANG_PROMPT_FOREVER === "1";
 const agentVersion = process.env.T3_ACP_AGENT_VERSION ?? "0.0.0";
-const geminiApiKey = process.env.GEMINI_API_KEY;
 const idleError = process.env.T3_ACP_IDLE_ERROR;
 const emitTrackedToolCallKindThenHang = process.env.T3_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG;
 const clientFsProbePath = process.env.T3_ACP_CLIENT_FS_PROBE_PATH;
@@ -81,14 +79,6 @@ const loadReplyDelayMs = Number(process.env.T3_ACP_LOAD_REPLY_DELAY_MS ?? "0");
 const loadNeverReplies = process.env.T3_ACP_LOAD_NEVER_REPLIES === "1";
 const rejectPromptUntilLoaded = process.env.T3_ACP_REJECT_PROMPT_UNTIL_LOADED === "1";
 const failPrompt = process.env.T3_ACP_FAIL_PROMPT === "1";
-// JSON for the `data` of an "Internal error" response to `session/new`, as
-// Antigravity sends when its runtime cannot reach its local harness.
-const newSessionErrorData =
-  process.env.T3_ACP_NEW_SESSION_ERROR_DATA === undefined
-    ? undefined
-    : Schema.decodeSync(Schema.fromJsonString(Schema.Unknown))(
-        process.env.T3_ACP_NEW_SESSION_ERROR_DATA,
-      );
 const failPromptOrdinal = Number(process.env.T3_ACP_FAIL_PROMPT_ORDINAL);
 const compactionPromptOrdinals = new Set(
   (process.env.T3_ACP_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
@@ -118,12 +108,8 @@ const permissionOptionIds = {
 };
 const sessionId = "mock-session-1";
 
-let currentModeId = antigravityProfile
-  ? (process.env.T3_ACP_INITIAL_MODE ?? "default")
-  : copilotModesProfile
-    ? copilotModeId("agent")
-    : "ask";
-let currentModelId = antigravityProfile ? "gemini-test-low" : "default";
+let currentModeId = copilotModesProfile ? copilotModeId("agent") : "ask";
+let currentModelId = "default";
 let parameterizedModelPicker = false;
 let currentReasoning = "medium";
 let currentContext = "272k";
@@ -161,26 +147,6 @@ process.once("SIGINT", () => {
 function configOptions(): ReadonlyArray<AcpSchema.SessionConfigOption> {
   if (process.env.T3_ACP_OMIT_MODEL_OPTIONS === "1") {
     return [];
-  }
-  if (antigravityProfile) {
-    return [
-      {
-        configId: "model",
-        name: "Model",
-        category: "model",
-        type: "select",
-        currentValue: currentModelId,
-        options: antigravityModels.map((model) => ({ value: model.modelId, name: model.name })),
-      },
-      {
-        configId: "mode",
-        name: "Mode",
-        category: "mode",
-        type: "select",
-        currentValue: currentModeId,
-        options: availableModes.map((mode) => ({ value: mode.id, name: mode.name })),
-      },
-    ];
   }
   if (parameterizedModelPicker) {
     const baseOptions: Array<AcpSchema.SessionConfigOption> = [
@@ -369,40 +335,29 @@ function availableModels(): ReadonlyArray<{
   }));
 }
 
-const antigravityModels = [
-  { modelId: "gemini-test-low", name: "Gemini Test Low" },
-  { modelId: "gemini-test-high", name: "Gemini Test High" },
-] satisfies ReadonlyArray<AcpCompat.ModelInfo>;
-
-const availableModes: ReadonlyArray<AcpCompat.SessionMode> = antigravityProfile
+const availableModes: ReadonlyArray<AcpCompat.SessionMode> = copilotModesProfile
   ? [
-      { id: "default", name: "Default" },
-      { id: "auto_edit", name: "Auto edit" },
-      { id: "yolo", name: "YOLO" },
+      { id: copilotModeId("agent"), name: "Agent" },
+      { id: copilotModeId("plan"), name: "Plan" },
+      { id: copilotModeId("autopilot"), name: "Autopilot" },
     ]
-  : copilotModesProfile
-    ? [
-        { id: copilotModeId("agent"), name: "Agent" },
-        { id: copilotModeId("plan"), name: "Plan" },
-        { id: copilotModeId("autopilot"), name: "Autopilot" },
-      ]
-    : [
-        {
-          id: "ask",
-          name: "Ask",
-          description: "Request permission before making any changes",
-        },
-        {
-          id: "architect",
-          name: "Architect",
-          description: "Design and plan software systems without implementation",
-        },
-        {
-          id: "code",
-          name: "Code",
-          description: "Write and modify code with full tool access",
-        },
-      ];
+  : [
+      {
+        id: "ask",
+        name: "Ask",
+        description: "Request permission before making any changes",
+      },
+      {
+        id: "architect",
+        name: "Architect",
+        description: "Design and plan software systems without implementation",
+      },
+      {
+        id: "code",
+        name: "Code",
+        description: "Write and modify code with full tool access",
+      },
+    ];
 
 function modeState(): AcpCompat.SessionModeState {
   return {
@@ -432,9 +387,6 @@ const grokAcpModels: ReadonlyArray<AcpCompat.ModelInfo> = [
 ];
 
 function modelState(): AcpCompat.SessionModelState {
-  if (antigravityProfile) {
-    return { currentModelId, availableModels: antigravityModels };
-  }
   const modelId = grokAcpModels.some((model) => model.modelId === currentModelId)
     ? currentModelId
     : "grok-4.6";
@@ -514,17 +466,6 @@ const program = Effect.gen(function* () {
   const nativeCancelRequested = yield* Deferred.make<void>();
   const nativeCancelRelease = yield* Deferred.make<void>();
   const delayedLoadReplied = yield* Deferred.make<void>();
-  const publishAntigravityCommands = (targetSessionId: string) =>
-    agent.client.sessionUpdate({
-      sessionId: targetSessionId,
-      update: {
-        sessionUpdate: "available_commands_update",
-        availableCommands: [
-          { name: "plan", description: "Plan a task", input: { hint: "task" } },
-          { name: "logout", description: "Sign out" },
-        ],
-      },
-    });
 
   const finishPrompt = (
     targetSessionId: string,
@@ -588,19 +529,9 @@ const program = Effect.gen(function* () {
     }),
   );
 
-  // Antigravity requires GEMINI_API_KEY for API key authentication.
   yield* agent.handleAuthenticate((request) =>
     Effect.gen(function* () {
-      if (antigravityProfile) {
-        if (
-          request.methodId !== "oauth-personal" &&
-          !(request.methodId === "gemini-api-key" && geminiApiKey)
-        ) {
-          return yield* AcpError.AcpRequestError.invalidParams(
-            `Mock Antigravity rejected auth method ${request.methodId}.`,
-          );
-        }
-      } else if (advertisedAuthMethodId && request.methodId !== advertisedAuthMethodId) {
+      if (advertisedAuthMethodId && request.methodId !== advertisedAuthMethodId) {
         return yield* AcpError.AcpRequestError.invalidParams(
           `Unknown mock authentication method: ${request.methodId}`,
         );
@@ -609,10 +540,6 @@ const program = Effect.gen(function* () {
       return {};
     }),
   );
-  if (antigravityProfile) {
-    yield* agent.handleLogout(() => Effect.succeed({}));
-  }
-
   yield* agent.handleLogout(() =>
     Effect.sync(() => {
       authenticated = false;
@@ -629,12 +556,6 @@ const program = Effect.gen(function* () {
   yield* agent.handleCreateSession(() =>
     Effect.gen(function* () {
       yield* requireAuthentication();
-      if (newSessionErrorData !== undefined) {
-        return yield* AcpError.AcpRequestError.internalError("Internal error", newSessionErrorData);
-      }
-      if (antigravityProfile) {
-        yield* publishAntigravityCommands(sessionId);
-      }
       if (advertisedCommandNames.length > 0) {
         yield* agent.client.sessionUpdate({
           sessionId,
@@ -664,9 +585,6 @@ const program = Effect.gen(function* () {
           content: { type: "text", text: "native-resume-started" },
         },
       });
-      if (antigravityProfile) {
-        yield* publishAntigravityCommands(request.sessionId);
-      }
       return {
         modes: modeState(),
         models: modelState(),
@@ -1311,7 +1229,7 @@ const program = Effect.gen(function* () {
             rawInput: { path: "src/env.ts" },
             locations: [{ path: "src/env.ts" }],
           },
-          // Antigravity reports an image read with only a text result, never the image bytes.
+          // Some agents report an image read with only a text result, never the image bytes.
           {
             sessionUpdate: "tool_call_update",
             toolCallId: "structured-image-read",
@@ -1422,7 +1340,7 @@ const program = Effect.gen(function* () {
           },
           {
             sessionUpdate: "tool_call_update",
-            toolCallId: "antigravity-shell",
+            toolCallId: "structured-shell",
             title: "run_command",
             kind: "execute",
             status: "completed",
@@ -1431,7 +1349,7 @@ const program = Effect.gen(function* () {
           },
           {
             sessionUpdate: "tool_call_update",
-            toolCallId: "antigravity-web-search",
+            toolCallId: "structured-web-search",
             title: "Web search",
             kind: "search",
             status: "completed",
@@ -1441,7 +1359,7 @@ const program = Effect.gen(function* () {
           },
           {
             sessionUpdate: "tool_call_update",
-            toolCallId: "antigravity-run-search-web",
+            toolCallId: "structured-run-search-web",
             title: "Running search_web",
             kind: "search",
             status: "completed",
@@ -1449,7 +1367,7 @@ const program = Effect.gen(function* () {
           },
           {
             sessionUpdate: "tool_call_update",
-            toolCallId: "antigravity-web-search-streamed",
+            toolCallId: "structured-web-search-streamed",
             title: "Web search",
             kind: "search",
             status: "in_progress",
@@ -1458,12 +1376,12 @@ const program = Effect.gen(function* () {
           },
           {
             sessionUpdate: "tool_call_content_chunk",
-            toolCallId: "antigravity-web-search-streamed",
+            toolCallId: "structured-web-search-streamed",
             content: { type: "content", content: { type: "text", text: " (updated)" } },
           },
           {
             sessionUpdate: "tool_call_update",
-            toolCallId: "antigravity-web-search-streamed",
+            toolCallId: "structured-web-search-streamed",
             status: "completed",
           },
           {

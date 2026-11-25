@@ -51,7 +51,6 @@ const mobileEndorsementRows = [
     <div class="hero-float" aria-hidden="true">
       {[
         { key: "opencode", icon: "/harnesses/opencode-dark.svg", cls: "hf-opencode" },
-        { key: "antigravity", icon: "/harnesses/antigravity.svg", cls: "hf-antigravity" },
         { key: "claude", icon: "/harnesses/claude-ai-icon.svg", cls: "hf-claude" },
         { key: "codex", icon: "/harnesses/openai_dark.svg", cls: "hf-codex" },
         { key: "grok", icon: "/harnesses/grok-dark.svg", cls: "hf-grok" },
@@ -258,13 +257,6 @@ const mobileEndorsementRows = [
           <div class="harness-meta">
             <div class="harness-name">Grok CLI</div>
             <div class="harness-tag">grok login</div>
-          </div>
-        </div>
-        <div class="harness">
-          <div class="harness-mark"><img src="/harnesses/antigravity.svg" alt="" /></div>
-          <div class="harness-meta">
-            <div class="harness-name">Antigravity</div>
-            <div class="harness-tag">{t.googleSignIn}</div>
           </div>
         </div>
       </div>
@@ -702,7 +694,6 @@ const mobileEndorsementRows = [
   }
 
   .hf-opencode    { --x: max(-300px, -19vw); --y: 20px; --s: 64px; --rot: 6deg; --depth: 0.6; --d: 620ms; --fx: -40px; --fy: -80px; }
-  .hf-antigravity { --x: min(300px, 19vw); --y: 20px; --s: 64px; --rot: -5deg; --depth: 0.6; --d: 580ms; --fx: 40px; --fy: -80px; }
   .hf-claude   { --x: max(-560px, -38vw); --y: 128px; --s: 96px; --rot: -8deg; --depth: 1.2; --d: 380ms; --fx: -160px; --fy: -40px; }
   .hf-codex    { --x: min(560px, 38vw); --y: 128px; --s: 96px; --rot: 7deg; --depth: 1.2; --d: 460ms; --fx: 160px; --fy: -40px; }
   .hf-grok     { --x: max(-440px, -30vw); --y: 440px; --s: 80px; --rot: 4deg; --depth: 0.9; --d: 540ms; --fx: -120px; --fy: 80px; }
@@ -738,14 +729,13 @@ const mobileEndorsementRows = [
     /* Four above the headline, two beside the CTA. Keeps the copy clear. */
     .hf-claude      { --x: -37vw; --y: 44px; --s: 64px; --rot: -10deg; }
     .hf-opencode    { --x: -12vw; --y: 52px; --s: 56px; --rot: -4deg; }
-    .hf-antigravity { --x: 12vw; --y: 52px; --s: 56px; --rot: 5deg; }
     .hf-codex       { --x: 37vw; --y: 44px; --s: 64px; --rot: 8deg; }
     .hf-grok     { --x: -36vw; --y: 474px; --s: 64px; --rot: -6deg; }
     .hf-cursor   { --x: 36vw; --y: 474px; --s: 64px; --rot: 7deg; }
   }
 
   @media (max-width: 340px) {
-    .hf-opencode, .hf-antigravity, .hf-grok, .hf-cursor { --s: 48px; }
+    .hf-opencode, .hf-grok, .hf-cursor { --s: 48px; }
     .hf-grok, .hf-cursor { --y: 580px; }
   }
 

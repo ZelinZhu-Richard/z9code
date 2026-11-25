@@ -6,7 +6,7 @@ export const es: Messages = {
     defaultDescription:
       "T3 Code. El panel de control de código abierto para agentes de programación.",
     socialImageAlt:
-      "T3 Code: el panel de control de código abierto para agentes de programación, con Claude Code, Codex, Cursor, OpenCode, Grok y Antigravity.",
+      "T3 Code: el panel de control de código abierto para agentes de programación, con Claude Code, Codex, Cursor, OpenCode y Grok.",
     homeLabel: "Inicio de T3 Code",
     download: "Descargar",
     starsLabel: "Dale una estrella a T3 Code en GitHub, {stars} estrellas",
@@ -24,7 +24,7 @@ export const es: Messages = {
     description: "T3 Code. El panel de control de código abierto para agentes de programación.",
     heroTitle: ["El panel de control", "de código abierto", "para agentes de código."],
     heroSub:
-      "Orquesta Claude Code, Codex, Antigravity, OpenCode, Cursor y Grok desde un solo lugar. Usa tu propia suscripción. Haz un fork del proyecto entero.",
+      "Orquesta Claude Code, Codex, OpenCode, Cursor y Grok desde un solo lugar. Usa tu propia suscripción. Haz un fork del proyecto entero.",
     downloadForMac: "Descargar para macOS",
     downloadForWindows: "Descargar para Windows",
     downloadForLinux: "Descargar para Linux",
@@ -39,8 +39,7 @@ export const es: Messages = {
     readPost: "Leer la publicación de {handle} en X",
     harnessTitle: "Trae tu propia suscripción",
     harnessBody:
-      "T3 Code no revende tokens. Conecta Claude Code, Codex, Antigravity, OpenCode, Cursor o Grok con las credenciales que ya tienes. Nosotros los orquestamos, tú conservas tu plan.",
-    googleSignIn: "Inicio de sesión con Google",
+      "T3 Code no revende tokens. Conecta Claude Code, Codex, OpenCode, Cursor o Grok con las credenciales que ya tienes. Nosotros los orquestamos, tú conservas tu plan.",
     harnessPoints: [
       "Sin venta de claves. Sin límites de cuota.",
       "Cambia de modelo a mitad del hilo.",

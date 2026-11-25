@@ -1707,7 +1707,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
   ) {
     const adapter = yield* providerAdapters.get(providerInstanceId).pipe(mapDispatchError(command));
     const { driver } = adapter;
-    if (driver === "opencode" || driver === "antigravity") {
+    if (driver === "opencode") {
       const capabilities = yield* adapter.getCapabilities().pipe(mapDispatchError(command));
       return capabilities.turns.supportsNativeGoals === true ? driver : undefined;
     }
@@ -1724,14 +1724,6 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       const goalCommand = parseGoalCommand(message);
       if (goalCommand === null || goalCommand.type === "set") return;
       const driver = yield* goalDriverFor(command, providerInstanceId);
-      if (driver === "antigravity") {
-        return yield* new OrchestratorDispatchError({
-          commandId: command.commandId,
-          commandType: command.type,
-          cause:
-            "Antigravity accepts /goal followed by an objective. Interrupt the running turn, then ask Antigravity to stop the current goal.",
-        });
-      }
       if (goalCommand.type !== "pause" && goalCommand.type !== "resume") return;
       if (driver !== "claudeAgent") return;
       return yield* new OrchestratorDispatchError({

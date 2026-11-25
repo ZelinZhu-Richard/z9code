@@ -91,7 +91,7 @@ const startupRequestTimeout = Duration.seconds(90);
 const defaultSessionLoadReplayIdleGap = Duration.seconds(2);
 const defaultCancelTimeout = Duration.seconds(15);
 const maxStartupMetadataUpdates = 32;
-// Antigravity can emit an accepted 16 KiB Google authorization URL on stderr.
+// An agent can emit an accepted 16 KiB authorization URL on stderr.
 const maxStderrChunkLength = 32_768;
 
 export interface AcpSpawnInput {
@@ -138,7 +138,7 @@ export interface AcpSessionRuntimeOptions {
     readonly version: string;
   };
   readonly authMethodId?: string;
-  /** Authenticate before opening: Antigravity selects its credential source from the method. */
+  /** Authenticate before opening, for agents that select their credential source from the method. */
   readonly authenticateEagerly?: boolean;
   readonly mcpServers?: ReadonlyArray<EffectAcpSchema.McpServer>;
   /** Sent on every session/new, load, resume and fork; omitting them clears an agent's stored roots. */
@@ -2507,7 +2507,7 @@ export const make = Effect.fn("AcpSessionRuntime.make")(function* (
     });
 
     if (options.authenticateEagerly === true) {
-      // The configured method is authoritative here: Antigravity accepts
+      // The configured method is authoritative here: an agent may accept
       // methods (API key, Vertex) it does not list in `initialize`.
       const authenticatePayload = {
         methodId: options.authMethodId ?? "",

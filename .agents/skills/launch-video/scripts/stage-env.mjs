@@ -13,16 +13,7 @@ export const REPO = NodePath.resolve(
   "../../../..",
 );
 const BASE_WEB_PORT = 5733; // dev-runner.ts BASE_WEB_PORT
-const REAL_PROVIDERS = [
-  "codex",
-  "claudeAgent",
-  "cursor",
-  "grok",
-  "muse",
-  "pi",
-  "opencode",
-  "antigravity",
-];
+const REAL_PROVIDERS = ["codex", "claudeAgent", "cursor", "grok", "muse", "pi", "opencode"];
 
 export const freePort = () =>
   new Promise((resolve) => {

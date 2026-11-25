@@ -168,7 +168,6 @@ describe("resolveProviderProbeTimeoutMs", () => {
     "codex",
     "claude",
     "cursor",
-    "antigravity",
     "grok",
     "kiro",
     "fx",

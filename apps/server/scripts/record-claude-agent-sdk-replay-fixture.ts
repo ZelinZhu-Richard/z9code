@@ -82,7 +82,7 @@ const CLAUDE_RECORDINGS = {
     queryMode: "streaming",
     enableTools: true,
   },
-  // Record with ANTHROPIC_BASE_URL at a CLIProxyAPI hub whose upstream accounts answer 429.
+  // Record with ANTHROPIC_BASE_URL at a credential-pooling gateway whose upstream accounts answer 429.
   usage_limit: {
     prompts: [SIMPLE_PROMPT],
     defaultTranscriptFile: "fixtures/usage_limit/claude_transcript.ndjson",

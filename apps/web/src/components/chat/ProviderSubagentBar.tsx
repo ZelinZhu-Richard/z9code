@@ -5,7 +5,6 @@ import {
 import { isOrchestrationV2WorkActive } from "@t3tools/contracts";
 import { T, useGT, useMessages } from "gt-react";
 import { ArrowUpLeftIcon } from "lucide-react";
-import type { ReactNode } from "react";
 
 import { tickTextContent } from "~/lib/tickTextContent";
 import type { ProviderInstanceEntry } from "../../providerInstances";
@@ -24,7 +23,6 @@ export function ProviderSubagentBar(props: {
   readonly effortLabel: string | null;
   readonly status: ProviderSubagentStatus | null;
   readonly onOpenParent: (() => void) | null;
-  readonly actions?: ReactNode;
 }) {
   const { status } = props;
   const gt = useGT();
@@ -48,7 +46,6 @@ export function ProviderSubagentBar(props: {
           <span className="shrink-0 text-muted-foreground @max-[640px]/composer-surface:sr-only">
             <T>Runs on its own</T>
           </span>
-          {props.actions}
           {props.onOpenParent ? (
             <Button size="sm" variant="ghost" onClick={props.onOpenParent}>
               <ArrowUpLeftIcon />

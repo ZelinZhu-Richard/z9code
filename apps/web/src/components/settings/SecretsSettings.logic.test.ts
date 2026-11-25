@@ -9,9 +9,9 @@ const work = { provider: "work", reference: "op://Work/token" };
 
 const settings = Schema.decodeSync(ServerSettings)({
   providerInstances: {
-    antigravity_work: {
-      driver: "antigravity",
-      displayName: "Antigravity Work",
+    opencode_work: {
+      driver: "opencode",
+      displayName: "OpenCode Work",
       environment: [
         { name: "API_TOKEN", value: "", secret: personal("op://a/env") },
         { name: "OTHER_TOKEN", value: "", secret: work },
@@ -26,7 +26,7 @@ const settings = Schema.decodeSync(ServerSettings)({
     github: { tokens: { "github.com": personal("op://gh"), "ghe.acme.test": work } },
   },
   usageLimitSources: {
-    hub: { kind: "cliproxy", url: "https://hub.test", managementKey: personal("op://hub") },
+    hub: { kind: "http", url: "https://hub.test", managementKey: personal("op://hub") },
   },
   easDeviceHosts: [
     { kind: "eas", id: "eas", label: "Expo Simulators", accessToken: personal("op://expo") },
@@ -47,7 +47,7 @@ it.each([
   [
     "personal",
     [
-      "Antigravity Work · API_TOKEN",
+      "OpenCode Work · API_TOKEN",
       "Codex · CODEX_TOKEN",
       "GitHub · github.com",
       "https://hub.test · Management Key",
@@ -56,7 +56,7 @@ it.each([
       "Voice · OpenAI",
     ],
   ],
-  ["work", ["Antigravity Work · OTHER_TOKEN", "GitHub · ghe.acme.test"]],
+  ["work", ["OpenCode Work · OTHER_TOKEN", "GitHub · ghe.acme.test"]],
   ["unused", []],
 ])("lists what reads from secret provider %s", (providerId, uses) => {
   expect(secretProviderUses(settings, providerId).map((use) => use.label)).toEqual(uses);

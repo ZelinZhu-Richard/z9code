@@ -5,7 +5,7 @@ export const zh: Messages = {
     defaultTitle: "T3 Code",
     defaultDescription: "T3 Code：面向编程智能体的开源控制中心。",
     socialImageAlt:
-      "T3 Code：面向编程智能体的开源控制中心，支持 Claude Code、Codex、Cursor、OpenCode、Grok 和 Antigravity。",
+      "T3 Code：面向编程智能体的开源控制中心，支持 Claude Code、Codex、Cursor、OpenCode 和 Grok。",
     homeLabel: "T3 Code 首页",
     download: "下载",
     starsLabel: "在 GitHub 上为 T3 Code 加星标，已有 {stars} 个星标",
@@ -23,7 +23,7 @@ export const zh: Messages = {
     description: "T3 Code：面向编程智能体的开源控制中心。",
     heroTitle: ["开源的", "编程智能体", "控制中心。"],
     heroSub:
-      "在同一个界面里调度 Claude Code、Codex、Antigravity、OpenCode、Cursor 和 Grok。用你自己的订阅。整个项目都可以 fork。",
+      "在同一个界面里调度 Claude Code、Codex、OpenCode、Cursor 和 Grok。用你自己的订阅。整个项目都可以 fork。",
     downloadForMac: "下载 macOS 版",
     downloadForWindows: "下载 Windows 版",
     downloadForLinux: "下载 Linux 版",
@@ -38,8 +38,7 @@ export const zh: Messages = {
     readPost: "在 X 上阅读 {handle} 的帖子",
     harnessTitle: "自带订阅",
     harnessBody:
-      "T3 Code 不转售 token。用你现有的凭据接入 Claude Code、Codex、Antigravity、OpenCode、Cursor 或 Grok。我们负责调度，你的套餐还是你的。",
-    googleSignIn: "Google 登录",
+      "T3 Code 不转售 token。用你现有的凭据接入 Claude Code、Codex、OpenCode、Cursor 或 Grok。我们负责调度，你的套餐还是你的。",
     harnessPoints: [
       "不转售密钥，不设额度上限。",
       "线程进行中也能切换模型。",

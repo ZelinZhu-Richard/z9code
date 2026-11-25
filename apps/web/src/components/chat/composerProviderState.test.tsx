@@ -293,10 +293,10 @@ describe("getComposerReasoningStep", () => {
     }
   });
 
-  it("steps Antigravity's thinking_level like other effort controls", () => {
+  it("steps an ACP agent's thinking_level like other effort controls", () => {
     expect(
       step({
-        provider: ProviderDriverKind.make("antigravity"),
+        provider: ProviderDriverKind.make("acpRegistry"),
         models: modelWith([selectDescriptor("thinking_level", LEVELS)]),
       })?.modelOptions,
     ).toStrictEqual(selections(["thinking_level", "high"]));

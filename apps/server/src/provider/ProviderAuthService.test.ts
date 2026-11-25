@@ -27,10 +27,10 @@ import type { ProviderInstance } from "@t3tools/provider-core/server/driver";
 import * as ProviderAuthService from "./ProviderAuthService.ts";
 import * as ProviderInstanceRegistry from "./ProviderInstanceRegistry.ts";
 
-const instanceId = ProviderInstanceId.make("antigravity-personal");
-const otherInstanceId = ProviderInstanceId.make("antigravity-work");
+const instanceId = ProviderInstanceId.make("cursor-personal");
+const otherInstanceId = ProviderInstanceId.make("cursor-work");
 const unsupportedInstanceId = ProviderInstanceId.make("codex");
-const driverKind = ProviderDriverKind.make("antigravity");
+const driverKind = ProviderDriverKind.make("cursor");
 const owner = "paired-client-owner";
 const otherOwner = "paired-client-other";
 const flowId = "test-sign-in-flow";
@@ -48,7 +48,7 @@ const waitingAuthState: ProviderAuthState = {
   ...idleAuthState,
   phase: "waiting",
   flowId,
-  authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth?state=test-state",
+  authorizationUrl: "https://auth.example.test/authorize?state=test-state",
   expiresAt: "2026-09-02T00:05:00.000Z",
 };
 
@@ -524,7 +524,7 @@ describe("ProviderAuthService", () => {
         const newWaiting: ProviderAuthState = {
           ...waitingAuthState,
           flowId: "replacement-flow",
-          authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth?state=replacement-state",
+          authorizationUrl: "https://auth.example.test/authorize?state=replacement-state",
         };
         yield* SubscriptionRef.set(replacement.state, newWaiting);
         assert.deepStrictEqual(yield* Queue.take(firstClient.states), idleAuthState);

@@ -1107,7 +1107,7 @@ export const make = Effect.fn("effect-acp/AcpClient.make")(function* (
           ).pipe(
             Effect.map((response) => {
               // ACP v1 protocolVersion values were not generation identifiers in
-              // every shipped agent. Antigravity, for example, reports version 2
+              // every shipped agent. Some, for example, report version 2
               // with the v1 agentInfo/agentCapabilities response shape.
               const isV2 = isV2InitializeResponse(response);
               negotiatedProtocolGeneration = isV2 ? 2 : 1;

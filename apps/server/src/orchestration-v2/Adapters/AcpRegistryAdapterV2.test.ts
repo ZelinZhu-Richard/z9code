@@ -474,7 +474,7 @@ describe("AcpRegistryAdapterV2", () => {
               method: "initialize",
               result: {
                 protocolVersion: 1,
-                agentInfo: { name: "Antigravity ACP Server", version: "1.5.9" },
+                agentInfo: { name: "agy ACP Server", version: "1.5.9" },
                 agentCapabilities: { loadSession: true },
                 authMethods: [],
               },
@@ -541,7 +541,7 @@ describe("AcpRegistryAdapterV2", () => {
                 method: "initialize",
                 result: {
                   protocolVersion: 1,
-                  agentInfo: { name: "Antigravity ACP Server", version: "1.5.9" },
+                  agentInfo: { name: "agy ACP Server", version: "1.5.9" },
                   agentCapabilities: { loadSession: true },
                   authMethods: [],
                 },

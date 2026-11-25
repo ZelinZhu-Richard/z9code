@@ -2,7 +2,6 @@ import {
   AcpRegistryDriver,
   type AcpRegistryDriverEnv,
 } from "@t3tools/provider-acp-registry/server";
-import { AntigravityDriver, type AntigravityDriverEnv } from "./Drivers/AntigravityDriver.ts";
 import { ClaudeDriver, type ClaudeDriverEnv } from "./Drivers/ClaudeDriver.ts";
 import { CodexDriver, type CodexDriverEnv } from "./Drivers/CodexDriver.ts";
 import { CursorDriver, type CursorDriverEnv } from "@t3tools/provider-cursor/server";
@@ -19,7 +18,6 @@ import { KiroDriver, type KiroDriverEnv } from "@t3tools/provider-kiro/server";
 
 export type BuiltInDriversEnv =
   | AcpRegistryDriverEnv
-  | AntigravityDriverEnv
   | ClaudeDriverEnv
   | CodexDriverEnv
   | CursorDriverEnv
@@ -37,7 +35,6 @@ export const BUILT_IN_DRIVERS: ReadonlyArray<AnyProviderDriver<BuiltInDriversEnv
   GrokDriver,
   FxDriver,
   OpenCodeDriver,
-  AntigravityDriver,
   KiroDriver,
   PiDriver,
   MuseDriver,
@@ -49,7 +46,6 @@ export type BuiltInUsageReadersEnv =
   | ProviderUsageReaderEnv<typeof CodexDriver>
   | ProviderUsageReaderEnv<typeof GrokDriver>
   | ProviderUsageReaderEnv<typeof OpenCodeDriver>
-  | ProviderUsageReaderEnv<typeof AntigravityDriver>
   | ProviderUsageReaderEnv<typeof CursorDriver>
   | ProviderUsageReaderEnv<typeof PiDriver>
   | ProviderUsageReaderEnv<typeof MuseDriver>;
@@ -57,13 +53,4 @@ export type BuiltInUsageReadersEnv =
 /** Order matters: aggregation keeps the first duplicate record. */
 export const BUILT_IN_USAGE_DRIVERS: ReadonlyArray<
   AnyProviderDriver<BuiltInDriversEnv, BuiltInUsageReadersEnv>
-> = [
-  ClaudeDriver,
-  CodexDriver,
-  GrokDriver,
-  PiDriver,
-  OpenCodeDriver,
-  MuseDriver,
-  AntigravityDriver,
-  CursorDriver,
-];
+> = [ClaudeDriver, CodexDriver, GrokDriver, PiDriver, OpenCodeDriver, MuseDriver, CursorDriver];

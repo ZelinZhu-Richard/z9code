@@ -1,5 +1,4 @@
 import {
-  AntigravitySettings,
   ClaudeSettings,
   CloudSpeechCredentials,
   CodexSettings,
@@ -32,7 +31,6 @@ export const SECRET_REDACTED = "\u2022\u2022\u2022\u2022\u2022\u2022";
 const providerSecretFields = new Map([
   ["codex", secretSettingsFields(CodexSettings)],
   ["claudeAgent", secretSettingsFields(ClaudeSettings)],
-  ["antigravity", secretSettingsFields(AntigravitySettings)],
   ...[
     cursorClient,
     grokClient,

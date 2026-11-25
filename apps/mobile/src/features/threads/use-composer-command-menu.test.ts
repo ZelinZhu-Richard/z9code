@@ -70,8 +70,8 @@ describe("mobile slash commands", () => {
       atMessageStart: true,
       hasThread: true,
       selectedProviderStatus: {
-        driver: ProviderDriverKind.make("antigravity"),
-        slashCommands: [{ name: "plan", description: "Plan with Antigravity" }],
+        driver: ProviderDriverKind.make("kiro"),
+        slashCommands: [{ name: "plan", description: "Plan with Kiro" }],
       },
     });
 

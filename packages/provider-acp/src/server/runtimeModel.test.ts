@@ -1399,7 +1399,7 @@ describe("extractMcpToolCallIdentity", () => {
     });
   });
 
-  it("recovers server, tool, and arguments from Antigravity call_mcp_tool calls", () => {
+  it("recovers server, tool, and arguments from agy call_mcp_tool calls", () => {
     // agy 1.5.12 reaches MCP tools its context budget left out through call_mcp_tool.
     const toolCall = toolCallFromUpdate({
       sessionUpdate: "tool_call",
@@ -1502,7 +1502,7 @@ describe("extractMcpToolCallIdentity", () => {
       // Kimi retitles with partial JSON and middle-truncates args over 50 characters.
       'delegate_task: {"mode":"async","task":"Ru',
       'delegate_task: {"mode":"async","task":"Ru...cho child-result-42\'"}',
-      // Antigravity: "Running <tool>" before agy 1.5.8, "Run mcp_<server>_<tool>" since, "?" on prompts.
+      // agy: "Running <tool>" before 1.5.8, "Run mcp_<server>_<tool>" since, "?" on prompts.
       "Running delegate_task",
       "Run mcp_t3-code_delegate_task",
       "Run mcp_t3-code_delegate_task?",

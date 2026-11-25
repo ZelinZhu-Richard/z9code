@@ -5,7 +5,7 @@ export const de: Messages = {
     defaultTitle: "T3 Code",
     defaultDescription: "T3 Code. Die Open-Source-Steuerzentrale für Coding-Agenten.",
     socialImageAlt:
-      "T3 Code: die Open-Source-Steuerzentrale für Coding-Agenten, mit Claude Code, Codex, Cursor, OpenCode, Grok und Antigravity.",
+      "T3 Code: die Open-Source-Steuerzentrale für Coding-Agenten, mit Claude Code, Codex, Cursor, OpenCode und Grok.",
     homeLabel: "Startseite von T3 Code",
     download: "Download",
     starsLabel: "T3 Code auf GitHub einen Stern geben, {stars} Sterne",
@@ -23,7 +23,7 @@ export const de: Messages = {
     description: "T3 Code. Die Open-Source-Steuerzentrale für Coding-Agenten.",
     heroTitle: ["Die Open-Source-", "Steuerzentrale", "für Coding-Agenten."],
     heroSub:
-      "Steuere Claude Code, Codex, Antigravity, OpenCode, Cursor und Grok von einer Oberfläche aus. Nutze dein eigenes Abo. Forke das ganze Ding.",
+      "Steuere Claude Code, Codex, OpenCode, Cursor und Grok von einer Oberfläche aus. Nutze dein eigenes Abo. Forke das ganze Ding.",
     downloadForMac: "Für macOS herunterladen",
     downloadForWindows: "Für Windows herunterladen",
     downloadForLinux: "Für Linux herunterladen",
@@ -39,8 +39,7 @@ export const de: Messages = {
     readPost: "Beitrag von {handle} auf X lesen",
     harnessTitle: "Bring dein eigenes Abo mit",
     harnessBody:
-      "T3 Code verkauft keine Tokens weiter. Verbinde Claude Code, Codex, Antigravity, OpenCode, Cursor oder Grok mit den Zugangsdaten, die du schon hast. Wir orchestrieren sie, du behältst dein Abo.",
-    googleSignIn: "Google-Anmeldung",
+      "T3 Code verkauft keine Tokens weiter. Verbinde Claude Code, Codex, OpenCode, Cursor oder Grok mit den Zugangsdaten, die du schon hast. Wir orchestrieren sie, du behältst dein Abo.",
     harnessPoints: [
       "Keine weiterverkauften Keys. Keine Kontingentgrenzen.",
       "Modell mitten im Thread wechseln.",

@@ -7,15 +7,7 @@ import {
 } from "@t3tools/client-runtime/state/provider-instance-display";
 
 import { ProviderDriverKind } from "@t3tools/contracts";
-import {
-  AnthropicIcon,
-  AntigravityIcon,
-  ClaudeAI,
-  Icon,
-  OllamaIcon,
-  OpenAI,
-  OpenRouterIcon,
-} from "../Icons";
+import { AnthropicIcon, ClaudeAI, Icon, OllamaIcon, OpenAI, OpenRouterIcon } from "../Icons";
 
 import { cn } from "~/lib/utils";
 import { providerClients } from "../settings/providerDriverMeta";
@@ -29,7 +21,6 @@ import {
 const PROVIDER_ICON_BY_PROVIDER: Partial<Record<ProviderDriverKind, Icon>> = {
   [ProviderDriverKind.make("codex")]: OpenAI,
   [ProviderDriverKind.make("claudeAgent")]: ClaudeAI,
-  [ProviderDriverKind.make("antigravity")]: AntigravityIcon,
   // Text generators, by the service they reach (see textGeneratorBrand).
   [ProviderDriverKind.make("openai")]: OpenAI,
   [ProviderDriverKind.make("anthropic")]: AnthropicIcon,
@@ -40,7 +31,6 @@ const PROVIDER_ICON_BY_PROVIDER: Partial<Record<ProviderDriverKind, Icon>> = {
 const PROVIDER_TEXT_COLOR_BY_PROVIDER: Partial<Record<ProviderDriverKind, string>> = {
   [ProviderDriverKind.make("codex")]: "text-black dark:text-white",
   [ProviderDriverKind.make("claudeAgent")]: "text-[#d97757]",
-  [ProviderDriverKind.make("antigravity")]: "text-[#5b87bf]",
   [ProviderDriverKind.make("openai")]: "text-black dark:text-white",
   [ProviderDriverKind.make("anthropic")]: "text-black dark:text-white",
   [ProviderDriverKind.make("openrouter")]: "text-black dark:text-white",
@@ -49,7 +39,6 @@ const PROVIDER_TEXT_COLOR_BY_PROVIDER: Partial<Record<ProviderDriverKind, string
 
 const BUNDLED_LOGO_COLOR_BY_PROVIDER: Partial<Record<ProviderDriverKind, string>> = {
   [ProviderDriverKind.make("claudeAgent")]: "#d97757",
-  [ProviderDriverKind.make("antigravity")]: "#5b87bf",
 };
 
 /** The logo's own color, or null for logos that swap between black and white per theme. */

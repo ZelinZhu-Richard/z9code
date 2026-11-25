@@ -160,7 +160,7 @@ it.layer(NodeServices.layer)("ManagedPolicy.load", (it) => {
             ...base,
             settings: {
               providerInstances: {
-                value: { gemini: { driver: "antigravity", config: { apiKey: "corp-key" } } },
+                value: { gateway: { driver: "opencode", config: { serverPassword: "corp-key" } } },
                 locked: true,
               },
             },

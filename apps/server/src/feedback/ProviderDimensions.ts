@@ -37,8 +37,8 @@ const MANIFEST_LABELS: ReadonlyMap<string, string> = new Map(
 
 /**
  * The model name a feedback report records. A routed id, alias, or dated snapshot that the
- * bundled manifest or a provider's model list knows, such as `anthropic/claude-opus-5-5`
- * or `antigravity-default`, maps to its catalog slug. A file path reports only its file
+ * bundled manifest or a provider's model list knows, such as `anthropic/claude-opus-5-5`,
+ * maps to its catalog slug. A file path reports only its file
  * name. Any other id is reported as is.
  */
 function modelLabel(providers: ReadonlyArray<ServerProvider>, model: string): string {

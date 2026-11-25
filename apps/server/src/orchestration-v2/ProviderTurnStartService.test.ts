@@ -477,7 +477,7 @@ function makeLocalCommandHarness(input: {
   readonly nativeGoals?: boolean;
   readonly canForkWhileSourceRunning?: boolean;
   readonly exposesNativeTurnId?: boolean;
-  readonly goalDriver?: "opencode" | "antigravity";
+  readonly goalDriver?: "opencode";
   readonly worktreePath?: string;
   readonly worktreesDir?: string;
   readonly workspaceRoot?: string;
@@ -536,7 +536,7 @@ function makeLocalCommandHarness(input: {
   const providerThreadId = ProviderThreadId.make("new-provider-thread");
   const providerSessionId = ProviderSessionId.make("new-provider-session");
   const oldProviderThreadId = ProviderThreadId.make("existing-native-provider-thread");
-  const oldInstanceId = ProviderInstanceId.make("antigravity-personal");
+  const oldInstanceId = ProviderInstanceId.make("cursor-personal");
   const newInstanceId = ProviderInstanceId.make("codex-personal");
   const checkpointScopeId = CheckpointScopeId.make("scope-native-account-command");
   const messageId = MessageId.make("message-native-account-command");
@@ -659,10 +659,10 @@ function makeLocalCommandHarness(input: {
               ...providerThread,
               id: oldProviderThreadId,
               providerInstanceId: oldInstanceId,
-              driver: ProviderDriverKind.make("antigravity"),
+              driver: ProviderDriverKind.make("cursor"),
               lastRunOrdinal: 1,
               nativeThreadRef: {
-                driver: ProviderDriverKind.make("antigravity"),
+                driver: ProviderDriverKind.make("cursor"),
                 nativeId: "existing-session",
                 strength: "strong" as const,
               },
@@ -2655,8 +2655,6 @@ effectIt.effect.each(
     [
       { goalDriver: "opencode", nativeGoals: false },
       { goalDriver: "opencode", nativeGoals: true },
-      { goalDriver: "antigravity", nativeGoals: false },
-      { goalDriver: "antigravity", nativeGoals: true },
     ] as const
   ).flatMap((choice) => [
     { ...choice, resuming: false },
@@ -3316,7 +3314,7 @@ effectIt.effect("fails the run without a retry when the provider needs sign-in",
     const harness = makeLocalCommandHarness({
       text: "Continue",
       openFailure: new ProviderAdapter.ProviderAdapterOpenSessionError({
-        driver: ProviderDriverKind.make("antigravity"),
+        driver: ProviderDriverKind.make("cursor"),
         providerSessionId: ProviderSessionId.make("new-provider-session"),
         requiresSignIn: true,
       }),
@@ -3332,7 +3330,7 @@ effectIt.effect("fails the run without a retry when the provider needs sign-in",
         status: "failed",
         failure: {
           class: "provider_error",
-          message: "Failed to open antigravity provider session new-provider-session.",
+          message: "Failed to open cursor provider session new-provider-session.",
         },
       },
     ]);

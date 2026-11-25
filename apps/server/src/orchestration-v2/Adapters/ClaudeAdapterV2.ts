@@ -5203,7 +5203,7 @@ function providerFailureFromResult(
   const resetAt =
     apiErrorStatus === 429 && message.result.startsWith("API Error:")
       ? gatewayCooldownResetAt(
-          // CLIProxyAPI nests upstream errors in its message; only its own cooldown counts.
+          // A credential-pooling gateway nests upstream errors in its message; only its own cooldown counts.
           message.result.startsWith(
             "API Error: Request rejected (429) · All credentials for model ",
           )

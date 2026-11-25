@@ -107,10 +107,7 @@ export function collectLimitNotices(
     for (const source of presentation.serverConfig?.usageLimitSources ?? []) {
       if (source.error) {
         notices.add(`${label(environmentLabel, source.label)}: ${source.error}`);
-      } else if (
-        (source.kind === "http" ? (source.quotaAccounts?.length ?? 0) : source.accounts.length) ===
-        0
-      ) {
+      } else if ((source.quotaAccounts?.length ?? 0) === 0) {
         notices.add(
           resolve(
             msg("{source}: No accounts reported.", {

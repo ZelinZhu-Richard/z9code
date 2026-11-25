@@ -8,7 +8,6 @@ import { vi } from "vite-plus/test";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
-  AntigravitySettings,
   EnvironmentId,
   type ClaudeSettings,
   type CodexSettings,
@@ -1108,7 +1107,6 @@ describe("ProviderInstanceRegistry secret environment", () => {
   });
 
   it.effect.each([
-    { name: "Antigravity apiKey", schema: AntigravitySettings, field: "apiKey" },
     { name: "OpenCode serverPassword", schema: OpenCodeSettings, field: "serverPassword" },
   ])("hands the driver the secret its $name names", ({ schema, field }) => {
     const reference: SecretReference = { ...secret, reference: "op://Private/Provider/key" };

@@ -203,7 +203,6 @@ computer.
 | Grok Build          | Install [Grok Build CLI](https://x.ai/cli), then run `grok login`.                                                                                        |
 | Kiro                | Install [Kiro CLI](https://kiro.dev/docs/cli/), then run `kiro-cli login`.                                                                                |
 | OpenCode            | Install [OpenCode](https://opencode.ai), then run `opencode auth login`.                                                                                  |
-| Antigravity         | Install and sign in with Google from T3 Code's provider settings.                                                                                         |
 | Pi                  | Install [Pi](./providers-pi.md#set-up-pi) with Node.js 22.19 or newer, then run `pi` and `/login`.                                                        |
 | Muse Code           | Install [Muse Code](https://dev.meta.ai/docs/muse-code) on the server, run `muse login`, then enable it in Settings → Providers.                          |
 | fx                  | Install [fx](https://fx.sh) with `curl -fsSL https://fx.sh/setup.sh \| bash`, then run `fx login`.                                                        |
@@ -212,8 +211,8 @@ computer.
 Provider CLIs must be on the server's `PATH`. If T3 Code cannot find one, set its
 **Binary path** in provider settings, especially when using a version manager.
 Cursor's executable is `cursor-agent`, although its login command is
-`agent login`. Codex connected through ChatGPT and Antigravity can use their
-managed runtimes without a `PATH` entry.
+`agent login`. Codex connected through ChatGPT can use its
+managed runtime without a `PATH` entry.
 
 T3 Code warns when a provider version has known compatibility problems with your
 release. Check **Settings → Providers** on that environment for the recommended
@@ -231,13 +230,13 @@ only for a tool your mise config requests as `latest` when the provider's binary
 path is a mise shim or under the tool's `installs/<tool>/latest` link; update a
 pinned version, or a path into one version's directory, through mise yourself.
 Update a CLI installed with Nix through Nix.
-Cursor and Antigravity update with T3 Code. Homebrew and Chocolatey installs
+Cursor updates with T3 Code. Homebrew and Chocolatey installs
 compare against the version their package manager offers, which can trail the
 npm release; update Claude installed with Chocolatey through Chocolatey.
 
-The managed runtimes for Antigravity and for Codex connected through ChatGPT
-first install the release T3 Code tested. When T3 Code finds a newer compatible
-release, their setup in **Settings → Providers** offers an update.
+The managed runtime for Codex connected through ChatGPT
+first installs the release T3 Code tested. When T3 Code finds a newer compatible
+release, its setup in **Settings → Providers** offers an update.
 
 Add another provider instance for a separate account or configuration. Each
 instance can have its own environment variables, such as API keys or a custom
@@ -245,8 +244,7 @@ base URL. Mark secret values as sensitive; after saving, T3 Code does not displa
 their original values.
 
 For provider-specific setup and accounts, see [Codex](./providers-codex.md),
-[Claude](./providers-claude.md), [OpenCode](./providers-opencode.md),
-[Antigravity](./providers-antigravity.md), [Kiro](./providers-kiro.md),
+[Claude](./providers-claude.md), [OpenCode](./providers-opencode.md), [Kiro](./providers-kiro.md),
 [Pi](./providers-pi.md), [Muse Code](./providers-muse.md), [fx](./providers-fx.md), and
 [ACP Registry agents](./providers-acp.md).
 
@@ -277,7 +275,6 @@ greater than 2147483647; unset or invalid values keep the defaults.
 | Codex               | `T3CODE_CODEX_PROBE_TIMEOUT_MS`        |
 | Claude              | `T3CODE_CLAUDE_PROBE_TIMEOUT_MS`       |
 | Cursor              | `T3CODE_CURSOR_PROBE_TIMEOUT_MS`       |
-| Antigravity         | `T3CODE_ANTIGRAVITY_PROBE_TIMEOUT_MS`  |
 | Grok                | `T3CODE_GROK_PROBE_TIMEOUT_MS`         |
 | Kiro                | `T3CODE_KIRO_PROBE_TIMEOUT_MS`         |
 | fx                  | `T3CODE_FX_PROBE_TIMEOUT_MS`           |

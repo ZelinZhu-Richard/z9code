@@ -20,6 +20,8 @@ import {
   globalIdleCompaction,
   isSecretReference,
   type SecretReference,
+  UsageLimitSourceConfig,
+  UsageLimitSourceId,
   withIdleCompaction,
 } from "@t3tools/contracts";
 import * as Cache from "effect/Cache";
@@ -164,14 +166,8 @@ export function redactServerSettingsForClient(
   return {
     ...shaped,
     secretProviders: withoutUnknownSecretProviderConfigs(shaped),
-    // Older clients decode only "cliproxy" sources and reject the whole settings payload otherwise.
-    usageLimitSources: client.httpUsageLimitSources
-      ? shaped.usageLimitSources
-      : Object.fromEntries(
-          Object.entries(shaped.usageLimitSources).filter(
-            ([, source]) => source.kind === "cliproxy",
-          ),
-        ),
+    // Older clients reject "http" sources, the only kind left, and the whole settings payload with them.
+    usageLimitSources: client.httpUsageLimitSources ? shaped.usageLimitSources : {},
   };
 }
 
@@ -380,8 +376,30 @@ const PersistedResponseStreamingMode = Schema.Union([
     }),
   ),
 );
+// Accept retired usage limit source kinds only on load, dropping them, so one cannot reset all settings.
+const UsageLimitSources = Schema.Record(UsageLimitSourceId, UsageLimitSourceConfig);
+const PersistedUsageLimitSources = Schema.Record(Schema.String, Schema.Unknown).pipe(
+  Schema.decodeTo(
+    UsageLimitSources,
+    SchemaTransformation.transform<typeof UsageLimitSources.Encoded, Record<string, unknown>>({
+      decode: (sources) =>
+        Object.fromEntries(
+          Object.entries(sources).filter(
+            ([, source]) =>
+              typeof source !== "object" ||
+              source === null ||
+              (source as { readonly kind?: unknown }).kind === "http",
+          ),
+        ) as typeof UsageLimitSources.Encoded,
+      encode: (sources) => sources,
+    }),
+  ),
+);
 const PersistedServerSettings = Schema.Struct({
   ...ServerSettings.fields,
+  usageLimitSources: PersistedUsageLimitSources.pipe(
+    Schema.withDecodingDefault(Effect.succeed({})),
+  ),
   responseStreamingMode: PersistedResponseStreamingMode.pipe(
     Schema.withDecodingDefault(Effect.succeed("paragraph" as const)),
   ),

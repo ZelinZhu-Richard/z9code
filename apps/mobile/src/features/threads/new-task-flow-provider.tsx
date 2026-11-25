@@ -455,8 +455,7 @@ export function NewTaskFlowProvider(
     managedPolicy,
   );
 
-  // Antigravity keeps unavailable selections so sign-out or a catalog change
-  // cannot switch the user's model.
+  // Unavailable selections are kept so sign-out or a catalog change cannot switch the user's model.
   const draftModelSelection = resolveSelectableModelSelection(
     selectedEnvironmentServerConfig,
     selectedProjectDraft.modelSelection ?? null,

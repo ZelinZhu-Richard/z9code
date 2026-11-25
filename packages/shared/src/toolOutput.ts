@@ -29,7 +29,7 @@ const MAX_CONTENT_BLOCKS = 32;
 const MAX_ENVELOPE_DEPTH = 4;
 const MAX_ENVELOPE_NODES = 128;
 const encoder = new TextEncoder();
-// Antigravity's terminal tool prefixes an `acp-mcp-call` result's stdout with timestamps and exit status.
+// Some agents' terminal tools prefix an `acp-mcp-call` result's stdout with timestamps and exit status.
 const TERMINAL_OUTPUT_MARKER = "\nCommand output:\n";
 
 interface ResultReadBudget {

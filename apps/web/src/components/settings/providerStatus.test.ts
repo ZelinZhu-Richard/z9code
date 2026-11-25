@@ -50,30 +50,22 @@ describe("getProviderSummary", () => {
   });
 });
 
-describe("Antigravity with unchecked sign-in", () => {
-  const unchecked: ServerProvider = {
+describe("provider status with unknown sign-in", () => {
+  const unknown: ServerProvider = {
     ...provider,
-    instanceId: ProviderInstanceId.make("antigravity"),
-    driver: ProviderDriverKind.make("antigravity"),
     status: "warning",
     auth: { status: "unknown" },
-    message: "Antigravity is installed. Google account access is not checked yet.",
+    message: "Could not verify the account.",
   };
 
-  it("presents an unchecked Google sign-in neutrally without claiming authentication is required", () => {
-    for (const auth of [unchecked.auth, { status: "unknown", type: "oauth-personal" }] as const) {
-      const candidate = { ...unchecked, auth };
-      expect.soft(getProviderSummary(candidate)).toEqual({
-        headline: "Installed · Sign-in not checked",
-        detail: unchecked.message,
-      });
-      expect(getProviderStatusKey(candidate)).toBe("neutral");
-    }
-  });
-
-  // regression: #18623 neutral unchecked-sign-in display must not mask real warnings
-  it("preserves actionable warnings, failures and disabled states outside unchecked Google sign-in", () => {
+  it("keeps actionable warnings, failures and disabled states", () => {
     const cases = [
+      {
+        name: "unknown sign-in",
+        change: {},
+        headline: "Needs attention",
+        status: "warning",
+      },
       {
         name: "confirmed sign-out",
         change: { auth: { status: "unauthenticated" } },
@@ -99,24 +91,6 @@ describe("Antigravity with unchecked sign-in", () => {
         status: "warning",
       },
       {
-        name: "API key authentication",
-        change: { auth: { status: "unknown", type: "gemini-api-key" } },
-        headline: "Needs attention",
-        status: "warning",
-      },
-      {
-        name: "Agent Platform authentication",
-        change: { auth: { status: "unknown", type: "agent-platform" } },
-        headline: "Needs attention",
-        status: "warning",
-      },
-      {
-        name: "another provider",
-        change: { driver: provider.driver },
-        headline: "Needs attention",
-        status: "warning",
-      },
-      {
         name: "disabled provider",
         change: { enabled: false },
         headline: "Disabled",
@@ -124,7 +98,7 @@ describe("Antigravity with unchecked sign-in", () => {
       },
     ] as const;
     for (const { name, change, headline, status } of cases) {
-      const candidate = { ...unchecked, ...change };
+      const candidate = { ...unknown, ...change };
       expect.soft(getProviderSummary(candidate).headline, name).toBe(headline);
       expect.soft(getProviderStatusKey(candidate), name).toBe(status);
     }

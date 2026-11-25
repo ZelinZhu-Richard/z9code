@@ -54,13 +54,13 @@ vi.mock(import("../../localApi"), async (original) => ({
 import { AcpSessionManagementSection } from "./AcpSessionManagementSection";
 
 const environmentId = EnvironmentId.make("remote-device");
-const instanceId = ProviderInstanceId.make("acpRegistry_antigravity");
-const projectId = ProjectId.make("project-antigravity");
+const instanceId = ProviderInstanceId.make("acpRegistry_gemini");
+const projectId = ProjectId.make("project-gemini");
 const session = {
   sessionId: "native-session-1",
-  cwd: "/workspace/antigravity",
+  cwd: "/workspace/gemini",
   additionalDirectories: [],
-  title: "Native Antigravity session",
+  title: "Native Gemini session",
   updatedAt: "2026-08-23T00:00:00Z",
   importedThreadId: null,
 } as const;
@@ -80,7 +80,7 @@ const provider = {
   skills: [],
 } satisfies ServerProvider;
 
-const project = { id: projectId, title: "Antigravity", workspaceRoot: session.cwd };
+const project = { id: projectId, title: "Gemini", workspaceRoot: session.cwd };
 const replacement = {
   id: ProjectId.make("replacement"),
   title: "Replacement",
@@ -317,7 +317,7 @@ it.each([true, false])(
     await screen.getByRole("combobox").click();
     if (canList) {
       // Keys sent before the popup takes focus only move focus onto the selected option.
-      await expect.element(screen.getByRole("option", { name: "Antigravity" })).toHaveFocus();
+      await expect.element(screen.getByRole("option", { name: "Gemini" })).toHaveFocus();
       await userEvent.keyboard("{ArrowDown}{Enter}");
     } else await screen.getByRole("option", { name: "Second", exact: true }).click();
     await expect
@@ -385,7 +385,7 @@ it.each([true, false])(
           name: canList ? "Project for ACP sessions" : "Project for ACP providers",
         }),
       )
-      .toHaveTextContent("Antigravity");
+      .toHaveTextContent("Gemini");
     await expect
       .element(screen.getByRole("textbox", { name: "google base URL" }))
       .toHaveValue("https://api.example.test/v1");

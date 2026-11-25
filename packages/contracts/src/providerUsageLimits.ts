@@ -106,7 +106,7 @@ export const HttpQuotaResponse = Schema.Struct({
 
 export const UsageLimitSourceSnapshot = Schema.Struct({
   id: UsageLimitSourceId,
-  kind: Schema.Literals(["cliproxy", "http"]),
+  kind: Schema.Literal("http"),
   label: TrimmedNonEmptyString,
   /** Origin of the hub, which also serves the agents sent through it. */
   origin: Schema.optional(TrimmedNonEmptyString),

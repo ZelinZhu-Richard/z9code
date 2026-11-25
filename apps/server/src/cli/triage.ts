@@ -23,12 +23,11 @@ import { interactiveStdin } from "./consoleStdin.ts";
 import { resolveCliCommand } from "./invocation.ts";
 
 interface TriageAgent {
-  readonly id: "claude" | "codex" | "antigravity";
+  readonly id: "claude" | "codex";
   readonly command: string;
   readonly label: string;
   readonly stateDirEnv: string;
   readonly defaultStateDir: string;
-  readonly promptArgs?: ReadonlyArray<string>;
 }
 
 const TRIAGE_AGENTS: ReadonlyArray<TriageAgent> = [
@@ -45,14 +44,6 @@ const TRIAGE_AGENTS: ReadonlyArray<TriageAgent> = [
     label: "Codex",
     stateDirEnv: "CODEX_HOME",
     defaultStateDir: ".codex",
-  },
-  {
-    id: "antigravity",
-    command: "agy",
-    label: "Antigravity",
-    stateDirEnv: "GEMINI_HOME",
-    defaultStateDir: ".gemini",
-    promptArgs: ["--prompt-interactive"],
   },
 ];
 
@@ -73,7 +64,7 @@ export class TriageAgentChoiceRequiredError extends Schema.TaggedError<TriageAge
   {},
 ) {
   override get message(): string {
-    return "Multiple supported agent CLIs are installed and there is no terminal to ask which to use. Re-run with --agent claude, --agent codex, or --agent antigravity.";
+    return "Multiple supported agent CLIs are installed and there is no terminal to ask which to use. Re-run with --agent claude or --agent codex.";
   }
 }
 
@@ -153,7 +144,7 @@ const describeTriageFiles = (session: {
   `  ${session.contextFilePath}`,
 ];
 
-const agentFlag = Flag.Literals("agent", ["claude", "codex", "antigravity"]).pipe(
+const agentFlag = Flag.Literals("agent", ["claude", "codex"]).pipe(
   Flag.withDescription("Agent CLI to use. Default: ask when multiple are installed."),
   Flag.optional,
 );
@@ -169,7 +160,7 @@ export const triageCommand = Command.make("triage", {
   model: modelFlag,
 }).pipe(
   Command.withDescription(
-    "Investigate a T3 Code problem on this machine with Claude Code, Codex, or Antigravity, and help file a good issue.",
+    "Investigate a T3 Code problem on this machine with Claude Code or Codex, and help file a good issue.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {
@@ -248,7 +239,6 @@ export const triageCommand = Command.make("triage", {
       const command = onPath === null ? selected.command : NodePath.resolve(onPath);
       const spawnSpec = yield* resolveSpawnCommand(command, [
         ...(model === undefined ? [] : ["--model", model]),
-        ...(selected.promptArgs ?? []),
         launchPrompt,
       ]);
       yield* Console.log(`Starting ${selected.label}. It will ask what went wrong.\n`);

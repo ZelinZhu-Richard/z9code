@@ -78,7 +78,7 @@ function hub(
 ): UsageLimitSourceSnapshot {
   return {
     id: UsageLimitSourceId.make(label),
-    kind: "cliproxy",
+    kind: "http",
     label,
     origin,
     checkedAt,

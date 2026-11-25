@@ -32,7 +32,7 @@ const PROVIDER_GROUPS: ReadonlyArray<readonly [RegExp, string]> = [
   [/cursor/, "cursor"],
   [/opencode/, "opencode"],
   [/grok/, "grok"],
-  [/antigravity|gemini/, "antigravity"],
+  [/gemini/, "gemini"],
 ];
 const OTHER_GROUPS: ReadonlyArray<readonly [RegExp, string]> = [
   [/chrom/, "browser"],

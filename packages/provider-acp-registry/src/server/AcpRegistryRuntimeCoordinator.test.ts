@@ -138,7 +138,7 @@ describe("AcpRegistryRuntimeCoordinator", () => {
   it.effect("requires matching user consent before accepting URL authentication", () =>
     Effect.gen(function* () {
       const coordinator = yield* AcpRegistryRuntimeCoordinator.AcpRegistryRuntimeCoordinator;
-      const instanceId = ProviderInstanceId.make("acpRegistry_antigravity");
+      const instanceId = ProviderInstanceId.make("acpRegistry_gemini");
       const action = {
         elicitationId: "login-1",
         url: "https://accounts.example.com/login",

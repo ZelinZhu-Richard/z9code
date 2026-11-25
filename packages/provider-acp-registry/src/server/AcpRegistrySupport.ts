@@ -551,8 +551,8 @@ export const layerFromHost = Layer.merge(
       return layer({
         cacheDir: paths.providerStatusCacheDir,
         toolsDir: path.join(paths.baseDir, "tools"),
-        // Beside the built-in driver's runtime temp, short for Windows' 260-character path limit.
-        runtimeTempDir: path.join(paths.stateDir, "antigravity-tmp", "acp-registry"),
+        // Short for Windows' 260-character path limit.
+        runtimeTempDir: path.join(paths.stateDir, "acp-tmp", "registry"),
       });
     }),
   ),

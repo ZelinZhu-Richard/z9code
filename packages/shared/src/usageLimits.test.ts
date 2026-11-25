@@ -4,7 +4,6 @@ import {
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-  type UsageLimitSourceAccount,
   UsageLimitSourceId,
 } from "@t3tools/contracts";
 import { describe, expect, it } from "vite-plus/test";
@@ -130,9 +129,6 @@ describe("new thread model fallback", () => {
     ["cursor", ["autoPercentUsed"], "claude-opus-5-5", false, undefined, undefined],
     ["cursor", ["autoPercentUsed"], "composer-2.5", false, undefined, undefined],
     ["cursor", ["autoPercentUsed", "apiPercentUsed"], "composer-2.5", true, undefined, undefined],
-    ["antigravity", ["gemini-weekly"], "claude-opus-5-5", false, undefined, undefined],
-    ["antigravity", ["3p-weekly"], "claude-opus-5-5", true, undefined, undefined],
-    ["antigravity", ["gemini-weekly"], "antigravity-default", true, undefined, undefined],
     ["codex", ["individual"], "gpt-5.5", true, undefined, undefined],
     ["opencode", ["go_weekly"], "opencode/big-pickle", false, undefined, undefined],
     ["opencode", ["go_weekly"], "opencode-go/big-pickle", true, undefined, undefined],
@@ -233,7 +229,7 @@ describe("pools", () => {
   const claude = ProviderDriverKind.make("claudeAgent");
   const source = {
     id: UsageLimitSourceId.make("hub"),
-    kind: "cliproxy" as const,
+    kind: "http" as const,
     label: "hub",
     checkedAt,
   };
@@ -400,45 +396,6 @@ describe("pools", () => {
       },
     });
     expect(collectLimitAccounts(input)).toHaveLength(1);
-  });
-
-  it("merges a local Antigravity login with its hub account by Google account fingerprint", () => {
-    const antigravity = ProviderDriverKind.make("antigravity");
-    const local = provider({
-      driver: antigravity,
-      instanceId: ProviderInstanceId.make("antigravity"),
-      auth: { status: "authenticated" },
-      usageLimits: {
-        checkedAt,
-        credentialFingerprint: "google-key",
-        windows: [{ ...window, id: "gemini-weekly", usedPercent: 20 }],
-      },
-    });
-    const hubAccount = {
-      id: "antigravity-g@example.com.json",
-      driver: antigravity,
-      usageLimits: {
-        checkedAt: "2026-09-03T11:30:00.000Z",
-        credentialFingerprint: "google-key",
-        windows: [{ ...window, id: "gemini-weekly", usedPercent: 30 }],
-      },
-    };
-    const accounts = collectLimitAccounts(
-      new Map([
-        [
-          EnvironmentId.make("env-a"),
-          {
-            ...laptop,
-            serverConfig: {
-              providers: [local],
-              usageLimitSources: [{ ...source, accounts: [hubAccount] }],
-            },
-          },
-        ],
-      ]),
-    );
-    expect(accounts).toHaveLength(1);
-    expect(accounts[0]?.limits.windows[0]?.usedPercent).toBe(30);
   });
 
   it("takes windows from a fresher hub read but credits and redeem from the native instance", () => {
@@ -1412,7 +1369,7 @@ describe("/usage-limits", () => {
   const sources = [
     {
       id: UsageLimitSourceId.make("hub"),
-      kind: "cliproxy" as const,
+      kind: "http" as const,
       label: "Accounts",
       origin: "http://hub:8317",
       checkedAt: limits.checkedAt,
@@ -1495,7 +1452,7 @@ describe("/usage-limits", () => {
     const stale = [
       {
         id: UsageLimitSourceId.make("hub"),
-        kind: "cliproxy" as const,
+        kind: "http" as const,
         label: "Accounts",
         checkedAt: limits.checkedAt,
         accounts: [
@@ -1524,7 +1481,7 @@ describe("/usage-limits", () => {
     const hub = [
       {
         ...sources[0]!,
-        label: "CLIProxyAPI",
+        label: "Quota hub",
         accounts: [
           {
             id: "claude-b@example.com.json",
@@ -1539,7 +1496,7 @@ describe("/usage-limits", () => {
     const report = collectProviderUsageLimits(selected.instanceId, [selected], hub, now);
     expect(
       report?.accounts.filter((account) => account.sourceLabel).map((account) => account.label),
-    ).toEqual(["CLIProxyAPI · claude-b@example.com", "CLIProxyAPI · team-seat"]);
+    ).toEqual(["Quota hub · claude-b@example.com", "Quota hub · team-seat"]);
   });
 
   it("keeps unidentified custom instances separate, filtering by driver", () => {
@@ -1831,7 +1788,7 @@ describe("sameUsageLimitCommandCoverage", () => {
   };
   const base = {
     id: UsageLimitSourceId.make("hub"),
-    kind: "cliproxy" as const,
+    kind: "http" as const,
     label: "Accounts",
     checkedAt: "2026-09-03T11:00:00.000Z",
   };
@@ -1933,92 +1890,10 @@ describe("external usage settings", () => {
           ],
         ]),
       );
-    expect(notices(unsupported("Sign in with Google to see Antigravity limits."))).toEqual([
-      "codex: Sign in with Google to see Antigravity limits.",
+    expect(notices(unsupported("Sign in to see usage limits."))).toEqual([
+      "codex: Sign in to see usage limits.",
     ]);
     expect(notices(unsupported())).toEqual([]);
-  });
-
-  it("names a hub account whose read failed unless another environment read it", () => {
-    const checkedAt = "2026-09-03T11:00:00.000Z";
-    const account = {
-      id: "claude-tg@example.com.json",
-      driver: ProviderDriverKind.make("claudeAgent"),
-      email: "tg@example.com",
-    };
-    const failed = {
-      ...account,
-      usageLimits: {
-        checkedAt,
-        windows: [],
-        unavailable: {
-          reason: "probeFailed" as const,
-          message: "The provider refused the hub request (HTTP 429).",
-        },
-      },
-    };
-    const read = {
-      ...account,
-      usageLimits: { checkedAt, windows: [{ ...window, usedPercent: 10 }] },
-    };
-    const hub = (accounts: readonly UsageLimitSourceAccount[]) => ({
-      providers: [],
-      usageLimitSources: [
-        {
-          id: UsageLimitSourceId.make("hub"),
-          kind: "cliproxy" as const,
-          label: "hub",
-          checkedAt,
-          accounts,
-        },
-      ],
-    });
-    const desktop = { entry: { target: { label: "Desktop" } }, serverConfig: hub([failed]) };
-    expect(collectLimitNotices(new Map([[EnvironmentId.make("a"), desktop]]))).toEqual([
-      "hub · tg@example.com: The provider refused the hub request (HTTP 429).",
-    ]);
-    expect(
-      collectLimitNotices(
-        new Map([
-          [EnvironmentId.make("a"), desktop],
-          [
-            EnvironmentId.make("b"),
-            { entry: { target: { label: "WSL" } }, serverConfig: hub([read]) },
-          ],
-        ]),
-      ),
-    ).toEqual([]);
-    // The row resolves an omitted workspace to the only one known, so the notice must too.
-    expect(
-      collectLimitNotices(
-        new Map([
-          [EnvironmentId.make("a"), desktop],
-          [
-            EnvironmentId.make("b"),
-            {
-              entry: { target: { label: "WSL" } },
-              serverConfig: hub([{ ...read, workspaceId: "ws-1" }]),
-            },
-          ],
-        ]),
-      ),
-    ).toEqual([]);
-    // Without an email, same-named auth files on two environment-local hubs are different accounts.
-    const { email: _failedEmail, ...anonymousFailed } = failed;
-    const { email: _readEmail, ...anonymousRead } = read;
-    expect(
-      collectLimitNotices(
-        new Map([
-          [EnvironmentId.make("a"), { ...desktop, serverConfig: hub([anonymousFailed]) }],
-          [
-            EnvironmentId.make("b"),
-            { entry: { target: { label: "WSL" } }, serverConfig: hub([anonymousRead]) },
-          ],
-        ]),
-      ),
-    ).toEqual([
-      "Desktop · hub · claude-tg@example.com: The provider refused the hub request (HTTP 429).",
-    ]);
   });
 });
 

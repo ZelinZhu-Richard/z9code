@@ -208,7 +208,7 @@ export function ProviderModelsSection({
     builtInModels.length > 0 && builtInModels.every((model) => hiddenModels.includes(model.slug));
 
   const handleAdd = async () => {
-    if (!canManageCustomModels || driverKind === "antigravity" || isSaving) return;
+    if (!canManageCustomModels || isSaving) return;
     const normalized = normalizeCustomModelSlug(input);
     if (!normalized) {
       setError(gt("Enter a model slug."));
@@ -400,7 +400,7 @@ export function ProviderModelsSection({
               : ""}
           </span>
         </div>
-        {driverKind !== "antigravity" && !isAdding ? (
+        {!isAdding ? (
           <Button
             type="button"
             size="xs"
@@ -465,7 +465,7 @@ export function ProviderModelsSection({
         })}
       </div>
 
-      {driverKind === "antigravity" || !canManageCustomModels ? null : isAdding ? (
+      {!canManageCustomModels ? null : isAdding ? (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Input
             id={`provider-instance-${instanceId}-custom-model`}
@@ -503,9 +503,7 @@ export function ProviderModelsSection({
         </div>
       ) : null}
 
-      {driverKind !== "antigravity" && error ? (
-        <p className="mt-2 text-xs text-destructive">{error}</p>
-      ) : null}
+      {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }

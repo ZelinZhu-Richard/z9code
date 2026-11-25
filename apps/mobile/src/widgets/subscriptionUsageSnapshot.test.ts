@@ -125,7 +125,7 @@ describe("subscription widget snapshots", () => {
             usageLimitSources: [
               {
                 id: UsageLimitSourceId.make("hub"),
-                kind: "cliproxy" as const,
+                kind: "http" as const,
                 label: "Hub",
                 checkedAt,
                 accounts: [

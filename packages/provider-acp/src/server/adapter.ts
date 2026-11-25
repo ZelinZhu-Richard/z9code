@@ -729,7 +729,7 @@ export interface AcpAdapterV2Flavor {
    * leaves usage semantics open, so this stays unset until proven live.
    */
   readonly reportsPerTurnPromptUsage?: boolean;
-  /** Antigravity 1.5+ usage: inputTokens leaves out cachedReadTokens, while outputTokens already includes thoughtTokens. */
+  /** Gemini-style usage: inputTokens leaves out cachedReadTokens, while outputTokens already includes thoughtTokens. */
   readonly geminiPromptUsage?: boolean;
   /**
    * Fails a dispatched prompt after this long with no update for its session while no
@@ -4898,7 +4898,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
             }
             if (status === "completed" && isHtmlRender && !isError) {
               const reportedPage = htmlRenderFromToolItem({ toolName, output });
-              // Antigravity replaces MCP results with summaries, including on repeated completions.
+              // Some agents replace MCP results with summaries, including on repeated completions.
               const previousPage = htmlRenderFromToolItem({
                 toolName,
                 output: acpMcpToolCallOutput(previous?.data.rawOutput ?? previous?.data.content),
@@ -5020,7 +5020,7 @@ export const makeAcpAdapterV2 = Effect.fn("makeAcpAdapterV2")(function* (
                 if (backendSearch !== undefined) {
                   const label = nonEmptyText(toolCall.data.title, title ?? "Web search")
                     .replace(/:\s*$/u, "")
-                    // Antigravity titles the call "Running search_web".
+                    // agy titles the call "Running search_web".
                     .replace(
                       /^\s*(?:run(?:ning)?\s+)?(?:web_search|search_web)\s*$/iu,
                       "Web search",

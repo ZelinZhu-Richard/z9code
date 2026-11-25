@@ -8,7 +8,6 @@ export const PROVIDER_ORDER: readonly UsageProviderKind[] = [
   "grok",
   "cursor",
   "opencode",
-  "antigravity",
   "pi",
   "muse",
 ];
@@ -24,7 +23,6 @@ export const PROVIDER_LABEL: Record<UsageProviderKind, string> = {
   grok: "Grok Build",
   cursor: "Cursor",
   opencode: "OpenCode",
-  antigravity: "Antigravity",
   pi: "Pi",
   muse: "Muse Code",
 };

@@ -1125,8 +1125,8 @@ const T3_MCP_TITLE_SUFFIX_CALL =
  */
 const T3_MCP_BARE_TITLE_CALL = /^(?<tool>[A-Za-z0-9_]+)(?::\s*\{|$)/;
 
-// Antigravity titles calls "Running <tool>" or, from agy 1.5.8, "Run mcp_<server>_<tool>"; prompts end in "?".
-const ANTIGRAVITY_TOOL_TITLE = /^Run(?:ning)? (?<name>[^\s?]+)\??$/;
+// agy titles calls "Running <tool>" or, from 1.5.8, "Run mcp_<server>_<tool>"; prompts end in "?".
+const RUN_TOOL_TITLE = /^Run(?:ning)? (?<name>[^\s?]+)\??$/;
 
 /** ACP lacks typed MCP calls; recognize provider metadata and terminal fallback commands. */
 export function extractMcpToolCallIdentity(
@@ -1142,7 +1142,7 @@ export function extractMcpToolCallIdentity(
   if (meta?.is_mcp_tool_call === true && server.length > 0 && tool.length > 0) {
     return { server, tool };
   }
-  // Antigravity reaches MCP tools its context budget left out through call_mcp_tool, an execute
+  // agy reaches MCP tools its context budget left out through call_mcp_tool, an execute
   // call titled "MCP Tool <tool>" whose rawInput names the server, tool, and arguments.
   const proxiedServer = typeof rawInput?.ServerName === "string" ? rawInput.ServerName.trim() : "";
   const proxiedTool = typeof rawInput?.ToolName === "string" ? rawInput.ToolName.trim() : "";
@@ -1227,7 +1227,7 @@ export function extractMcpToolCallIdentity(
     }
     if (qualified?.[1] && qualified[2] && !/^t3[-_ ]?code$/i.test(qualified[1]))
       return { server: qualified[1], tool: qualified[2] };
-    const name = ANTIGRAVITY_TOOL_TITLE.exec(trimmed)?.groups?.name ?? trimmed;
+    const name = RUN_TOOL_TITLE.exec(trimmed)?.groups?.name ?? trimmed;
     const match =
       T3_MCP_TITLE_CALL.exec(name) ??
       T3_MCP_TITLE_SUFFIX_CALL.exec(name) ??

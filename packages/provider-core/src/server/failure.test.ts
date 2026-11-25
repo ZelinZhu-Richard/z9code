@@ -154,7 +154,7 @@ it("names how the provider process exited and the stage it failed in, without it
     const sessionOpenFailure = {
       _tag: "ProviderSessionOpenError",
       cause: new ProviderAdapter.ProviderAdapterOpenSessionError({
-        driver: ProviderDriverKind.make("antigravity"),
+        driver: ProviderDriverKind.make("kiro"),
         providerSessionId: ProviderSessionId.make("provider-session:private-id"),
         cause: {
           _tag: "AcpProcessExitedError",

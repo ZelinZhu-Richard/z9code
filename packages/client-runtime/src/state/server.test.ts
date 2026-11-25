@@ -608,7 +608,7 @@ describe("server state projection", () => {
                 sources: [
                   {
                     id: UsageLimitSourceId.make("source-test"),
-                    kind: "cliproxy",
+                    kind: "http",
                     label: "Test source",
                     checkedAt: "2026-10-20T07:50:37.633Z",
                     accounts: [],
@@ -1802,7 +1802,7 @@ describe("provider setup commands", () => {
       const codex = yield* install("codex");
       expect(yield* Queue.take(requested)).toBe("codex");
       const duplicateCodex = yield* install("codex");
-      const antigravity = yield* install("antigravity");
+      const claude = yield* install("claudeAgent");
       yield* Deferred.succeed(release, undefined);
 
       expect(yield* Fiber.join(codex)).toMatchObject({
@@ -1810,11 +1810,11 @@ describe("provider setup commands", () => {
         value: { driver: "codex" },
       });
       expect(yield* Fiber.join(duplicateCodex)).toEqual(yield* Fiber.join(codex));
-      expect(yield* Fiber.join(antigravity)).toMatchObject({
+      expect(yield* Fiber.join(claude)).toMatchObject({
         _tag: "Success",
-        value: { driver: "antigravity" },
+        value: { driver: "claudeAgent" },
       });
-      expect(yield* Queue.takeAll(requested)).toEqual(["antigravity"]);
+      expect(yield* Queue.takeAll(requested)).toEqual(["claudeAgent"]);
     }),
   );
 

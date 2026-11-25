@@ -18,7 +18,7 @@ vi.mock(import("./SecretSourceInput"), async (original) => ({
 import { AddUsageLimitSourceDialog } from "./AddUsageLimitSourceDialog";
 
 describe("AddUsageLimitSourceDialog", () => {
-  it("adds the hub when Enter is pressed in a field", async () => {
+  it("adds the source when Enter is pressed in a field", async () => {
     updateSettings.mockClear();
     const onOpenChange = vi.fn();
     await using _screen = await render(
@@ -31,13 +31,13 @@ describe("AddUsageLimitSourceDialog", () => {
       />,
     );
 
-    await userEvent.type(page.getByLabelText("Hub URL"), "https://hub.example.ts.net:8318");
-    await userEvent.type(page.getByLabelText("Management key"), "secret-key{Enter}");
+    await userEvent.type(page.getByLabelText("Endpoint URL"), "https://hub.example.ts.net:8318");
+    await userEvent.type(page.getByLabelText("Bearer token (optional)"), "secret-key{Enter}");
 
     expect(updateSettings).toHaveBeenCalledOnce();
     expect(updateSettings).toHaveBeenCalledWith({
       usageLimitSources: {
-        "cliproxy-hub.example.ts.net-8318": expect.objectContaining({
+        "http-hub.example.ts.net-8318": expect.objectContaining({
           url: "https://hub.example.ts.net:8318",
           managementKey: "secret-key",
         }),

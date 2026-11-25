@@ -68,10 +68,10 @@ function makeThread(input: {
 }
 
 const grokInstanceId = ProviderInstanceId.make("grok");
-const antigravityInstanceId = ProviderInstanceId.make("antigravity");
+const noAutoInstanceId = ProviderInstanceId.make("acp-agent");
 const supportedRuntimeModesByInstance = new Map<ProviderInstanceId, ReadonlyArray<RuntimeMode>>([
   [grokInstanceId, ["approval-required", "auto", "full-access"]],
-  [antigravityInstanceId, ["approval-required", "auto-accept-edits", "full-access"]],
+  [noAutoInstanceId, ["approval-required", "auto-accept-edits", "full-access"]],
 ]);
 const providerInstanceFor = (instanceId: ProviderInstanceId) =>
   ({
@@ -166,26 +166,28 @@ const layerTaskFolderPolicy = layerWithPolicy(
 ).pipe(Layer.provideMerge(layerTaskFolderStore));
 
 it.layer(layerTest)("RuntimePolicyV2", (it) => {
-  it.effect("asks for Antigravity command approval when a stored Auto thread falls back", () =>
-    Effect.gen(function* () {
-      const policy = yield* RuntimePolicy.RuntimePolicyV2;
-      const now = yield* DateTime.now;
-      const resolve = (runtimeMode: RuntimeMode) =>
-        policy.resolve({
-          thread: makeThread({ now, worktreePath: null, runtimeMode }),
-          modelSelection: { instanceId: antigravityInstanceId, model: "test-model" },
-        });
-      const request = {
-        sessionId: "session-1",
-        toolCall: { toolCallId: "command-1", title: "Run command", kind: "execute" as const },
-        options: [{ optionId: "allow", name: "Allow", kind: "allow_once" as const }],
-      };
-      const auto = yield* resolve("auto");
-      assert.equal(auto.runtimeMode, "approval-required");
-      assert.equal(acpPermissionDisposition(auto, request), "ask");
-      assert.equal(acpPermissionDisposition(yield* resolve("auto-accept-edits"), request), "ask");
-      assert.equal(acpPermissionDisposition(yield* resolve("full-access"), request), "allow");
-    }),
+  it.effect(
+    "asks for command approval when a stored Auto thread falls back to a provider without Auto",
+    () =>
+      Effect.gen(function* () {
+        const policy = yield* RuntimePolicy.RuntimePolicyV2;
+        const now = yield* DateTime.now;
+        const resolve = (runtimeMode: RuntimeMode) =>
+          policy.resolve({
+            thread: makeThread({ now, worktreePath: null, runtimeMode }),
+            modelSelection: { instanceId: noAutoInstanceId, model: "test-model" },
+          });
+        const request = {
+          sessionId: "session-1",
+          toolCall: { toolCallId: "command-1", title: "Run command", kind: "execute" as const },
+          options: [{ optionId: "allow", name: "Allow", kind: "allow_once" as const }],
+        };
+        const auto = yield* resolve("auto");
+        assert.equal(auto.runtimeMode, "approval-required");
+        assert.equal(acpPermissionDisposition(auto, request), "ask");
+        assert.equal(acpPermissionDisposition(yield* resolve("auto-accept-edits"), request), "ask");
+        assert.equal(acpPermissionDisposition(yield* resolve("full-access"), request), "allow");
+      }),
   );
 
   it.effect("runs a mode the provider does not offer in Supervised", () =>

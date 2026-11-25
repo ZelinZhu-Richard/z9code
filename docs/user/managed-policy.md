@@ -207,8 +207,7 @@ environment from settings the user controls, such as their shell profile, so a u
 own `claude` earlier on their `PATH`. Pin an absolute `binaryPath` in `providers.instances` for each
 provider you allow.
 
-ACP agents' own mode menus have no effect under `maxRuntimeMode`, except Antigravity's, whose modes
-T3 Code can place under the limit. Users still choose which ACP Registry agent runs; leave
+ACP agents' own mode menus have no effect under `maxRuntimeMode`. Users still choose which ACP Registry agent runs; leave
 `acpRegistry` out of `allowedDrivers` to stop that.
 
 The limit decides which modes T3 Code asks the provider for. It is not a sandbox; see
@@ -269,8 +268,7 @@ so restart T3 Code after that.
 ### Providers
 
 `providers.allowedDrivers` lists the providers that may run, by ID: `codex` (Codex),
-`claudeAgent` (Claude), `cursor` (Cursor), `grok` (Grok), `opencode` (OpenCode), `antigravity`
-(Antigravity), `fx` (fx), `kiro` (Kiro), `pi` (Pi), `muse` (Muse Code), and `acpRegistry` (ACP
+`claudeAgent` (Claude), `cursor` (Cursor), `grok` (Grok), `opencode` (OpenCode), `fx` (fx), `kiro` (Kiro), `pi` (Pi), `muse` (Muse Code), and `acpRegistry` (ACP
 Registry).
 `t3 policy check` rejects an ID this version does not know. Threads on other providers stay,
 marked unavailable, and users can still turn those providers off.

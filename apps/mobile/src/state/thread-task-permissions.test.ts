@@ -694,12 +694,12 @@ it.each(["cancelled", "expired"] as const)(
 describe("mobile handoff preview and submission", () => {
   it("follows project enablement and provider availability for the selected destination", async () => {
     state.grantedEnvironments.add("secondary");
-    const instanceId = ProviderInstanceId.make("antigravity");
+    const instanceId = ProviderInstanceId.make("kiro");
     const projectId = ProjectId.make(state.thread.projectId);
     const selection = { instanceId, model: "gemini" };
     const provider = {
       instanceId,
-      driver: ProviderDriverKind.make("antigravity"),
+      driver: ProviderDriverKind.make("kiro"),
       enabled: false,
       installed: true,
       auth: { status: "authenticated" as const },

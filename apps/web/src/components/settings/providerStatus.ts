@@ -36,23 +36,8 @@ export function providerAuthLabel(
   return auth.label ?? auth.type;
 }
 
-// Antigravity's local health check verifies installation, not Google sign-in.
-// API-key and Agent Platform warnings still need attention.
-function isAntigravitySignInUnchecked(provider: ServerProvider): boolean {
-  return (
-    provider.driver === "antigravity" &&
-    provider.installed &&
-    provider.status === "warning" &&
-    provider.auth.status === "unknown" &&
-    (provider.auth.type === undefined ||
-      provider.auth.type === "oauth-personal" ||
-      provider.auth.type === "oauth-business")
-  );
-}
-
 export function getProviderStatusKey(provider: ServerProvider | undefined): ProviderStatusKey {
   if (provider && !provider.enabled) return "disabled";
-  if (provider && isAntigravitySignInUnchecked(provider)) return "neutral";
   return provider?.status ?? "warning";
 }
 
@@ -91,12 +76,6 @@ export function getProviderSummary(
       detail: provider.message ?? null,
     };
   }
-  if (isAntigravitySignInUnchecked(provider)) {
-    return {
-      headline: resolve(msg("Installed · Sign-in not checked")),
-      detail: provider.message ?? null,
-    };
-  }
   if (provider.status === "warning") {
     return {
       headline: resolve(msg("Needs attention")),
@@ -128,9 +107,10 @@ export function getProviderSummary(
 
 export function getProviderVersionLabel(version: string | null | undefined) {
   if (!version) return null;
-  const antigravity = /^agy_acp_server_(\d{4})(\d{2})(\d{2})_\d+(?:_(\w+))?$/.exec(version);
-  if (antigravity) {
-    const [, year, month, day, candidate] = antigravity;
+  // agy reports dated build tags such as agy_acp_server_20261101_3_rc.
+  const agyBuild = /^agy_acp_server_(\d{4})(\d{2})(\d{2})_\d+(?:_(\w+))?$/.exec(version);
+  if (agyBuild) {
+    const [, year, month, day, candidate] = agyBuild;
     return `${year}-${month}-${day}${candidate ? ` ${candidate}` : ""}`;
   }
   return /^\d/.test(version) ? `v${version}` : version;
