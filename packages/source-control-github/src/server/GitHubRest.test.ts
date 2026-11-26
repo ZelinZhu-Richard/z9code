@@ -96,12 +96,19 @@ const json = (body: unknown, init?: ResponseInit) =>
   });
 
 describe("environmentToken", () => {
-  it("follows gh's precedence per kind of host", () => {
+  it("follows gh's precedence per kind of host, pinning tenants to GH_HOST", () => {
     const env = { GH_TOKEN: "gh", GITHUB_TOKEN: "github", GH_ENTERPRISE_TOKEN: "ghe" };
     expect(GitHubCredentials.environmentToken("github.com", env)).toBe("gh");
-    expect(GitHubCredentials.environmentToken("acme.ghe.com", { GITHUB_TOKEN: "github" })).toBe(
-      "github",
-    );
+    // Anyone can own a *.ghe.com tenant, so it gets the github.com token only when GH_HOST names it.
+    expect(
+      GitHubCredentials.environmentToken("acme.ghe.com", { GITHUB_TOKEN: "github" }),
+    ).toBeNull();
+    expect(
+      GitHubCredentials.environmentToken("acme.ghe.com", {
+        GITHUB_TOKEN: "github",
+        GH_HOST: "acme.ghe.com",
+      }),
+    ).toBe("github");
     expect(GitHubCredentials.environmentToken("git.acme.internal", env)).toBeNull();
     expect(
       GitHubCredentials.environmentToken("git.acme.internal", {

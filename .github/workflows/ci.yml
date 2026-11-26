@@ -36,13 +36,24 @@ jobs:
         run: pnpm exec vp run typecheck
 
   test:
-    name: Test ${{ matrix.package }}
+    name: Test ${{ matrix.package }} ${{ matrix.shard }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
       fail-fast: false
+      # One process per suite overloads a 4-vCPU runner and drops the browser; shard like upstream.
       matrix:
-        package: [apps/server, apps/web, apps/desktop, packages]
+        include:
+          - { package: apps/server, shard: 1/4 }
+          - { package: apps/server, shard: 2/4 }
+          - { package: apps/server, shard: 3/4 }
+          - { package: apps/server, shard: 4/4 }
+          - { package: apps/web, shard: 1/4 }
+          - { package: apps/web, shard: 2/4 }
+          - { package: apps/web, shard: 3/4 }
+          - { package: apps/web, shard: 4/4 }
+          - { package: apps/desktop, shard: 1/1 }
+          - { package: packages, shard: 1/1 }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,6 +63,9 @@ jobs:
         run: npm install -g "$(jq -r '.packageManager' package.json)"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Install native build libraries
+        if: matrix.package == 'apps/desktop'
+        run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config
       - name: Install Chromium for browser tests
         if: matrix.package == 'apps/web' || matrix.package == 'apps/server'
         run: pnpm --filter @t3tools/web exec playwright install --with-deps chromium
@@ -64,7 +78,7 @@ jobs:
               fi
             done
           else
-            cd "${{ matrix.package }}" && pnpm run test
+            cd "${{ matrix.package }}" && pnpm run test --shard "${{ matrix.shard }}"
           fi
 
   rust:

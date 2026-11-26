@@ -675,10 +675,13 @@ fn redact_command_parts(parts: Vec<String>) -> String {
             continue;
         }
         if let Some((name, _)) = part.split_once('=')
-            && !name.is_empty() && !name.contains('/') && is_secret_name(name) {
-                redacted.push(format!("{name}={REDACTED}"));
-                continue;
-            }
+            && !name.is_empty()
+            && !name.contains('/')
+            && is_secret_name(name)
+        {
+            redacted.push(format!("{name}={REDACTED}"));
+            continue;
+        }
         if part.starts_with('-') && !part.contains('=') && is_secret_name(&part) {
             redact_next = true;
             redacted.push(part);
