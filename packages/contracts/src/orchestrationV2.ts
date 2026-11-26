@@ -2616,6 +2616,8 @@ export const OrchestrationV2ShellStreamItem = Schema.Union([
     sequence: NonNegativeInt,
     location: Schema.Literals(["active", "archive"]),
     threadId: ThreadId,
+    /** Set only for a deletion; an archive also removes the row and must keep client caches. */
+    deleted: Schema.optionalKey(Schema.Literal(true)),
   }),
 ]);
 export type OrchestrationV2ShellStreamItem = typeof OrchestrationV2ShellStreamItem.Type;
@@ -4099,6 +4101,7 @@ export const ORCHESTRATION_V2_WS_METHODS = {
   getArchivedShellSnapshot: "orchestration.getArchivedShellSnapshot",
   getThreadFamily: "orchestration.getThreadFamily",
   getThreadTitles: "orchestration.getThreadTitles",
+  getDeletedThreadIds: "orchestration.getDeletedThreadIds",
   getThreadLinkMetadata: "orchestration.getThreadLinkMetadata",
   getWorktreeThreadIds: "orchestration.getWorktreeThreadIds",
   getOlderSettledThreads: "orchestration.getOlderSettledThreads",
@@ -4250,6 +4253,13 @@ export const OrchestrationV2GetThreadTitlesInput = Schema.Struct({
 
 /** Titles of the requested threads that exist, archived ones included. Deleted and unknown ids are absent. */
 export const OrchestrationV2ThreadTitles = Schema.Record(ThreadId, Schema.String);
+
+export const DELETED_THREAD_LOOKUP_MAX_IDS = 500;
+export const OrchestrationV2GetDeletedThreadIdsInput = Schema.Struct({
+  threadIds: Schema.Array(ThreadId).check(Schema.isMaxLength(DELETED_THREAD_LOOKUP_MAX_IDS)),
+});
+/** Only ids the server can prove were deleted; unknown and not-yet-created ids are absent. */
+export const OrchestrationV2DeletedThreadIds = Schema.Array(ThreadId);
 
 export const OrchestrationV2ThreadLinkMetadata = Schema.Struct({
   title: Schema.String,
@@ -4738,6 +4748,10 @@ export const OrchestrationV2RpcSchemas = {
   getThreadTitles: {
     input: OrchestrationV2GetThreadTitlesInput,
     output: OrchestrationV2ThreadTitles,
+  },
+  getDeletedThreadIds: {
+    input: OrchestrationV2GetDeletedThreadIdsInput,
+    output: OrchestrationV2DeletedThreadIds,
   },
   getThreadLinkMetadata: {
     input: OrchestrationV2GetThreadTitlesInput,

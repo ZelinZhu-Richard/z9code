@@ -179,6 +179,7 @@ const makeHarness = Effect.fn("TestThreadAtoms.makeHarness")(function* (options?
             }),
           saveThread: () => Effect.void,
           removeThread: () => Effect.void,
+          listThreadIds: () => Effect.succeed([]),
           loadServerConfig: () => Effect.succeedNone,
           saveServerConfig: () => Effect.void,
           loadVcsRefs: () => Effect.succeedNone,

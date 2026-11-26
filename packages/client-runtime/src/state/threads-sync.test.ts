@@ -251,6 +251,7 @@ const makeHarness = Effect.fn("TestEnvironmentThreads.makeHarness")(function* (o
       ),
     removeThread: (_environmentId, threadId) =>
       Ref.update(removedThreads, (current) => [...current, threadId]),
+    listThreadIds: () => Effect.succeed([]),
     loadServerConfig: () => Effect.succeedNone,
     saveServerConfig: () => Effect.void,
     loadVcsRefs: () => Effect.succeedNone,
