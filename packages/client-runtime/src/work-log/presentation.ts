@@ -8,27 +8,27 @@ import {
   type ToolActivityIcon,
   type OrchestrationV2TurnItem,
   type ThreadId,
-} from "@t3tools/contracts";
-import type { ToolCallVisibility } from "@t3tools/contracts/settings";
+} from "@z9code/contracts";
+import type { ToolCallVisibility } from "@z9code/contracts/settings";
 import {
   resolveT3McpSummaryAction,
   resolveT3McpToolDefinition,
-  type T3McpToolDefinition,
-  type T3McpToolSummaryAction,
-} from "@t3tools/shared/t3McpToolPresentation";
-import { classifyMarkdownImageSource } from "@t3tools/client-runtime/markdown-images";
-import { resolveMediaSource } from "@t3tools/client-runtime/media-source";
-import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
-import { isWorkspaceImagePreviewPath } from "@t3tools/shared/mediaPreview";
-import { formatTokens } from "@t3tools/shared/usageFormat";
-import { classifyToolActivity } from "@t3tools/shared/toolActivity";
-import { toolOutputIndicatesFailure } from "@t3tools/shared/toolOutput";
+  type Z9McpToolDefinition,
+  type Z9McpToolSummaryAction,
+} from "@z9code/shared/t3McpToolPresentation";
+import { classifyMarkdownImageSource } from "@z9code/client-runtime/markdown-images";
+import { resolveMediaSource } from "@z9code/client-runtime/media-source";
+import { sourceControlClients } from "@z9code/client-runtime/source-control-clients";
+import { isWorkspaceImagePreviewPath } from "@z9code/shared/mediaPreview";
+import { formatTokens } from "@z9code/shared/usageFormat";
+import { classifyToolActivity } from "@z9code/shared/toolActivity";
+import { toolOutputIndicatesFailure } from "@z9code/shared/toolOutput";
 
 import {
   summarizeT3ToolCalls,
   t3ToolResultIndicatesFailure,
-  type T3ToolSummaryCall,
-} from "@t3tools/client-runtime/t3ToolSummary";
+  type Z9ToolSummaryCall,
+} from "@z9code/client-runtime/t3ToolSummary";
 import { mFallback, msg } from "gt-i18n";
 import { t3ToolSentence } from "./t3ToolSentences.ts";
 import type { MFunctionType } from "gt-i18n/types";
@@ -87,7 +87,7 @@ export function contextCompactionLabel(
 }
 
 export interface WorkLogPresentationEntry {
-  readonly questionAnswer?: import("@t3tools/contracts").UserInputAttachmentAnswerPayload;
+  readonly questionAnswer?: import("@z9code/contracts").UserInputAttachmentAnswerPayload;
   readonly id: string;
   readonly createdAt: string;
   readonly label: string;
@@ -182,7 +182,7 @@ function t3ToolStatusKey(status: string | undefined) {
 }
 
 function resolveT3McpToolPresentation(
-  definition: T3McpToolDefinition | null,
+  definition: Z9McpToolDefinition | null,
   status: string | undefined,
   data: unknown,
   resolve: MFunctionType,
@@ -660,7 +660,7 @@ function joinClauses(items: ReadonlyArray<string>, resolve: MFunctionType): stri
   );
 }
 
-function t3ToolSummaryCall(entry: WorkLogPresentationEntry): T3ToolSummaryCall {
+function t3ToolSummaryCall(entry: WorkLogPresentationEntry): Z9ToolSummaryCall {
   return {
     input: workEntryToolInput(entry),
     output: workEntryToolOutput(entry),
@@ -675,7 +675,7 @@ function t3ToolSummaryCall(entry: WorkLogPresentationEntry): T3ToolSummaryCall {
   };
 }
 
-function summaryActionPriority(action: ToolGroupAction | T3McpToolSummaryAction): number {
+function summaryActionPriority(action: ToolGroupAction | Z9McpToolSummaryAction): number {
   switch (action) {
     case "command":
     case "edit":
@@ -738,10 +738,10 @@ export function summarizeToolGroup(
   }
   entries = toolEntries;
   const groups = new Map<
-    ToolGroupAction | T3McpToolSummaryAction,
+    ToolGroupAction | Z9McpToolSummaryAction,
     {
       action: ToolGroupAction;
-      t3Action: T3McpToolSummaryAction | null;
+      t3Action: Z9McpToolSummaryAction | null;
       entries: WorkLogPresentationEntry[];
     }
   >();

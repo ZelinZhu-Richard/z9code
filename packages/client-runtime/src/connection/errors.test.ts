@@ -1,4 +1,4 @@
-import { EnvironmentAuthInvalidError } from "@t3tools/contracts";
+import { EnvironmentAuthInvalidError } from "@z9code/contracts";
 import { describe, expect, it } from "@effect/vitest";
 
 import { isHostCredentialRefusal, mapRemoteDpopEnvironmentError } from "./errors.ts";

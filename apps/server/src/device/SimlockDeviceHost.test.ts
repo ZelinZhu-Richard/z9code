@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { SecretProviderId, type SimlockDeviceHostConfig } from "@t3tools/contracts";
-import * as SecretResolver from "@t3tools/secret-provider-core/server/SecretResolver";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import { SecretProviderId, type SimlockDeviceHostConfig } from "@z9code/contracts";
+import * as SecretResolver from "@z9code/secret-provider-core/server/SecretResolver";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Clock from "effect/Clock";
 import * as Fiber from "effect/Fiber";
@@ -48,7 +48,7 @@ const CATALOG = {
   ],
 };
 
-/** The gateway's HTTP API and T3's agent-device CLI, recording what was asked of them. */
+/** The gateway's HTTP API and z9code's agent-device CLI, recording what was asked of them. */
 const fakePool = (
   options: {
     /** What the agent-device CLI prints before exiting 1 from `open`. */

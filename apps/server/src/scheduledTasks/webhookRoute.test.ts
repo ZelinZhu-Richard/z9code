@@ -13,7 +13,7 @@ import {
   EnvironmentHttpApi,
   ScheduledTaskError,
   ScheduledTaskWebhookDeliveryId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   ScheduledTaskService,
   type WebhookTriggerRequest,
@@ -108,7 +108,7 @@ describe("webhook route", () => {
     try {
       const response = await handler(
         new Request("http://env.local/api/hooks/id/tok", {
-          headers: { Cookie: "t3_session=session-secret", "x-github-event": "push" },
+          headers: { Cookie: "z9_session=session-secret", "x-github-event": "push" },
         }),
       );
       expect(response.status).toBe(202);

@@ -45,7 +45,7 @@ vi.mock("../features/connection/dpop", async () => {
   const Layer = await import("effect/Layer");
   return { layer: Layer.empty, layerSigner: Layer.empty };
 });
-vi.mock("@t3tools/client-runtime/rpc", async () => {
+vi.mock("@z9code/client-runtime/rpc", async () => {
   const Layer = await import("effect/Layer");
   return { layerRemoteHttpClient: () => Layer.empty };
 });

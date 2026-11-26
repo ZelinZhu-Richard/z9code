@@ -1,5 +1,5 @@
-import { scopedThreadKey } from "@t3tools/client-runtime/environment";
-import type { ScopedThreadRef } from "@t3tools/contracts";
+import { scopedThreadKey } from "@z9code/client-runtime/environment";
+import type { ScopedThreadRef } from "@z9code/contracts";
 
 // Lifecycle commands run in order, so a queued close ends whichever shell holds its ID by then.
 const closingIdsByThread = new Map<string, Map<string, number>>();

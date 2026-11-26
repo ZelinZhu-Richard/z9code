@@ -1,10 +1,10 @@
-import { EnvironmentId, ThreadId } from "@t3tools/contracts";
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { EnvironmentId, ThreadId } from "@z9code/contracts";
+import { scopeThreadRef } from "@z9code/client-runtime/environment";
 import { describe, expect, it } from "vite-plus/test";
 import type { ComposerThreadDraftState } from "../../composerDraftStore";
 import { formatInlineContextReference } from "../../lib/composerContextReferences";
 import { threadContextReference } from "../../lib/composerContextRecords";
-import { threadContextRecord } from "@t3tools/shared/composerContextReferences";
+import { threadContextRecord } from "@z9code/shared/composerContextReferences";
 import {
   approvalRedirectNotice,
   composerDraftContentChanged,

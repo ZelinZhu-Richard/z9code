@@ -1,7 +1,7 @@
 import {
   serializeAssistantCitation,
   expandAssistantCitationsForProvider,
-} from "@t3tools/shared/assistantCitations";
+} from "@z9code/shared/assistantCitations";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it, vi } from "vite-plus/test";
@@ -30,7 +30,7 @@ import {
   PROVIDER_SEND_TURN_MAX_INPUT_CHARS,
   type OrchestrationV2ThreadProjection,
   OrchestrationV2DomainEvent,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -78,10 +78,10 @@ import * as RuntimeRequestService from "./RuntimeRequestService.ts";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
 import * as ThreadManagementService from "./ThreadManagementService.ts";
 import * as ThreadTitleRegenerationService from "./ThreadTitleRegenerationService.ts";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
+import * as IdAllocator from "@z9code/provider-core/server/IdAllocator";
 import { CodexProviderCapabilitiesV2 } from "./Adapters/CodexAdapterV2.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
-import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
 import * as ProviderSessionManager from "./ProviderSessionManager.ts";
 import * as ProviderTurnStart from "./ProviderTurnStartService.ts";
 import * as RunExecutionService from "./RunExecutionService.ts";
@@ -1580,7 +1580,7 @@ effectIt.effect(
           failure: {
             class: "unknown",
             message:
-              "T3 Code could not start this turn. Send the message again; if it keeps failing, check the server logs.",
+              "z9code could not start this turn. Send the message again; if it keeps failing, check the server logs.",
           },
         },
       ]);

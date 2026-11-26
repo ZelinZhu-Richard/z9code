@@ -1,11 +1,11 @@
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
+import { thrownErrorMessage } from "@z9code/client-runtime/errors";
 import { useAtomValue } from "@effect/atom-react";
 import {
   AuthEnvironmentMaintainScope,
   type AuthSessionState,
   sessionGrantsScope,
-} from "@t3tools/contracts";
-import { managedUpdatesDenial } from "@t3tools/client-runtime/contract-labels";
+} from "@z9code/contracts";
+import { managedUpdatesDenial } from "@z9code/client-runtime/contract-labels";
 import type { AsyncResult } from "effect/reactivity";
 import { environmentSession } from "~/state/session";
 import type {
@@ -13,17 +13,17 @@ import type {
   EnvironmentId,
   ServerInstallation,
   ServerSelfUpdateCapability,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   serverUpdateFailureText,
   type ServerUpdateStage,
   type ServerUpdateState,
-} from "@t3tools/client-runtime/state/server";
+} from "@z9code/client-runtime/state/server";
 import {
   isAtomCommandInterrupted,
   settlePromise,
   squashAtomCommandFailure,
-} from "@t3tools/client-runtime/state/runtime";
+} from "@z9code/client-runtime/state/runtime";
 import { CircleArrowUpIcon } from "lucide-react";
 import { type ComponentProps, useRef, useState } from "react";
 import { msg, T, useGT, useMessages } from "gt-react";
@@ -39,7 +39,7 @@ import { useManagedPolicy } from "~/state/managedPolicy";
 import { environmentPresentations } from "~/state/presentation";
 import { ManagedControl } from "./ManagedPolicy";
 import { manualServerUpdateCommand } from "~/versionSkew";
-import { crossesReleaseTrack } from "@t3tools/shared/cliRelease";
+import { crossesReleaseTrack } from "@z9code/shared/cliRelease";
 import { Button } from "./ui/button";
 import { toastManager } from "./ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "./ui/tooltip";
@@ -179,7 +179,7 @@ export function useServerUpdate() {
                   version: result.value.targetVersion,
                 }),
               )
-            : m(msg("Reconnected on t3@{version}.", { version: result.value.targetVersion })),
+            : m(msg("Reconnected on z9@{version}.", { version: result.value.targetVersion })),
       });
     }
     return { status: "updated" };
@@ -222,7 +222,7 @@ export function ServerUpdatesAction({
         const confirmed =
           (await requestConfirmDialog(
             gt(
-              "Update the T3 Code desktop apps on {servers}? They will close and relaunch on those machines.",
+              "Update the z9code desktop apps on {servers}? They will close and relaunch on those machines.",
               { servers: desktopTargets.map((target) => target.serverLabel).join(", ") },
             ),
             { initialFocus: "confirm" },
@@ -325,12 +325,12 @@ export function ServerUpdateAction({
         type: "success",
         title: updatesInstall ? gt("Update command copied") : gt("Relaunch command copied"),
         description: updatesInstall
-          ? gt("Run `{command}` on {serverLabel}, then restart t3 with your usual options.", {
+          ? gt("Run `{command}` on {serverLabel}, then restart z9 with your usual options.", {
               command,
               serverLabel,
             })
           : gt(
-              "Stop t3 on {serverLabel}, then relaunch with `{command}` using the same subcommand and options. This does not update an installed t3 command.",
+              "Stop z9 on {serverLabel}, then relaunch with `{command}` using the same subcommand and options. This does not update an installed z9 command.",
               { command, serverLabel },
             ),
       });
@@ -355,7 +355,7 @@ export function ServerUpdateAction({
       const confirmed =
         (await requestConfirmDialog(
           gt(
-            "Update the T3 Code desktop app that runs the {serverLabel}? It will close and relaunch on that machine.",
+            "Update the z9code desktop app that runs the {serverLabel}? It will close and relaunch on that machine.",
             { serverLabel },
           ),
           { initialFocus: "confirm" },
@@ -483,7 +483,7 @@ export function OutdatedServerUpdateAction({
     toastManager.add({
       type: "success",
       title: m(msg("{serverLabel} updated", { serverLabel })),
-      description: m(msg("Reconnected on t3@{version}.", { version: result.value.targetVersion })),
+      description: m(msg("Reconnected on z9@{version}.", { version: result.value.targetVersion })),
     });
   };
   if (fromVersion !== undefined && crossesReleaseTrack(fromVersion, targetVersion)) {

@@ -1,8 +1,8 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
-import { EnvironmentId } from "@t3tools/contracts";
-import { providerClients } from "@t3tools/client-runtime/provider-clients";
-import { normalizeProviderAccentColor } from "@t3tools/client-runtime/state/provider-instance-display";
+import { EnvironmentId } from "@z9code/contracts";
+import { providerClients } from "@z9code/client-runtime/provider-clients";
+import { normalizeProviderAccentColor } from "@z9code/client-runtime/state/provider-instance-display";
 import {
   collectHttpQuotaSources,
   collectLimitAccounts,
@@ -12,12 +12,12 @@ import {
   remainingPercent,
   type LimitAccount,
   type LimitPoolWindow,
-} from "@t3tools/shared/usageLimits";
+} from "@z9code/shared/usageLimits";
 import {
   collectExternalUsageLinks,
   collectLimitNotices,
   cursorUsageWindowDetails,
-} from "@t3tools/shared/usageLimitsCopy";
+} from "@z9code/shared/usageLimitsCopy";
 import { msg, T, useGT, useMessages, Var } from "gt-react-native";
 import { Fragment, type ReactNode, useId, useState } from "react";
 import { Pressable, View } from "react-native";

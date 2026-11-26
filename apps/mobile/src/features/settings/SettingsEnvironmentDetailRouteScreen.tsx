@@ -1,5 +1,5 @@
-import { errorDisplayMessage } from "@t3tools/client-runtime/errors";
-import { serverUpdateFailureText } from "@t3tools/client-runtime/state/server";
+import { errorDisplayMessage } from "@z9code/client-runtime/errors";
+import { serverUpdateFailureText } from "@z9code/client-runtime/state/server";
 import { T, useGT, useMessages, Var } from "gt-react-native";
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtom, useAtomValue } from "@effect/atom-react";
@@ -9,10 +9,10 @@ import {
   AuthOrchestrationReadScope,
   type EnvironmentId,
   type ServerProvider,
-} from "@t3tools/contracts";
-import { settlePromise, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
-import { managedUpdatesDenial } from "@t3tools/client-runtime/contract-labels";
-import { sessionPermissionsUnavailableMessage } from "@t3tools/shared/authScopeOptions";
+} from "@z9code/contracts";
+import { settlePromise, squashAtomCommandFailure } from "@z9code/client-runtime/state/runtime";
+import { managedUpdatesDenial } from "@z9code/client-runtime/contract-labels";
+import { sessionPermissionsUnavailableMessage } from "@z9code/shared/authScopeOptions";
 import * as Cause from "effect/Cause";
 import * as Exit from "effect/Exit";
 import { AsyncResult } from "effect/reactivity";
@@ -137,11 +137,11 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
       capabilities.serverSelfUpdate === "desktop-managed"
         ? gt(
             "Install {product} {version}. The desktop app will close and relaunch. Running threads may be interrupted.",
-            { product: "T3 Code", version: targetVersion },
+            { product: "z9code", version: targetVersion },
           )
         : gt(
             "Install {product} {version}. The server will restart and reconnect. Running threads may be interrupted.",
-            { product: "T3 Code", version: targetVersion },
+            { product: "z9code", version: targetVersion },
           ),
       [
         { text: gt("Cancel"), style: "cancel" },
@@ -254,7 +254,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
             {notice ? <Text className="px-2 text-sm text-foreground-muted">{notice}</Text> : null}
             {config && !outdated ? (
               <>
-                <SettingsSection title="T3 Code">
+                <SettingsSection title="z9code">
                   <View className="gap-1 p-4">
                     <Text className="text-base text-foreground">
                       <T>
@@ -298,7 +298,7 @@ function EnvironmentDetail({ environmentId }: { readonly environmentId: Environm
                         {capabilities?.serverSelfUpdate === "desktop-managed"
                           ? gt("Update the desktop app on this machine.")
                           : gt("Update and restart {product} on this machine.", {
-                              product: "T3 Code",
+                              product: "z9code",
                             })}
                       </Text>
                     ) : null}

@@ -9,8 +9,8 @@ import {
   type PeerLinkSummary,
   resolveEnvironmentMachineKind,
   type ServerConfig,
-} from "@t3tools/contracts";
-import { isLocalLoopbackHost } from "@t3tools/shared/hostClassification";
+} from "@z9code/contracts";
+import { isLocalLoopbackHost } from "@z9code/shared/hostClassification";
 
 import type { EnvironmentPresentation } from "./connection/presentation.ts";
 import { connectionRoutes, routeHttpBaseUrl } from "./connection/routes.ts";

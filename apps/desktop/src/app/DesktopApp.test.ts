@@ -9,7 +9,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as HttpClient from "effect/http/HttpClient";
 import { ChildProcessSpawner } from "effect/process";
-import * as NetService from "@t3tools/shared/Net";
+import * as NetService from "@z9code/shared/Net";
 import * as Fiber from "effect/Fiber";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
@@ -327,7 +327,7 @@ it.effect.each([false, true])(
 );
 
 it.effect(
-  "points a stale t3 launcher at the updated AppImage and accepts t3 <dir> with Local environment off",
+  "points a stale z9 launcher at the updated AppImage and accepts t3 <dir> with Local environment off",
   () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -338,13 +338,13 @@ it.effect(
         baseDir,
         platform: "linux",
       } as DesktopEnvironment.DesktopEnvironment["Service"]);
-      const removedAppImage = path.join(baseDir, "T3-Code-0.1.6-x86_64.AppImage");
-      const updatedAppImage = path.join(baseDir, "T3-Code-0.1.7-x86_64.AppImage");
+      const removedAppImage = path.join(baseDir, "z9code-0.1.6-x86_64.AppImage");
+      const updatedAppImage = path.join(baseDir, "z9code-0.1.7-x86_64.AppImage");
       yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
       yield* fs.writeFileString(
         launcher,
         DesktopCliShim.renderCliShim({
-          target: { kind: "appimage", appImage: removedAppImage, executableName: "t3code" },
+          target: { kind: "appimage", appImage: removedAppImage, executableName: "z9code" },
           shimPath: launcher,
           t3Home: baseDir,
         }),
@@ -375,7 +375,7 @@ it.effect(
       assert.include(
         content,
         `app='${updatedAppImage}'`,
-        "startup left the t3 launcher pointing at the removed AppImage",
+        "startup left the z9 launcher pointing at the removed AppImage",
       );
       assert.isTrue(
         yield* Deferred.isDone(activationStarted),

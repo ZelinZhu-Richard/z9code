@@ -1,11 +1,11 @@
 import { msg } from "gt-react";
-import { managedCapabilityDenial } from "@t3tools/client-runtime/contract-labels";
+import { managedCapabilityDenial } from "@z9code/client-runtime/contract-labels";
 import { Link } from "@tanstack/react-router";
 import {
   AgentFeedbackMode,
   DEFAULT_WORKFLOW_SKIPPED_RUNS_KEPT,
   MAX_WORKFLOW_SKIPPED_RUNS_KEPT,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { T, useGT, useMessages } from "gt-react";
 
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "../ui/number-field";
@@ -186,7 +186,7 @@ function WorkflowsRow() {
       {...searchableSetting("workflows-beta")}
       settingKeys={["workflowsEnabled"]}
       description={gt(
-        "Run multi-step workflows from files in the workflows folder of this server's T3 home. Open them from the command palette. While off, nothing in that folder runs; runs wait until it is on again.",
+        "Run multi-step workflows from files in the workflows folder of this server's z9code home. Open them from the command palette. While off, nothing in that folder runs; runs wait until it is on again.",
       )}
       control={
         <ScopedSwitch
@@ -306,7 +306,7 @@ function SimlockHostsRow() {
           <Link to="/settings/devices" className="underline underline-offset-2">
             Devices
           </Link>
-          . An alpha that may change or break. T3 Code never installs Simlock.
+          . An alpha that may change or break. z9code never installs Simlock.
         </T>
       }
       control={
@@ -346,7 +346,7 @@ function FastWorktreeCheckoutRow() {
       {...searchableSetting("worktree-fast-checkout")}
       settingKeys={["fastWorktreeCheckout"]}
       description={gt(
-        "On a Mac, clone new worktrees from a checkout cached in the T3 home folder instead of writing every file. Uses Git’s normal checkout when it can’t. Turning it off deletes the cache.",
+        "On a Mac, clone new worktrees from a checkout cached in the z9code home folder instead of writing every file. Uses Git’s normal checkout when it can’t. Turning it off deletes the cache.",
       )}
       control={
         <ScopedSwitch
@@ -368,12 +368,12 @@ const AGENT_FEEDBACK_MODE_LABELS: Record<AgentFeedbackMode, string> = {
   auto: msg("Automatic"),
 };
 const AGENT_FEEDBACK_MODE_DESCRIPTIONS: Record<AgentFeedbackMode, string> = {
-  off: msg("Agents send no feedback to the T3 team."),
+  off: msg("Agents send no feedback to the z9code team."),
   "on-request": msg(
-    "When you ask, agents show you a short report about T3 Code and send it to the T3 team if you approve.",
+    "When you ask, agents show you a short report about z9code and send it to the z9code team if you approve.",
   ),
   auto: msg(
-    "Agents also report T3 Code problems they hit on their own, such as a T3 tool that failed.",
+    "Agents also report z9code problems they hit on their own, such as a z9code tool that failed.",
   ),
 };
 

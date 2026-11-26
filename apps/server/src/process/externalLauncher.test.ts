@@ -16,10 +16,10 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import { EDITORS } from "@t3tools/contracts";
-import { resolveEditorCommand } from "@t3tools/shared/editor";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { SpawnExecutableResolution } from "@t3tools/shared/shell";
+import { EDITORS } from "@z9code/contracts";
+import { resolveEditorCommand } from "@z9code/shared/editor";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { SpawnExecutableResolution } from "@z9code/shared/shell";
 import * as ExternalLauncher from "./externalLauncher.ts";
 import { WindowsVerbatimSpawn } from "./windowsVerbatimSpawn.ts";
 
@@ -243,7 +243,7 @@ it.effect.skipIf(windowsHost)(
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
 );
 
-// A project opened from T3 must not replace the editor's last active window.
+// A project opened from z9code must not replace the editor's last active window.
 it.effect.skipIf(windowsHost)(
   "opens a project folder in a new VS Code window and a file in the existing one",
   () =>

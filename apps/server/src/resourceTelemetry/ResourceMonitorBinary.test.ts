@@ -1,5 +1,5 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import { afterEach, assert, describe, it, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -31,7 +31,7 @@ describe("ResourceMonitorBinary", () => {
         Effect.provideService(HostProcess.Platform, "freebsd"),
         Effect.provideService(HostProcess.Architecture, "ia32"),
         Effect.provideService(HostProcess.Environment, {
-          T3CODE_RESOURCE_MONITOR_PATH: binaryPath,
+          Z9CODE_RESOURCE_MONITOR_PATH: binaryPath,
         }),
       );
 
@@ -52,8 +52,8 @@ describe("ResourceMonitorBinary", () => {
       const service = yield* ResourceMonitorBinary.make().pipe(
         Effect.provide(ServerConfig.layerTest(process.cwd(), baseDir)),
         Effect.provideService(HostProcess.Environment, {
-          T3CODE_RESOURCE_MONITOR_PATH: binaryPath,
-          T3CODE_RESOURCE_MONITOR_DISABLED: "1",
+          Z9CODE_RESOURCE_MONITOR_PATH: binaryPath,
+          Z9CODE_RESOURCE_MONITOR_DISABLED: "1",
         }),
       );
 
@@ -78,7 +78,7 @@ describe("ResourceMonitorBinary", () => {
         Effect.provideService(HostProcess.Architecture, "x64"),
         Effect.provideService(HostProcess.LinuxLibc, "gnu"),
         Effect.provideService(HostProcess.Environment, {
-          T3CODE_RESOURCE_MONITOR_PATH: binaryPath,
+          Z9CODE_RESOURCE_MONITOR_PATH: binaryPath,
         }),
       );
       const error = yield* Effect.flip(service.resolve);
@@ -101,7 +101,7 @@ describe("ResourceMonitorBinary", () => {
         Effect.provideService(HostProcess.Platform, "win32"),
         Effect.provideService(HostProcess.Architecture, "arm64"),
         Effect.provideService(HostProcess.Environment, {
-          T3CODE_RESOURCE_MONITOR_PATH: baseDir,
+          Z9CODE_RESOURCE_MONITOR_PATH: baseDir,
         }),
       );
       const error = yield* Effect.flip(service.resolve);

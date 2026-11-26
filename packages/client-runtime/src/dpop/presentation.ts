@@ -1,4 +1,4 @@
-import type { DpopFailureReason } from "@t3tools/contracts";
+import type { DpopFailureReason } from "@z9code/contracts";
 import { msg } from "gt-i18n";
 
 import type { MarkedText } from "../errors/translatable.ts";

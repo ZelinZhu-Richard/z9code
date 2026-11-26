@@ -16,91 +16,91 @@ import type * as AcpCompat from "effect-acp/compat";
 
 import { beginAcpMockPrompt } from "./acpMockCancellationState.ts";
 
-const requestLogPath = process.env.T3_ACP_REQUEST_LOG_PATH;
+const requestLogPath = process.env.Z9_ACP_REQUEST_LOG_PATH;
 // GitHub Copilot CLI advertises URL-shaped session mode ids.
-const copilotModesProfile = process.env.T3_ACP_COPILOT_MODES === "1";
+const copilotModesProfile = process.env.Z9_ACP_COPILOT_MODES === "1";
 const copilotModeId = (name: string) =>
   `https://agentclientprotocol.com/protocol/session-modes#${name}`;
-const modeOptionCategory = process.env.T3_ACP_MODE_OPTION_CATEGORY ?? "mode";
+const modeOptionCategory = process.env.Z9_ACP_MODE_OPTION_CATEGORY ?? "mode";
 // Comma-separated command names the mock advertises, so `/compact` support is testable.
-const advertisedCommandNames = (process.env.T3_ACP_AVAILABLE_COMMANDS ?? "")
+const advertisedCommandNames = (process.env.Z9_ACP_AVAILABLE_COMMANDS ?? "")
   .split(",")
   .map((name) => name.trim())
   .filter((name) => name.length > 0);
-const loadedCommandNames = process.env.T3_ACP_LOADED_COMMANDS?.split(",").filter(Boolean);
+const loadedCommandNames = process.env.Z9_ACP_LOADED_COMMANDS?.split(",").filter(Boolean);
 // omp advertises a loaded session's commands only after it answers session/load.
-const loadedCommandsDelayMs = Number(process.env.T3_ACP_LOADED_COMMANDS_DELAY_MS ?? "");
-const emitToolCalls = process.env.T3_ACP_EMIT_TOOL_CALLS === "1";
+const loadedCommandsDelayMs = Number(process.env.Z9_ACP_LOADED_COMMANDS_DELAY_MS ?? "");
+const emitToolCalls = process.env.Z9_ACP_EMIT_TOOL_CALLS === "1";
 const emitInterleavedAssistantToolCalls =
-  process.env.T3_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS === "1";
-const emitV2Fidelity = process.env.T3_ACP_EMIT_V2_FIDELITY === "1";
-const emitNotice = process.env.T3_ACP_EMIT_NOTICE === "1";
-const hangCloseSession = process.env.T3_ACP_HANG_CLOSE_SESSION === "1";
-const vibeRetryOutcome = process.env.T3_ACP_VIBE_RETRY_OUTCOME;
-const emitGenericToolPlaceholders = process.env.T3_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS === "1";
+  process.env.Z9_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS === "1";
+const emitV2Fidelity = process.env.Z9_ACP_EMIT_V2_FIDELITY === "1";
+const emitNotice = process.env.Z9_ACP_EMIT_NOTICE === "1";
+const hangCloseSession = process.env.Z9_ACP_HANG_CLOSE_SESSION === "1";
+const vibeRetryOutcome = process.env.Z9_ACP_VIBE_RETRY_OUTCOME;
+const emitGenericToolPlaceholders = process.env.Z9_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS === "1";
 const emitInTurnTaskOutputThenLateDuplicate =
-  process.env.T3_ACP_EMIT_IN_TURN_TASKOUTPUT_THEN_LATE_DUPLICATE === "1";
+  process.env.Z9_ACP_EMIT_IN_TURN_TASKOUTPUT_THEN_LATE_DUPLICATE === "1";
 const emitBackgroundToolDuringAnswer =
-  process.env.T3_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER === "1";
+  process.env.Z9_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER === "1";
 const emitMcpToolApprovalElicitation =
-  process.env.T3_ACP_EMIT_MCP_TOOL_APPROVAL_ELICITATION === "1";
-const emitElicitation = process.env.T3_ACP_EMIT_ELICITATION === "1";
-const elicitationSchema = process.env.T3_ACP_ELICITATION_SCHEMA;
+  process.env.Z9_ACP_EMIT_MCP_TOOL_APPROVAL_ELICITATION === "1";
+const emitElicitation = process.env.Z9_ACP_EMIT_ELICITATION === "1";
+const elicitationSchema = process.env.Z9_ACP_ELICITATION_SCHEMA;
 const decodeElicitationSchema = Schema.decodeUnknownSync(
   Schema.fromJsonString(AcpSchema.ElicitationSchema),
 );
-const elicitationResponseLogPath = process.env.T3_ACP_ELICITATION_RESPONSE_LOG_PATH;
-const grokKillTaskShape = process.env.T3_ACP_GROK_KILL_TASK_SHAPE;
-const emitGrokBackgroundTaskPoll = process.env.T3_ACP_GROK_BACKGROUND_TASK_COMPLETION === "poll";
-const emitForeignSessionUpdates = process.env.T3_ACP_EMIT_FOREIGN_SESSION_UPDATES === "1";
-const omitInitializeModelState = process.env.T3_ACP_OMIT_INITIALIZE_MODEL_STATE === "1";
-const completeFirstPromptOnCancel = process.env.T3_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL === "1";
-const floodStderr = process.env.T3_ACP_FLOOD_STDERR === "1";
-const hangPromptForever = process.env.T3_ACP_HANG_PROMPT_FOREVER === "1";
-const agentVersion = process.env.T3_ACP_AGENT_VERSION ?? "0.0.0";
-const idleError = process.env.T3_ACP_IDLE_ERROR;
-const emitTrackedToolCallKindThenHang = process.env.T3_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG;
-const clientFsProbePath = process.env.T3_ACP_CLIENT_FS_PROBE_PATH;
-const clientFsProbeLogPath = process.env.T3_ACP_CLIENT_FS_PROBE_LOG_PATH;
+const elicitationResponseLogPath = process.env.Z9_ACP_ELICITATION_RESPONSE_LOG_PATH;
+const grokKillTaskShape = process.env.Z9_ACP_GROK_KILL_TASK_SHAPE;
+const emitGrokBackgroundTaskPoll = process.env.Z9_ACP_GROK_BACKGROUND_TASK_COMPLETION === "poll";
+const emitForeignSessionUpdates = process.env.Z9_ACP_EMIT_FOREIGN_SESSION_UPDATES === "1";
+const omitInitializeModelState = process.env.Z9_ACP_OMIT_INITIALIZE_MODEL_STATE === "1";
+const completeFirstPromptOnCancel = process.env.Z9_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL === "1";
+const floodStderr = process.env.Z9_ACP_FLOOD_STDERR === "1";
+const hangPromptForever = process.env.Z9_ACP_HANG_PROMPT_FOREVER === "1";
+const agentVersion = process.env.Z9_ACP_AGENT_VERSION ?? "0.0.0";
+const idleError = process.env.Z9_ACP_IDLE_ERROR;
+const emitTrackedToolCallKindThenHang = process.env.Z9_ACP_EMIT_TRACKED_TOOL_CALL_KIND_THEN_HANG;
+const clientFsProbePath = process.env.Z9_ACP_CLIENT_FS_PROBE_PATH;
+const clientFsProbeLogPath = process.env.Z9_ACP_CLIENT_FS_PROBE_LOG_PATH;
 const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
-const emitEmptySuccessfulBash = process.env.T3_ACP_EMIT_EMPTY_SUCCESSFUL_BASH === "1";
+const emitEmptySuccessfulBash = process.env.Z9_ACP_EMIT_EMPTY_SUCCESSFUL_BASH === "1";
 const emitEmptySuccessfulBashThenHang =
-  process.env.T3_ACP_EMIT_EMPTY_SUCCESSFUL_BASH_THEN_HANG === "1";
-const failLoadSession = process.env.T3_ACP_FAIL_LOAD_SESSION === "1";
+  process.env.Z9_ACP_EMIT_EMPTY_SUCCESSFUL_BASH_THEN_HANG === "1";
+const failLoadSession = process.env.Z9_ACP_FAIL_LOAD_SESSION === "1";
 const failLoadSessionAfterConfigReplay =
-  process.env.T3_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY === "1";
-const emitLoadReplay = process.env.T3_ACP_EMIT_LOAD_REPLAY === "1";
-const delayLoadSessionAfterReplay = process.env.T3_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY === "1";
-const loadSessionDelayMs = Number(process.env.T3_ACP_LOAD_SESSION_DELAY_MS ?? "5000");
-const modeNotifiedBeforeDelayedLoadReply = process.env.T3_ACP_NOTIFY_MODE_BEFORE_LOAD_REPLY;
+  process.env.Z9_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY === "1";
+const emitLoadReplay = process.env.Z9_ACP_EMIT_LOAD_REPLAY === "1";
+const delayLoadSessionAfterReplay = process.env.Z9_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY === "1";
+const loadSessionDelayMs = Number(process.env.Z9_ACP_LOAD_SESSION_DELAY_MS ?? "5000");
+const modeNotifiedBeforeDelayedLoadReply = process.env.Z9_ACP_NOTIFY_MODE_BEFORE_LOAD_REPLY;
 const holdSetConfigOptionUntilLoadReply =
-  process.env.T3_ACP_HOLD_SET_CONFIG_OPTION_UNTIL_LOAD_REPLY === "1";
-const loadReplyDelayMs = Number(process.env.T3_ACP_LOAD_REPLY_DELAY_MS ?? "0");
-const loadNeverReplies = process.env.T3_ACP_LOAD_NEVER_REPLIES === "1";
-const rejectPromptUntilLoaded = process.env.T3_ACP_REJECT_PROMPT_UNTIL_LOADED === "1";
-const failPrompt = process.env.T3_ACP_FAIL_PROMPT === "1";
-const failPromptOrdinal = Number(process.env.T3_ACP_FAIL_PROMPT_ORDINAL);
+  process.env.Z9_ACP_HOLD_SET_CONFIG_OPTION_UNTIL_LOAD_REPLY === "1";
+const loadReplyDelayMs = Number(process.env.Z9_ACP_LOAD_REPLY_DELAY_MS ?? "0");
+const loadNeverReplies = process.env.Z9_ACP_LOAD_NEVER_REPLIES === "1";
+const rejectPromptUntilLoaded = process.env.Z9_ACP_REJECT_PROMPT_UNTIL_LOADED === "1";
+const failPrompt = process.env.Z9_ACP_FAIL_PROMPT === "1";
+const failPromptOrdinal = Number(process.env.Z9_ACP_FAIL_PROMPT_ORDINAL);
 const compactionPromptOrdinals = new Set(
-  (process.env.T3_ACP_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
+  (process.env.Z9_ACP_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
 );
 // These prompts end while their compaction is still in progress.
 const openCompactionPromptOrdinals = new Set(
-  (process.env.T3_ACP_OPEN_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
+  (process.env.Z9_ACP_OPEN_COMPACTION_PROMPT_ORDINALS ?? "").split(",").map(Number),
 );
-const failSetModeConfigOption = process.env.T3_ACP_FAIL_SET_MODE_CONFIG_OPTION === "1";
-const emitEmptyDefaultAgentOption = process.env.T3_ACP_EMIT_EMPTY_DEFAULT_AGENT_OPTION === "1";
-const promptResponseText = process.env.T3_ACP_PROMPT_RESPONSE_TEXT;
-const promptDelayMs = Number(process.env.T3_ACP_PROMPT_DELAY_MS ?? "0");
-const terminalOutputBytes = Number(process.env.T3_ACP_EMIT_TERMINAL_OUTPUT_BYTES ?? "0");
-const supportsSessionLifecycle = process.env.T3_ACP_SESSION_LIFECYCLE === "1";
-const supportsAcpMcp = process.env.T3_ACP_MCP_ACP === "1";
-const supportsHttpMcp = process.env.T3_ACP_MCP_HTTP === "1";
-const supportsV2Management = process.env.T3_ACP_V2_MANAGEMENT === "1";
-const failDeleteSession = process.env.T3_ACP_FAIL_DELETE_SESSION === "1";
-const advertisedAuthMethodId = process.env.T3_ACP_AUTH_METHOD_ID?.trim();
+const failSetModeConfigOption = process.env.Z9_ACP_FAIL_SET_MODE_CONFIG_OPTION === "1";
+const emitEmptyDefaultAgentOption = process.env.Z9_ACP_EMIT_EMPTY_DEFAULT_AGENT_OPTION === "1";
+const promptResponseText = process.env.Z9_ACP_PROMPT_RESPONSE_TEXT;
+const promptDelayMs = Number(process.env.Z9_ACP_PROMPT_DELAY_MS ?? "0");
+const terminalOutputBytes = Number(process.env.Z9_ACP_EMIT_TERMINAL_OUTPUT_BYTES ?? "0");
+const supportsSessionLifecycle = process.env.Z9_ACP_SESSION_LIFECYCLE === "1";
+const supportsAcpMcp = process.env.Z9_ACP_MCP_ACP === "1";
+const supportsHttpMcp = process.env.Z9_ACP_MCP_HTTP === "1";
+const supportsV2Management = process.env.Z9_ACP_V2_MANAGEMENT === "1";
+const failDeleteSession = process.env.Z9_ACP_FAIL_DELETE_SESSION === "1";
+const advertisedAuthMethodId = process.env.Z9_ACP_AUTH_METHOD_ID?.trim();
 const initializeAuthMethodId =
   advertisedAuthMethodId ?? (supportsSessionLifecycle ? "test" : undefined);
-const requiresAuthentication = process.env.T3_ACP_REQUIRE_AUTH === "1";
+const requiresAuthentication = process.env.Z9_ACP_REQUIRE_AUTH === "1";
 const permissionOptionIds = {
   allowOnce: "allow-once",
   allowAlways: "allow-always",
@@ -145,7 +145,7 @@ process.once("SIGINT", () => {
 });
 
 function configOptions(): ReadonlyArray<AcpSchema.SessionConfigOption> {
-  if (process.env.T3_ACP_OMIT_MODEL_OPTIONS === "1") {
+  if (process.env.Z9_ACP_OMIT_MODEL_OPTIONS === "1") {
     return [];
   }
   if (parameterizedModelPicker) {
@@ -1314,11 +1314,11 @@ const program = Effect.gen(function* () {
             rawOutput: {
               action: {
                 type: "search",
-                query: "t3 code",
+                query: "z9 code",
                 sources: [
-                  { type: "url", url: "https://t3.codes" },
-                  { type: "url", url: "https://t3.codes" },
-                  { type: "url", url: "https://github.com/pingdotgg/t3code" },
+                  { type: "url", url: "https://github.com/ZelinZhu-Richard/z9code" },
+                  { type: "url", url: "https://github.com/ZelinZhu-Richard/z9code" },
+                  { type: "url", url: "https://github.com/ZelinZhu-Richard/z9code" },
                 ],
               },
               id: "grok-web-search",
@@ -1328,15 +1328,18 @@ const program = Effect.gen(function* () {
           {
             sessionUpdate: "tool_call_update",
             toolCallId: "grok-web-fetch",
-            title: "Fetch: https://t3.codes",
+            title: "Fetch: https://github.com/ZelinZhu-Richard/z9code",
             kind: "fetch",
             status: "completed",
-            rawInput: { variant: "WebFetch", url: "https://t3.codes" },
+            rawInput: { variant: "WebFetch", url: "https://github.com/ZelinZhu-Richard/z9code" },
             rawOutput: {
               type: "WebFetch",
-              Content: { url: "https://t3.codes", content: "T3 Code page" },
+              Content: {
+                url: "https://github.com/ZelinZhu-Richard/z9code",
+                content: "z9code page",
+              },
             },
-            content: [{ type: "content", content: { type: "text", text: "T3 Code page" } }],
+            content: [{ type: "content", content: { type: "text", text: "z9code page" } }],
           },
           {
             sessionUpdate: "tool_call_update",
@@ -1819,7 +1822,7 @@ const program = Effect.gen(function* () {
             status: "completed",
             rawOutput: {
               exitCode: 0,
-              stdout: '{ "name": "t3" }',
+              stdout: '{ "name": "z9" }',
               stderr: "",
             },
           },
@@ -2022,8 +2025,8 @@ const program = Effect.gen(function* () {
   yield* agent.handleUnknownExtRequest((method, params) => {
     if (method === "_test/environment") {
       return Effect.succeed({
-        inherited: process.env.T3_ACP_RUNTIME_AMBIENT === "sentinel",
-        explicit: process.env.T3_ACP_RUNTIME_EXPLICIT === "kept",
+        inherited: process.env.Z9_ACP_RUNTIME_AMBIENT === "sentinel",
+        explicit: process.env.Z9_ACP_RUNTIME_EXPLICIT === "kept",
       });
     }
     if (method === "_test/finish-cancel") {

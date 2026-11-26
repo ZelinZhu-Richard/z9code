@@ -7,7 +7,7 @@ import {
   ProviderInstanceId,
   type ProviderOptionDescriptor,
   type ProviderOptionSelection,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { copySorted } from "./Array.ts";
@@ -130,7 +130,7 @@ export function draftModelPickMatchesThread(pick: ModelSelection, thread: ModelS
   return modelSelectionsEqual(withoutFastModeOff(pick), withoutFastModeOff(thread));
 }
 
-/** Cursor ACP can default Fast to true; T3 requires a user selection. */
+/** Cursor ACP can default Fast to true; z9code requires a user selection. */
 export function withImplicitFastModeDefault(
   caps: ModelCapabilities,
   modelOptions: ReadonlyArray<ProviderOptionSelection> | null | undefined,

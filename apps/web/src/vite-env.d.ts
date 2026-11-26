@@ -1,6 +1,6 @@
 /// <reference types="vite-plus/client" />
 
-import type { DesktopBridge, ThreadId } from "@t3tools/contracts";
+import type { DesktopBridge, ThreadId } from "@z9code/contracts";
 
 interface ImportMetaEnv {
   readonly VITE_HTTP_URL: string;
@@ -8,7 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_HOSTED_APP_URL: string;
   readonly VITE_HOSTED_APP_CHANNEL: string;
   readonly VITE_RELEASE_CHANNEL: string;
-  readonly T3CODE_DESKTOP_UPDATE_REPOSITORY: string;
+  readonly Z9CODE_DESKTOP_UPDATE_REPOSITORY: string;
   readonly APP_VERSION: string;
 }
 

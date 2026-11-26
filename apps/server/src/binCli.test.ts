@@ -4,7 +4,7 @@ import * as NodeURL from "node:url";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Stream from "effect/Stream";
@@ -56,7 +56,7 @@ it.live("keeps migration warnings out of JSON thread output", () =>
               ? { protocolVersion: "2025-06-18" }
               : {
                   structuredContent:
-                    message.params?.name === "t3_project_list"
+                    message.params?.name === "z9_project_list"
                       ? {
                           projects: [{ id: "project-1", title: "Test", workspaceRoot: root }],
                           nextCursor: null,
@@ -105,7 +105,7 @@ it.live("keeps migration warnings out of JSON thread output", () =>
           "--base-dir",
           root,
         ],
-        { env: { T3CODE_HOME: root } },
+        { env: { Z9CODE_HOME: root } },
       ),
     );
     const { stdout, stderr, exitCode } = yield* Effect.all(

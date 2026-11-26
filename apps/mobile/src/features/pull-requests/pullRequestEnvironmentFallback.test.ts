@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/models";
-import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
-import { EnvironmentId } from "@t3tools/contracts";
+import type { EnvironmentProject } from "@z9code/client-runtime/state/models";
+import type { EnvironmentConnectionPhase } from "@z9code/client-runtime/connection";
+import { EnvironmentId } from "@z9code/contracts";
 import { pullRequestFallbackEnvironment } from "./pullRequestEnvironmentFallback";
 
 const project = (environmentId: string, id: string, canonicalKey: string) =>
@@ -12,14 +12,14 @@ const project = (environmentId: string, id: string, canonicalKey: string) =>
   }) as unknown as EnvironmentProject;
 
 const projects = [
-  project("laptop", "t3", "github.com/pingdotgg/t3code"),
+  project("laptop", "z9", "github.com/ZelinZhu-Richard/z9code"),
   project("desktop", "other", "github.com/pingdotgg/other"),
-  project("server", "t3-copy", "github.com/pingdotgg/t3code"),
+  project("server", "t3-copy", "github.com/ZelinZhu-Richard/z9code"),
 ];
 const target = {
   environmentId: "laptop",
-  projectId: "t3",
-  repository: "pingdotgg/t3code",
+  projectId: "z9",
+  repository: "ZelinZhu-Richard/z9code",
   host: "github.com",
 };
 const environment = (

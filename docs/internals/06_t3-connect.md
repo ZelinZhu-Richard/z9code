@@ -1,7 +1,7 @@
 # T3 Connect (removed)
 
-Upstream T3 Code ships T3 Connect: Clerk accounts, a relay Worker, and Cloudflare tunnels run under
-T3's account. TLS ended at T3's edge, so the tunnel operator could read every request between a
+Upstream z9code ships T3 Connect: Clerk accounts, a relay Worker, and Cloudflare tunnels run under
+z9code's account. TLS ended at z9code's edge, so the tunnel operator could read every request between a
 phone and its computer; there was no end-to-end encryption. The relay also collected connection
 traces and mobile crash reports and delivered mobile push. This fork removes all of it.
 
@@ -20,5 +20,5 @@ Constraints that outlive the removal:
 - **Guest links use the owner's own address.** A guest link points at the http(s) origin the
   owner's client reached the server at, and the server refuses a loopback origin, because the
   guest opens it from another network. See [guest links](../user/guest-links.md).
-- **Do not reintroduce a hosted path.** `scripts/check-egress.ts` fails on T3 cloud, relay, and
+- **Do not reintroduce a hosted path.** `scripts/check-egress.ts` fails on z9code cloud, relay, and
   tracing hosts in shipped source.

@@ -1,6 +1,6 @@
 import {
-  T3_CODE_DARK_THEME_COLORS,
-  T3_CODE_LIGHT_THEME_COLORS,
+  Z9_CODE_DARK_THEME_COLORS,
+  Z9_CODE_LIGHT_THEME_COLORS,
   type ThemeAppearance,
   type ThemeColors,
 } from "./themePalettes.ts";
@@ -232,7 +232,7 @@ export const HTML_RENDER_THEME_GUIDE = [
 export const HTML_RENDER_LAYOUT_GUIDE = [
   `Frame width is reply width (${HTML_RENDER_COLUMN_WIDTH}px desktop, about 360px phones), on the thread background.`,
   "Leave html, body, and the outer element with no background color, no outer card, border, banner title, or side padding. This wins over any rule that sets a page background.",
-  "T3 adds an overridable 8px html gutter for selection rings and shadows. Use fluid widths within it.",
+  "z9code adds an overridable 8px html gutter for selection rings and shadows. Use fluid widths within it.",
   "A box that needs its own background gets 16px padding and var(--radius) corners. Give charts fixed pixel heights.",
   "Let content set the height. Do not use vh units or height:100% on html or body. Both are rejected or loop.",
 ].join(" ");
@@ -241,9 +241,9 @@ const HOST_CONTEXT_CHANGED_METHOD = "ui/notifications/host-context-changed";
 const OPEN_LINK_METHOD = "ui/open-link";
 const SIZE_CHANGED_METHOD = "ui/notifications/size-changed";
 // Custom bridge forwards app shortcuts because focused frames otherwise capture them.
-const SHORTCUTS_METHOD = "t3/notifications/shortcuts";
-const KEY_DOWN_METHOD = "t3/notifications/keydown";
-const OPEN_IMAGE_METHOD = "t3/notifications/open-image";
+const SHORTCUTS_METHOD = "z9/notifications/shortcuts";
+const KEY_DOWN_METHOD = "z9/notifications/keydown";
+const OPEN_IMAGE_METHOD = "z9/notifications/open-image";
 
 export function readHtmlRenderContentHeight(data: unknown): number | undefined {
   if (typeof data !== "object" || data === null) return undefined;
@@ -419,8 +419,8 @@ const BOOTSTRAP_SCRIPT = `(function(){var s=document.getElementById("t3-theme"),
 // The tag patterns below stop at the next `<` outside a quoted value, so matching stays linear in
 // the length of the document.
 function bootstrapMarkup(markup: string): string {
-  const dark = htmlRenderTheme(T3_CODE_DARK_THEME_COLORS, "dark");
-  const light = htmlRenderTheme(T3_CODE_LIGHT_THEME_COLORS, "light");
+  const dark = htmlRenderTheme(Z9_CODE_DARK_THEME_COLORS, "dark");
+  const light = htmlRenderTheme(Z9_CODE_LIGHT_THEME_COLORS, "light");
   const defaultCss = `${rootRule(dark)}@media (prefers-color-scheme: light){${rootRule(light)}}${BASE_CSS}`;
   return [
     /<meta\s[^<>]*charset/i.test(markup.slice(0, 4096)) ? "" : '<meta charset="utf-8">',
@@ -480,9 +480,9 @@ export function injectHtmlRenderBootstrap(html: string): string {
   return `<!doctype html><head>${markup}</head>${html}`;
 }
 
-const FILE_PREVIEW_SCROLL_METHOD = "t3/notifications/file-preview-scroll";
-const FILE_PREVIEW_RESTORE_SCROLL_METHOD = "t3/file-preview/restore-scroll";
-const FILE_PREVIEW_SCROLL_RESTORED_METHOD = "t3/notifications/file-preview-scroll-restored";
+const FILE_PREVIEW_SCROLL_METHOD = "z9/notifications/file-preview-scroll";
+const FILE_PREVIEW_RESTORE_SCROLL_METHOD = "z9/file-preview/restore-scroll";
+const FILE_PREVIEW_SCROLL_RESTORED_METHOD = "z9/notifications/file-preview-scroll-restored";
 
 export interface FilePreviewScroll {
   readonly x: number;

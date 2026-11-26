@@ -1,5 +1,5 @@
-import { ClientCapabilities, PlatformConnectionSource } from "@t3tools/client-runtime/platform";
-import { ConnectionBlockedError, Connectivity, Wakeups } from "@t3tools/client-runtime/connection";
+import { ClientCapabilities, PlatformConnectionSource } from "@z9code/client-runtime/platform";
+import { ConnectionBlockedError, Connectivity, Wakeups } from "@z9code/client-runtime/connection";
 import * as Clock from "effect/Clock";
 import { msg } from "gt-react-native";
 import { m } from "../i18n/messages";

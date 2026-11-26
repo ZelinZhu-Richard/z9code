@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentShellStatus } from "@t3tools/client-runtime/state/shell";
-import type { EnvironmentId, MessageId } from "@t3tools/contracts";
+import type { EnvironmentShellStatus } from "@z9code/client-runtime/state/shell";
+import type { EnvironmentId, MessageId } from "@z9code/contracts";
 import { Atom } from "effect/reactivity";
 
 import { appAtomRegistry } from "./atom-registry";

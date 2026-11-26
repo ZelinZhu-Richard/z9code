@@ -1,11 +1,11 @@
 // @effect-diagnostics nodeBuiltinImport:off -- The scenario starts a local ACP fixture.
 import * as NodePath from "node:path";
 
-import { ProviderDriverKind, ProviderInstanceId } from "@t3tools/contracts";
+import { ProviderDriverKind, ProviderInstanceId } from "@z9code/contracts";
 import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 
-import { T3_HOME } from "../e2e.config.ts";
+import { Z9_HOME } from "../e2e.config.ts";
 import {
   expectHeldImageCompressions,
   finishImageCompression,
@@ -63,7 +63,7 @@ test(
     const instanceId = ProviderInstanceId.make("scenario-question-agent");
     await runPromise(
       Effect.gen(function* () {
-        const client = yield* rpcClient(T3_HOME, app.baseUrl ?? "");
+        const client = yield* rpcClient(Z9_HOME, app.baseUrl ?? "");
         yield* client["server.updateSettings"]({
           patch: {},
           providerInstanceMutation: {
@@ -83,7 +83,7 @@ test(
         });
       }).pipe(Effect.scoped),
     );
-    const { cli } = makeState(T3_HOME);
+    const { cli } = makeState(Z9_HOME);
     const started = await runPromise(
       cli(
         [

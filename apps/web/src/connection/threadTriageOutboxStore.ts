@@ -1,10 +1,10 @@
 import {
   makeThreadTriageOutboxStore,
   ThreadTriageOutboxStorageError,
-} from "@t3tools/client-runtime/platform";
+} from "@z9code/client-runtime/platform";
 import * as Effect from "effect/Effect";
 
-const KEY = "t3code:thread-triage-outbox";
+const KEY = "z9code:thread-triage-outbox";
 
 /** In localStorage, so tabs share it and clearing the environment cache keeps unsynced changes. */
 export const browserThreadTriageOutboxStore = makeThreadTriageOutboxStore((next) =>

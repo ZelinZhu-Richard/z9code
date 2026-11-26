@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
-import { type EnvironmentId, ThreadId } from "@t3tools/contracts";
+import { scopeThreadRef } from "@z9code/client-runtime/environment";
+import { type EnvironmentId, ThreadId } from "@z9code/contracts";
 
 import {
   useSidebarPendingFileDropStore,

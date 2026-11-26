@@ -1,10 +1,10 @@
 // @effect-diagnostics nodeBuiltinImport:off - plain local servers stand in for LAN services.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { EnvironmentId, ProviderInstanceId, ThreadId } from "@t3tools/contracts";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { symlinksSupported } from "@t3tools/shared/testing/symlinks";
+import { EnvironmentId, ProviderInstanceId, ThreadId } from "@z9code/contracts";
+import * as McpProviderSessions from "@z9code/provider-core/server/McpProviderSessions";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { symlinksSupported } from "@z9code/shared/testing/symlinks";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -25,7 +25,7 @@ import { HtmlRenderBrowserError } from "./headlessChrome.ts";
 import * as PreviewBrowser from "../preview/PreviewBrowser.ts";
 import * as PreviewBrowserHost from "../preview/PreviewBrowserHost.ts";
 
-const TEST_BROWSER_ENV = "T3CODE_TEST_HEADLESS_SHELL";
+const TEST_BROWSER_ENV = "Z9CODE_TEST_HEADLESS_SHELL";
 
 const layerHtmlRender = (
   executable?: string,
@@ -440,7 +440,7 @@ describe("HtmlRender", () => {
   describe.skipIf(HostProcess.Platform.defaultValue() === "win32")(
     "when the browser cannot be signalled",
     () => {
-      // A browser T3 cannot signal, as under AppArmor in an LXC container, must still exit.
+      // A browser z9code cannot signal, as under AppArmor in an LXC container, must still exit.
       it.live("asks the browser to close when the preview finishes instead of signalling it", () =>
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;

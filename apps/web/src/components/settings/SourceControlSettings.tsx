@@ -9,7 +9,7 @@ import type {
   SourceControlProviderDiscoveryItem,
   VcsDriverKind,
   VcsDiscoveryItem,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { useSettingsScope } from "./SettingsScopeContext";
 import { ProjectDefaultsSettings } from "./ProjectDefaultsSettings";
 import { useLiveRefresh } from "../../hooks/useLiveRefresh";
@@ -51,9 +51,9 @@ import {
 } from "./settingsLayout";
 import { useSearchableSetting, sourceControlHostSettingsSearchId } from "./settingsSearch";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
-import { sourceControlInstallHintText } from "@t3tools/client-runtime/contract-labels";
-import { isSourceControlProviderOffered } from "@t3tools/client-runtime/operations/projects";
-import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import { sourceControlInstallHintText } from "@z9code/client-runtime/contract-labels";
+import { isSourceControlProviderOffered } from "@z9code/client-runtime/operations/projects";
+import { sourceControlClients } from "@z9code/client-runtime/source-control-clients";
 import { sourceControlIcon } from "~/sourceControlPresentation";
 
 const EMPTY_DISCOVERY_RESULT: SourceControlDiscoveryResult = {

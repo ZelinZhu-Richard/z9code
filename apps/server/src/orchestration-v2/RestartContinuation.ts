@@ -1,5 +1,5 @@
-import { runRanAfter } from "@t3tools/shared/orchestrationV2ThreadError";
-import { resolveProjectSettings } from "@t3tools/shared/projectSettings";
+import { runRanAfter } from "@z9code/shared/orchestrationV2ThreadError";
+import { resolveProjectSettings } from "@z9code/shared/projectSettings";
 import {
   CommandId,
   isOrchestrationV2WorkActive,
@@ -8,7 +8,7 @@ import {
   type OrchestrationV2Run,
   type RunId,
   type ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import type {
@@ -346,8 +346,8 @@ export const continueRestartedRun = Effect.fn("RestartContinuation.continueResta
             input.cause === "provider_exit"
               ? "The agent runtime exited and stopped background work"
               : note.settled
-                ? "T3 Code restarted and stopped background work"
-                : "T3 Code restarted and resumed this turn",
+                ? "z9code restarted and stopped background work"
+                : "z9code restarted and resumed this turn",
           detail: text,
         },
         attachments: [],

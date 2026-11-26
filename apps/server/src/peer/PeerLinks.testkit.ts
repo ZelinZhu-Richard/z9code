@@ -5,7 +5,7 @@ import {
   EnvironmentId,
   type AuthMcpClientAccess,
   type ExecutionEnvironmentDescriptor,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -169,7 +169,7 @@ export const servePeer = <E, R, E2 = never, R2 = never>(
         .listSessions()
         .pipe(
           Effect.map((sessions) =>
-            sessions.filter((session) => session.client.label?.startsWith("T3 Code · ")),
+            sessions.filter((session) => session.client.label?.startsWith("z9code · ")),
           ),
         ),
     };

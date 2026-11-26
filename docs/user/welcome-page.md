@@ -1,7 +1,7 @@
 # Welcome page
 
-T3 Code shows a Welcome page when you open a new installation. Existing
-workspaces skip it. It shows what T3 Code found on the computer you are using,
+z9code shows a Welcome page when you open a new installation. Existing
+workspaces skip it. It shows what z9code found on the computer you are using,
 on one page: your agents and projects from your Claude Code, Codex, and Pi
 history. Only an agent is needed to start chatting.
 
@@ -9,38 +9,38 @@ To see the page again, go to **Settings → About → Welcome page** and select
 **Open**. Direct links, such as Settings, open normally before setup is done.
 
 A hosted copy of the web app does not open the page. With no computer connected,
-it asks you to run `t3 pair` on your computer and add the pairing link. To add
+it asks you to run `z9 pair` on your computer and add the pairing link. To add
 more computers later, use **Settings → Environments**.
 
-If T3 Code cannot confirm the workspace during startup, it shows
+If z9code cannot confirm the workspace during startup, it shows
 **Still connecting** instead of opening the app. Select **Reload** to try again.
 
-If T3 Code cannot read your saved settings, it shows **Could not read settings**.
+If z9code cannot read your saved settings, it shows **Could not read settings**.
 Select **Retry** after storage becomes available. Setup does not replace
 unreadable settings with defaults.
 
 ## Agents
 
-T3 Code lists the agents it found on the computer first, ready ones on top.
-**Add more agents** lists every other agent T3 Code supports, A to Z. When no agent
+z9code lists the agents it found on the computer first, ready ones on top.
+**Add more agents** lists every other agent z9code supports, A to Z. When no agent
 is found, it reads **Set up an agent** and opens by itself:
 
 - **Turn on** enables an agent that is off on this computer, including one only
-  some projects use. T3 Code then checks whether it is installed and signed in.
+  some projects use. z9code then checks whether it is installed and signed in.
 - For Claude Code, **Install** or **Sign in** opens a terminal with the correct
   command ready to run. Install uses the vendor's own installer, which keeps
   **Update now** working in Settings.
 - For Codex, **Set up** offers sign-in with your ChatGPT account or your own
   Codex CLI. **Use existing CLI** opens the terminal to install or sign in, and
   **Continue with ChatGPT** stays available until Codex is signed in.
-- When T3 Code knows an installed version does not work with it, **Update** opens
+- When z9code knows an installed version does not work with it, **Update** opens
   the agent in **Settings → Providers**, which shows the version to use and updates it
   when it can.
 - Other agents, and agents that could not load, open their page in
   **Settings → Providers**.
 - **Browse** opens the ACP Registry for more agents.
 
-On the desktop app, when the folder of the `t3` command is not on your `PATH`,
+On the desktop app, when the folder of the `z9` command is not on your `PATH`,
 **Add to PATH** adds one line to your shell's startup file.
 
 The setup terminal uses the home directory and environment configured for the
@@ -52,13 +52,13 @@ without one. Checked projects are still imported.
 
 ## Projects
 
-T3 Code finds directories that Claude Code, Codex or Pi has used. Git repositories
+z9code finds directories that Claude Code, Codex or Pi has used. Git repositories
 are listed first, newest activity on top. When the remote is on GitHub, the
 group shows the repository as `owner/name`. Clones with the same remote share
 one group. Directories that are not git repositories sit under "Other folders".
 
 The page offers git repositories active within the last 30 days with at least
-three conversations, already checked. Projects already in T3 Code are not checked
+three conversations, already checked. Projects already in z9code are not checked
 again. Uncheck the box to start without them, or
 select **Review all** to pick from everything found, with "Select all" and
 "Select none". Linked worktrees of bare repositories
@@ -67,23 +67,23 @@ count toward their main checkout, so a repository is offered even if you only
 worked in its worktrees. Codex scratch directories under `Documents/Codex`, and
 anything under `Downloads` are not offered.
 
-A large or malformed history can reach the scan limit. T3 Code keeps the
+A large or malformed history can reach the scan limit. z9code keeps the
 projects it found and warns when projects or conversations may be missing.
 
 Imported projects include Claude, Codex and Pi conversations active within the last
-30 days. You can continue those conversations in T3 Code. Pi is off by default:
+30 days. You can continue those conversations in z9code. Pi is off by default:
 open **Add more agents** and select **Turn on** next to Pi, and the page looks for
 its sessions too. Pi sessions
 are read from each enabled Pi provider's session directory, which follows
 `PI_CODING_AGENT_SESSION_DIR` and `PI_CODING_AGENT_DIR` in its environment. A
 Pi conversation imports its active branch, the one Pi reopens.
 
-Conversation import is best effort. T3 Code keeps the first user prompt and the
+Conversation import is best effort. z9code keeps the first user prompt and the
 newest remaining visible user and assistant messages, with 200 messages total.
 It omits tool activity and attachments. For Codex, it omits generated setup
 context only when a canonical user event and a valid shared turn ID identify the
 same user turn. Ambiguous legacy or response-only context stays in the imported
-conversation so T3 Code does not remove user text. For Claude, slash commands
+conversation so z9code does not remove user text. For Claude, slash commands
 and `!` shell commands appear as you typed them; their output, background task
 notifications and interruption markers are left out, and a conversation that
 only ran commands such as `/clear`, with no reply, is skipped. It reads one
@@ -100,6 +100,6 @@ continue a large batch, open the Welcome page again and pick the project in
 **Review all**. Completed conversations are not imported again. You can continue
 without the remaining history.
 
-You can start without importing. While an import runs, T3 Code stays on the
+You can start without importing. While an import runs, z9code stays on the
 Welcome page. If you quit, open the Welcome page again from **Settings → About**; the
 projects you started stay checked.

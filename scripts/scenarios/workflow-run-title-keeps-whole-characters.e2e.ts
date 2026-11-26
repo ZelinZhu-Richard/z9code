@@ -3,14 +3,14 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import { T3_HOME } from "../e2e.config.ts";
+import { Z9_HOME } from "../e2e.config.ts";
 import { makeState, rpcClient, runPromise, test, WEB } from "./t3.ts";
 
 const KEPT = "a".repeat(199);
 // The emoji's two UTF-16 units straddle unit 200, where the server cuts a run's title.
-const DEFINITION = `export default T3.workflow("titled", { version: 1, payload: Schema.Struct({}) },
+const DEFINITION = `export default z9code.workflow("titled", { version: 1, payload: Schema.Struct({}) },
   Effect.fn(function* () {
-    yield* T3.title("${KEPT}😀 and the rest of the title");
+    yield* z9code.title("${KEPT}😀 and the rest of the title");
   }));
 `;
 
@@ -19,12 +19,12 @@ test(
   WEB,
   async ({ t3, app, screen }) => {
     const definition = await runPromise(
-      Effect.map(Path.Path, (path) => path.join(T3_HOME, "workflows/titled.ts")),
+      Effect.map(Path.Path, (path) => path.join(Z9_HOME, "workflows/titled.ts")),
     );
     const workflowsOn = (on: boolean) =>
       runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(T3_HOME, app.baseUrl ?? "");
+          const client = yield* rpcClient(Z9_HOME, app.baseUrl ?? "");
           yield* client["server.updateSettings"]({ patch: { workflowsEnabled: on } });
         }).pipe(Effect.scoped),
       );
@@ -40,7 +40,7 @@ test(
       await t3.project("demo");
       await workflowsOn(true);
       const started = await runPromise(
-        makeState(T3_HOME).cli(["workflow", "start", "titled", "--key", "one", "--json"]),
+        makeState(Z9_HOME).cli(["workflow", "start", "titled", "--key", "one", "--json"]),
       );
       const { run } = JSON.parse(started.stdout);
       await t3.open(`/workflows?run=${run.runId}`);

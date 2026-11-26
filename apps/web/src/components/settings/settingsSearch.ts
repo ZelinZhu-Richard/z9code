@@ -1,14 +1,14 @@
 import { HOSTED_APP_CHANNEL } from "~/branding";
 import { isElectron } from "~/env";
 import { isMacPlatform, isWindowsPlatform, normalizeSearchText } from "~/lib/utils";
-import { STATIC_KEYBINDING_COMMANDS, type KeybindingCommand } from "@t3tools/contracts";
-import type { EnvironmentId } from "@t3tools/contracts";
-import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
+import { STATIC_KEYBINDING_COMMANDS, type KeybindingCommand } from "@z9code/contracts";
+import type { EnvironmentId } from "@z9code/contracts";
+import type { EnvironmentConnectionPhase } from "@z9code/client-runtime/connection";
 import {
   sourceControlClients,
   type SourceControlDefinition,
-} from "@t3tools/client-runtime/source-control-clients";
-import { DEFAULT_KEYBINDINGS } from "@t3tools/shared/keybindings";
+} from "@z9code/client-runtime/source-control-clients";
+import { DEFAULT_KEYBINDINGS } from "@z9code/shared/keybindings";
 import * as Schema from "effect/Schema";
 import { decodeMsg, msg, useMessages } from "gt-react";
 import { TYPOGRAPHY_ADVANCED_STORAGE_KEY } from "../../appearanceFonts";
@@ -980,16 +980,10 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "cli-command",
-    title: msg("t3 command"),
+    title: msg("z9 command"),
     to: "/settings/about",
     searchTerms: [msg("cli terminal shell path install command line")],
     desktopOnly: true,
-  },
-  {
-    id: "mobile-app",
-    title: msg("Mobile app"),
-    to: "/settings/about",
-    searchTerms: [msg("phone tablet iPhone iPad iOS Android App Store Google Play QR")],
   },
   {
     id: "welcome-page",
@@ -1025,7 +1019,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     scope: "environment-defaults",
     agentFeedbackOnly: true,
     searchTerms: [
-      msg("report bug problem t3 team send feedback agents tools automatic when i ask"),
+      msg("report bug problem z9 team send feedback agents tools automatic when i ask"),
     ],
   },
   {
@@ -1221,7 +1215,7 @@ export const SETTINGS_SEARCH_ITEMS = [
   },
   {
     id: "pull-request-links-open-in-app",
-    title: msg("Open pull requests in T3 Code"),
+    title: msg("Open pull requests in z9code"),
     to: "/settings/diffs",
     searchTerms: [
       `pr commit links ${SOURCE_CONTROL_HOST_LABELS} browser external click default pull request view panel`,

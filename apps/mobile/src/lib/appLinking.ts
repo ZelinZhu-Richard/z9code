@@ -12,7 +12,7 @@ export function shouldHandleAppLink(url: string): boolean {
   return (
     !route.includes("expo-development-client") &&
     !route.includes("://expo-sharing") &&
-    !/^t3code(-dev|-preview)?:\/*$/.test(url)
+    !/^z9code(-dev|-preview)?:\/*$/.test(url)
   );
 }
 

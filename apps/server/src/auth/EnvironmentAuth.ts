@@ -23,9 +23,9 @@ import {
   DpopFailureReason,
   type DpopFailureReason as DpopFailureReasonType,
   mcpClientScopes,
-} from "@t3tools/contracts";
-import { isLocalLoopbackHost } from "@t3tools/shared/hostClassification";
-import { encodeOAuthScope } from "@t3tools/shared/oauthScope";
+} from "@z9code/contracts";
+import { isLocalLoopbackHost } from "@z9code/shared/hostClassification";
+import { encodeOAuthScope } from "@z9code/shared/oauthScope";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
@@ -99,7 +99,7 @@ export interface McpClientSession {
   readonly sessionId: AuthSessionId;
   readonly label: string;
   readonly access: AuthMcpClientAccess;
-  /** Another T3 Code environment's link, whose work here stays within it. */
+  /** Another z9code environment's link, whose work here stays within it. */
   readonly peerLink: boolean;
   /** When a peer link's session ends unless it is used again; the linking side keeps this. */
   readonly linkExpiresAt?: DateTime.Utc;
@@ -526,7 +526,7 @@ export class EnvironmentAuth extends Context.Service<
       ServerAuthMcpApprovalCodeError | ServerAuthInternalError
     >;
   }
->()("t3/auth/EnvironmentAuth") {}
+>()("z9/auth/EnvironmentAuth") {}
 
 type BootstrapExchangeResult = {
   readonly response: AuthBrowserSessionResult;

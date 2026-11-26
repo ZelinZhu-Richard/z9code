@@ -7,13 +7,13 @@ import type {
   ScopedProjectRef,
   ServerConfig,
   ServerProvider,
-} from "@t3tools/contracts";
-import { scopeProjectRef, scopeThreadRef } from "@t3tools/client-runtime/environment";
-import { resolveProviderInstanceDisplayName as agentName } from "@t3tools/client-runtime/state/provider-instance-display";
+} from "@z9code/contracts";
+import { scopeProjectRef, scopeThreadRef } from "@z9code/client-runtime/environment";
+import { resolveProviderInstanceDisplayName as agentName } from "@z9code/client-runtime/state/provider-instance-display";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@t3tools/client-runtime/state/runtime";
+} from "@z9code/client-runtime/state/runtime";
 import {
   AgentSessionSource,
   AuthProvidersManageScope,
@@ -23,7 +23,7 @@ import {
   isManagedDriverAllowed,
   ProviderDriverKind,
   ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { Link, useBlocker } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 import { CheckIcon, ChevronDownIcon, ChevronRightIcon, PlusIcon, TerminalIcon } from "lucide-react";
@@ -122,7 +122,7 @@ export function WelcomePage({
     environments.find((environment) => environment.environmentId === environmentId)?.label ??
     gt("this computer");
   const agentReady = useWelcomeAgents(environmentId).readyCount > 0;
-  // `t3` on PATH belongs to the primary computer, so only it offers it.
+  // `z9` on PATH belongs to the primary computer, so only it offers it.
   const isPrimary = usePrimaryEnvironmentId() === environmentId;
   const scans = useProjectScans([environmentId]);
   const [storedSelection, storeSelection] = useLocalStorage(
@@ -254,7 +254,7 @@ export function WelcomePage({
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-gutter-both">
           <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-6 pt-12 pb-8 sm:pt-20">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              <T>Welcome to T3 Code</T>
+              <T>Welcome to z9code</T>
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
               <T>
@@ -323,7 +323,7 @@ function TelemetryNotice({ environmentId }: { readonly environmentId: Environmen
     <p className="mt-auto pt-12 text-2xs leading-relaxed text-muted-foreground/70">
       {telemetryOff === undefined ? (
         <T>
-          T3 Code collects anonymous usage data to improve the app. To opt out, see the{" "}
+          z9code collects anonymous usage data to improve the app. To opt out, see the{" "}
           <a
             className="underline decoration-current/40 underline-offset-2 hover:text-muted-foreground"
             href={PRIVACY_POLICY_URL}
@@ -441,7 +441,7 @@ function AgentsSection({
   const [codexSetupId, setCodexSetupId] = useState<ProviderInstanceId | null>(null);
   const [cliTerminalFor, setCliTerminalFor] = useState<ProviderInstanceId | null>(null);
 
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- asks the environment to refresh its provider list when the environment changes
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- asks the environment to refresh its provider list when the environment changes
   useEffect(() => {
     void refreshProviders({ environmentId, input: {} });
   }, [environmentId, refreshProviders]);
@@ -1149,7 +1149,7 @@ function AgentInstallTerminal({
   const commandStartedRef = useRef(false);
   const handleCommandFinished = useEffectEvent(onCommandFinished);
 
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- the shell stays open after an install or sign-in, so its command exiting is the only signal to check the agent again
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- the shell stays open after an install or sign-in, so its command exiting is the only signal to check the agent again
   useEffect(() => {
     if (commandRunning) {
       commandStartedRef.current = true;
@@ -1161,7 +1161,7 @@ function AgentInstallTerminal({
 
   // StrictMode can finish a cancelled open after replacement setup; it must not close or pre-type into that
   // session.
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- opens the setup PTY, types the command into it, and closes it on cleanup
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- opens the setup PTY, types the command into it, and closes it on cleanup
   useEffect(() => {
     const generation = setupGenerationRef.current + 1;
     setupGenerationRef.current = generation;
@@ -1336,7 +1336,7 @@ function useProjectImport({
   );
   const importGenerationRef = useRef(0);
 
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- bumps the import generation on mount and unmount so in-flight imports drop stale results
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- bumps the import generation on mount and unmount so in-flight imports drop stale results
   useEffect(() => {
     importGenerationRef.current += 1;
     return () => {
@@ -1353,7 +1353,7 @@ function useProjectImport({
       })),
     ),
   );
-  // Projects already in T3 Code stay in the list, but reopening the page does not import their
+  // Projects already in z9code stay in the list, but reopening the page does not import their
   // history again unless the user picks them. The scan can be 30 s old, so the live list decides.
   const projects = useProjects();
   const isNewProject = isNewOnboardingProject(projects);
@@ -1824,7 +1824,7 @@ function ImportRowMeta({
   );
 }
 
-/** The desktop app links `t3` on a fresh install; this puts its folder on PATH when it is not. */
+/** The desktop app links `z9` on a fresh install; this puts its folder on PATH when it is not. */
 function CliPathSetup() {
   const { state, busy, run } = useDesktopCliCommand();
   const setup = state?.pathSetup;

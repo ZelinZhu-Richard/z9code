@@ -4,7 +4,7 @@ import {
   type ConnectionDiagnosis,
   connectionDiagnosisText,
   presentConnectionDiagnosis,
-} from "@t3tools/client-runtime/connection";
+} from "@z9code/client-runtime/connection";
 import { AsyncResult } from "effect/reactivity";
 import { msg, T, useGT, useMessages, Var } from "gt-react";
 import { ChevronRightIcon } from "lucide-react";

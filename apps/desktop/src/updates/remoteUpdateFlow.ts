@@ -1,4 +1,4 @@
-import type { DesktopUpdateRemoteOutcome, DesktopUpdateState } from "@t3tools/contracts";
+import type { DesktopUpdateRemoteOutcome, DesktopUpdateState } from "@z9code/contracts";
 
 export type RemoteDesktopUpdateStep =
   | { readonly action: "check" }

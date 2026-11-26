@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@t3tools/contracts";
+import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@z9code/contracts";
 import { mFallback } from "gt-i18n";
 import type { MFunctionType } from "gt-i18n/types";
 
@@ -76,7 +76,7 @@ describe("thread links", () => {
   });
 
   it("rejects other links and an empty id", () => {
-    expect(parseThreadLinkHref("https://t3.codes")).toBeNull();
+    expect(parseThreadLinkHref("https://github.com/ZelinZhu-Richard/z9code")).toBeNull();
     expect(parseThreadLinkHref("t3-thread://v1/")).toBeNull();
     expect(parseThreadLinkHref("t3-thread://v1/ ")).toBeNull();
     expect(parseThreadLinkHref("t3-thread://v2/env-1")).toBeNull();

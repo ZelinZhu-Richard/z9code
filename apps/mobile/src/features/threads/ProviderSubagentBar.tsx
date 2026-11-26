@@ -1,8 +1,8 @@
 import {
   formatProviderSubagentStatus,
   type ProviderSubagentStatus,
-} from "@t3tools/client-runtime/state/thread-execution";
-import { isOrchestrationV2WorkActive } from "@t3tools/contracts";
+} from "@z9code/client-runtime/state/thread-execution";
+import { isOrchestrationV2WorkActive } from "@z9code/contracts";
 import { T, useGT, useMessages, Var } from "gt-react-native";
 import { View } from "react-native";
 

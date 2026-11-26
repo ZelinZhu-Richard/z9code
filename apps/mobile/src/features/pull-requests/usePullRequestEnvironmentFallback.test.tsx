@@ -1,6 +1,6 @@
-import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/models";
-import { EnvironmentId } from "@t3tools/contracts";
+import type { EnvironmentConnectionPhase } from "@z9code/client-runtime/connection";
+import type { EnvironmentProject } from "@z9code/client-runtime/state/models";
+import { EnvironmentId } from "@z9code/contracts";
 import { act, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vite-plus/test";

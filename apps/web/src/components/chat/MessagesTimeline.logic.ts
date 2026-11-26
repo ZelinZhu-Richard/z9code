@@ -1,24 +1,24 @@
 import * as DateTime from "effect/DateTime";
 import { msg } from "gt-react";
-import { worktreeSetupAgentStarted } from "@t3tools/client-runtime/worktree-setup";
-import { resolveUserMessagePresentation } from "@t3tools/client-runtime/user-message";
+import { worktreeSetupAgentStarted } from "@z9code/client-runtime/worktree-setup";
+import { resolveUserMessagePresentation } from "@z9code/client-runtime/user-message";
 import {
   isLiveSubagentTurnItem,
   waitingOnSubagentsLabel,
-} from "@t3tools/client-runtime/state/subagentRuntime";
+} from "@z9code/client-runtime/state/subagentRuntime";
 import * as Equal from "effect/Equal";
 import { shallow } from "zustand/vanilla/shallow";
-import { claudeResumeCompactionAge } from "@t3tools/shared/claudeCompaction";
+import { claudeResumeCompactionAge } from "@z9code/shared/claudeCompaction";
 import {
   IDLE_COMPACTING_LABELS,
   IDLE_COMPACTION_TITLES,
-} from "@t3tools/client-runtime/user-message";
-import type { HandoffTimelineRun } from "@t3tools/client-runtime/handoff";
+} from "@z9code/client-runtime/user-message";
+import type { HandoffTimelineRun } from "@z9code/client-runtime/handoff";
 import { renderCodexDirectivesForCopy } from "~/markdown/markdownText";
 import {
   commandDisplayText,
   commandProgramName,
-} from "@t3tools/client-runtime/work-log/command-label";
+} from "@z9code/client-runtime/work-log/command-label";
 import {
   commandlessCommandLabel,
   genericCommandStatusLabel,
@@ -33,7 +33,7 @@ import {
   type ToolGroupSummaryKind,
   liveThoughtLine,
   workEntryHiddenByToolCallVisibility,
-} from "@t3tools/client-runtime/work-log/presentation";
+} from "@z9code/client-runtime/work-log/presentation";
 import {
   deriveRevertTurnCountByUserMessageId,
   isStreamingMessageTextUpdate,
@@ -65,23 +65,23 @@ import {
   RunId,
   type ThreadId,
   type TurnItemId,
-} from "@t3tools/contracts";
-import type { ThreadRunSummary } from "@t3tools/client-runtime/state/shell";
-import type { ToolCallVisibility } from "@t3tools/contracts/settings";
-import { resolveT3McpToolDefinition } from "@t3tools/shared/t3McpToolPresentation";
-import { compactDynamicToolOutput } from "@t3tools/shared/toolOutput";
-import { htmlRenderReferencesEqual, type HtmlRenderReference } from "@t3tools/shared/htmlRender";
-import { mcpAppReferencesEqual, type McpAppReference } from "@t3tools/shared/mcpApp";
-import { formatDuration } from "@t3tools/shared/orchestrationTimingCopy";
+} from "@z9code/contracts";
+import type { ThreadRunSummary } from "@z9code/client-runtime/state/shell";
+import type { ToolCallVisibility } from "@z9code/contracts/settings";
+import { resolveT3McpToolDefinition } from "@z9code/shared/t3McpToolPresentation";
+import { compactDynamicToolOutput } from "@z9code/shared/toolOutput";
+import { htmlRenderReferencesEqual, type HtmlRenderReference } from "@z9code/shared/htmlRender";
+import { mcpAppReferencesEqual, type McpAppReference } from "@z9code/shared/mcpApp";
+import { formatDuration } from "@z9code/shared/orchestrationTimingCopy";
 import { formatWorkspaceRelativePath } from "../../filePathDisplay";
 import { m, type MessageResolver } from "../../i18n/messages";
-import { collectToolFilePaths } from "@t3tools/shared/toolActivity";
+import { collectToolFilePaths } from "@z9code/shared/toolActivity";
 import {
   dynamicToolTitle,
   formatReadToolLabel,
   formatSearchToolLabel,
-} from "@t3tools/shared/toolActivityCopy";
-import { isHostPath } from "@t3tools/shared/path";
+} from "@z9code/shared/toolActivityCopy";
+import { isHostPath } from "@z9code/shared/path";
 
 export function timelineEntryRunId(entry: TimelineEntry): RunId | null {
   if (entry.kind === "message") {
@@ -621,7 +621,7 @@ type MessagesTimelineRowContent =
       label: string;
       tokenCounts: ReturnType<typeof contextCompactionTokenCounts>;
       active: boolean;
-      /** Replaces "Context compacted" when T3 Code compacted without being asked. */
+      /** Replaces "Context compacted" when z9code compacted without being asked. */
       title?: string;
       /** The compaction finished, so `title` names it. */
       compacted?: true;

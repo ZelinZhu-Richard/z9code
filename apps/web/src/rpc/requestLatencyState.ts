@@ -1,4 +1,4 @@
-import { WS_METHODS } from "@t3tools/contracts";
+import { WS_METHODS } from "@z9code/contracts";
 import { Atom } from "effect/reactivity";
 
 import { appAtomRegistry } from "./atomRegistry";

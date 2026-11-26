@@ -7,14 +7,14 @@ import {
 } from "lucide-react";
 import { useAtomValue } from "@effect/atom-react";
 import { useState } from "react";
-import { type EnvironmentId, resolveEnvironmentMachineKind } from "@t3tools/contracts";
+import { type EnvironmentId, resolveEnvironmentMachineKind } from "@z9code/contracts";
 import {
   connectionRoutes,
   hasSavedBearerRoute,
   connectionErrorText,
   connectionStatusText,
   environmentMcpUrl,
-} from "@t3tools/client-runtime/connection";
+} from "@z9code/client-runtime/connection";
 import { msg, T, useGT, useMessages } from "gt-react";
 import { m, type MessageResolver } from "../../i18n/messages";
 
@@ -336,7 +336,7 @@ export function SavedBackendListRow({
           environmentId={environmentId}
           serverLabel={gt("{label} server", {
             label: environment.label,
-            $context: "names a T3 server inside sentences such as {serverLabel} updated",
+            $context: "names a z9code server inside sentences such as {serverLabel} updated",
           })}
           fromVersion={undefined}
           targetVersion={APP_VERSION}
@@ -348,7 +348,7 @@ export function SavedBackendListRow({
           environmentId={environmentId}
           serverLabel={gt("{label} server", {
             label: environment.label,
-            $context: "names a T3 server inside sentences such as {serverLabel} updated",
+            $context: "names a z9code server inside sentences such as {serverLabel} updated",
           })}
           selfUpdate={resolveServerSelfUpdateCapability(environment.serverConfig)}
           installation={environment.serverConfig?.environment.capabilities.serverInstallation}

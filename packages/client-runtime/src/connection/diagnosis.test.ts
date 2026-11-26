@@ -1,4 +1,4 @@
-import { EnvironmentAuthInvalidError } from "@t3tools/contracts";
+import { EnvironmentAuthInvalidError } from "@z9code/contracts";
 import { describe, expect, it } from "@effect/vitest";
 
 import { presentConnectionDiagnosis } from "./diagnosis.ts";
@@ -33,8 +33,8 @@ const unreachable = () =>
   );
 
 describe("presentConnectionDiagnosis", () => {
-  it("names T3 Code on the host when it does not answer", () => {
-    expect(diagnose(backoff(unreachable()))?.headline).toBe("T3 Code on Mac mini did not answer");
+  it("names z9code on the host when it does not answer", () => {
+    expect(diagnose(backoff(unreachable()))?.headline).toBe("z9code on Mac mini did not answer");
     expect(results(backoff(unreachable()))).toEqual(["device:ok", "server:failed"]);
   });
 
@@ -48,7 +48,7 @@ describe("presentConnectionDiagnosis", () => {
     expect(diagnose(AVAILABLE_CONNECTION_STATE)).toBeNull();
   });
 
-  it("tells a host that refused this device's login to sign in again, not to start T3 Code", () => {
+  it("tells a host that refused this device's login to sign in again, not to start z9code", () => {
     const failure = mapRemoteEnvironmentError(
       new EnvironmentAuthInvalidError({
         code: "auth_invalid",
@@ -57,7 +57,7 @@ describe("presentConnectionDiagnosis", () => {
       }),
     );
     const steps = diagnose(backoff(failure))?.steps.join(" ");
-    expect(steps).not.toContain("Make sure T3 Code is running");
+    expect(steps).not.toContain("Make sure z9code is running");
     expect(steps).toMatch(/pair|sign in/i);
   });
 

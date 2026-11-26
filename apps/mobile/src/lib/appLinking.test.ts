@@ -10,7 +10,7 @@ import {
 } from "./appLinking";
 
 describe("shouldHandleAppLink", () => {
-  it.each(["t3code://", "t3code:///", "t3code-dev://", "t3code-preview://"])(
+  it.each(["z9code://", "z9code:///", "z9code-dev://", "z9code-preview://"])(
     "ignores scheme-only URL %s",
     (url) => {
       expect(shouldHandleAppLink(url)).toBe(false);
@@ -18,15 +18,15 @@ describe("shouldHandleAppLink", () => {
   );
 
   it.each([
-    "t3code://threads/env-1/thread-1",
-    "t3code://pair?pairingUrl=x",
-    "t3code-dev://settings/usage?tab=limits",
-    "t3code://threads/env/thread?prompt=Fix%20expo-development-client%20and%20t3code://expo-sharing",
+    "z9code://threads/env-1/thread-1",
+    "z9code://pair?pairingUrl=x",
+    "z9code-dev://settings/usage?tab=limits",
+    "z9code://threads/env/thread?prompt=Fix%20expo-development-client%20and%20z9code://expo-sharing",
   ])("handles path-bearing URL %s", (url) => {
     expect(shouldHandleAppLink(url)).toBe(true);
   });
 
-  it.each(["t3code://expo-development-client/?url=x", "t3code://expo-sharing/anything"])(
+  it.each(["z9code://expo-development-client/?url=x", "z9code://expo-sharing/anything"])(
     "ignores lifecycle URL %s",
     (url) => {
       expect(shouldHandleAppLink(url)).toBe(false);

@@ -5,9 +5,9 @@ import * as NodePath from "node:path";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { AgentScope } from "@t3tools/shared/AgentScope";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { symlinksSupported } from "@t3tools/shared/testing/symlinks";
+import { AgentScope } from "@z9code/shared/AgentScope";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { symlinksSupported } from "@z9code/shared/testing/symlinks";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -354,7 +354,7 @@ describe("AgentScope service", () => {
             "--user",
             "set-property",
             "--runtime",
-            "app-t3code-agents.slice",
+            "app-z9code-agents.slice",
             expect.stringMatching(/^MemoryHigh=\d+$/),
             expect.stringMatching(/^MemoryMax=\d+$/),
           ],
@@ -362,7 +362,7 @@ describe("AgentScope service", () => {
             "--user",
             "set-property",
             "--runtime",
-            "app-t3code.slice",
+            "app-z9code.slice",
             "CPUWeight=10",
             "IOWeight=10",
             "TasksMax=25%",
@@ -381,7 +381,7 @@ describe("AgentScope service", () => {
         const memoryLimits = () =>
           calls
             .filter(
-              ([, verb, , slice]) => verb === "set-property" && slice === "app-t3code-agents.slice",
+              ([, verb, , slice]) => verb === "set-property" && slice === "app-z9code-agents.slice",
             )
             .map((args) => args.slice(4));
         yield* launch;
@@ -427,7 +427,7 @@ describe("AgentScope service", () => {
             name: "terminal",
             survivesRestart: true,
           });
-          expect(sliceOf(terminal)).toBe("app-t3code-agents.slice");
+          expect(sliceOf(terminal)).toBe("app-z9code-agents.slice");
           expect(stopsOf(calls)).toHaveLength(1);
         }),
       { leftovers: true },

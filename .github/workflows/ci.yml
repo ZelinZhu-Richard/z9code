@@ -68,7 +68,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev pkg-config
       - name: Install Chromium for browser tests
         if: matrix.package == 'apps/web' || matrix.package == 'apps/server'
-        run: pnpm --filter @t3tools/web exec playwright install --with-deps chromium
+        run: pnpm --filter @z9code/web exec playwright install --with-deps chromium
       - name: Test
         run: |
           if [ "${{ matrix.package }}" = packages ]; then

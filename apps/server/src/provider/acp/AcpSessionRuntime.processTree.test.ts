@@ -5,11 +5,11 @@ import * as NodeModule from "node:module";
 import * as NodePath from "node:path";
 
 import { describe, expect, it, vi } from "@effect/vitest";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 
-import * as AcpSessionRuntime from "@t3tools/provider-acp/server/AcpSessionRuntime";
+import * as AcpSessionRuntime from "@z9code/provider-acp/server/AcpSessionRuntime";
 
 const identity = (
   pid: number,
@@ -142,7 +142,7 @@ describe("terminatePosixOwnedProcessTree", () => {
       const scratchRoot = NodePath.join(process.cwd(), "tmp");
       NodeFS.mkdirSync(scratchRoot, { recursive: true });
       const scratch = NodeFS.mkdtempSync(NodePath.join(scratchRoot, "acp-cgroup-wrapper-"));
-      const linkedNode = NodePath.join(scratch, "T3 Code AppImage 'quoted'");
+      const linkedNode = NodePath.join(scratch, "z9code AppImage 'quoted'");
       const bareGrok = NodePath.join(scratch, "grok");
       const relativeBin = NodePath.join(scratch, "relative-bin");
       const directoryBin = NodePath.join(scratch, "directory-bin");
@@ -183,7 +183,7 @@ describe("terminatePosixOwnedProcessTree", () => {
         "fs.writeFileSync(process.argv[1], JSON.stringify({",
         "  args: process.argv.slice(2),",
         "  electron: process.env.ELECTRON_RUN_AS_NODE,",
-        "  wrapper: process.env.T3_ACP_CGROUP_WRAPPER,",
+        "  wrapper: process.env.Z9_ACP_CGROUP_WRAPPER,",
         "}));",
       ].join("\n");
       const wrapped = AcpSessionRuntime.wrapCommandForLinuxCgroup(lease, linkedNode, [
@@ -200,7 +200,7 @@ describe("terminatePosixOwnedProcessTree", () => {
           env: {
             ...process.env,
             ELECTRON_RUN_AS_NODE: "1",
-            T3_ACP_CGROUP_WRAPPER: "1",
+            Z9_ACP_CGROUP_WRAPPER: "1",
           },
         });
         expect(result.status, result.stderr).toBe(0);
@@ -240,7 +240,7 @@ describe("terminatePosixOwnedProcessTree", () => {
     try {
       const wrapped = AcpSessionRuntime.wrapCommandForLinuxCgroup(lease, "/bin/sh", [
         "-c",
-        'printf "%s\\n" "$0" "$1" "$2" "$3" "${ELECTRON_RUN_AS_NODE-}" "${T3_ACP_CGROUP_WRAPPER-}" > "$4"',
+        'printf "%s\\n" "$0" "$1" "$2" "$3" "${ELECTRON_RUN_AS_NODE-}" "${Z9_ACP_CGROUP_WRAPPER-}" > "$4"',
         "packaged-target",
         "space value",
         "single'quote",
@@ -252,7 +252,7 @@ describe("terminatePosixOwnedProcessTree", () => {
         env: {
           ...process.env,
           ELECTRON_RUN_AS_NODE: "1",
-          T3_ACP_CGROUP_WRAPPER: "1",
+          Z9_ACP_CGROUP_WRAPPER: "1",
         },
       });
       expect(result.status, result.stderr).toBe(0);
@@ -576,37 +576,39 @@ describe("terminatePosixOwnedProcessTree", () => {
     }),
   );
 
-  it.live("re-admits a still-owned child after PID reuse and never signals the T3 session", () =>
-    Effect.gen(function* () {
-      const reused = identity(110, 100, 110, 110, "reused");
-      const fixture = makeController({
-        processes: [
-          server(),
-          identity(100, process.pid, 100, 100),
-          identity(110, 100, 110, 110, "owned"),
-          identity(120, 100, 120, process.pid),
-        ],
-        onProcess: (processes, pid) => {
-          if (pid === 110) processes.set(110, reused);
-          else processes.delete(pid);
-        },
-      });
+  it.live(
+    "re-admits a still-owned child after PID reuse and never signals the z9code session",
+    () =>
+      Effect.gen(function* () {
+        const reused = identity(110, 100, 110, 110, "reused");
+        const fixture = makeController({
+          processes: [
+            server(),
+            identity(100, process.pid, 100, 100),
+            identity(110, 100, 110, 110, "owned"),
+            identity(120, 100, 120, process.pid),
+          ],
+          onProcess: (processes, pid) => {
+            if (pid === 110) processes.set(110, reused);
+            else processes.delete(pid);
+          },
+        });
 
-      const result = yield* Effect.exit(
-        AcpSessionRuntime.terminatePosixOwnedProcessTree({
-          controller: fixture.controller,
-          grace: 0,
-          rootPid: 100,
-        }),
-      );
+        const result = yield* Effect.exit(
+          AcpSessionRuntime.terminatePosixOwnedProcessTree({
+            controller: fixture.controller,
+            grace: 0,
+            rootPid: 100,
+          }),
+        );
 
-      expect(Exit.isFailure(result)).toBe(true);
-      expect(fixture.processes.get(110)).toEqual(reused);
-      expect(
-        fixture.signals.filter((entry) => entry.startsWith("process:110:")).length,
-      ).toBeGreaterThan(0);
-      expect(fixture.signals.some((entry) => entry.includes(":120:"))).toBe(false);
-    }),
+        expect(Exit.isFailure(result)).toBe(true);
+        expect(fixture.processes.get(110)).toEqual(reused);
+        expect(
+          fixture.signals.filter((entry) => entry.startsWith("process:110:")).length,
+        ).toBeGreaterThan(0);
+        expect(fixture.signals.some((entry) => entry.includes(":120:"))).toBe(false);
+      }),
   );
 
   it.live("does not treat zombie residual entries as teardown survivors", () =>

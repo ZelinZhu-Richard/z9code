@@ -10,12 +10,12 @@ import {
   type OrchestrationV2LinkedSender,
   type RuntimeMode,
   type ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Context from "effect/Context";
 import type * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import { formatThreadLink } from "@t3tools/shared/threadLinks";
+import { formatThreadLink } from "@z9code/shared/threadLinks";
 
 const ALL_MCP_CAPABILITIES = [
   "preview",
@@ -41,23 +41,23 @@ export interface McpClientCaller {
   readonly label: string;
   readonly access: AuthMcpClientAccess;
   /**
-   * Another T3 Code environment's peer link. What it starts here carries its
+   * Another z9code environment's peer link. What it starts here carries its
    * session as `linkOrigin`, and it changes only that work (`linkOrigin.ts`).
    */
   readonly linked?: boolean | undefined;
-  /** When a peer link's session ends unless it is used again, answered as `T3-Link-Expires-At`. */
+  /** When a peer link's session ends unless it is used again, answered as `z9code-Link-Expires-At`. */
   readonly linkExpiresAt?: DateTime.Utc | undefined;
   /**
-   * Narrower modes the client asked for on this request (`T3-Mode-Limit`):
+   * Narrower modes the client asked for on this request (`z9code-Mode-Limit`):
    * another environment passing on the limits of the agent it calls for.
    */
   readonly narrowedTo?: ClientModes | undefined;
-  /** A linked environment's thread this request is made for (`T3-Sender-Thread`). */
+  /** A linked environment's thread this request is made for (`z9code-Sender-Thread`). */
   readonly senderThread?: OrchestrationV2LinkedSender | undefined;
 }
 
 /**
- * `T3-Mode-Limit: <runtimeMode>/<interactionMode>` lets an OAuth client cap
+ * `z9code-Mode-Limit: <runtimeMode>/<interactionMode>` lets an OAuth client cap
  * a request below what it was approved with: another environment passes on
  * the limits of the agent it calls for. It can only narrow (see
  * `clientModeCeiling`), so a client gains nothing by sending a broad one.
@@ -65,13 +65,13 @@ export interface McpClientCaller {
 export const MODE_LIMIT_HEADER = "t3-mode-limit";
 
 /**
- * `T3-Link-Expires-At: <ISO time>` answers a peer link's request with when its
+ * `z9code-Link-Expires-At: <ISO time>` answers a peer link's request with when its
  * session now ends. Using a link renews it, so the linking side keeps this.
  */
 export const LINK_EXPIRES_AT_HEADER = "t3-link-expires-at";
 
 /**
- * `T3-Sender-Thread: <environmentId>/<threadId>/<title>`, each URI-encoded: the
+ * `z9code-Sender-Thread: <environmentId>/<threadId>/<title>`, each URI-encoded: the
  * thread another environment makes a request for, so what it sends here can name
  * it. Read only from a linked client.
  */
@@ -164,12 +164,12 @@ export interface McpInvocationScope {
    * see the URL they were configured with, so links they must fetch carry it. Unset in-process.
    */
   readonly origin?: string | undefined;
-  /** False when the calling thread's project is on no forge T3 reads; `/mcp` reads it per request. */
+  /** False when the calling thread's project is on no forge z9code reads; `/mcp` reads it per request. */
   readonly forge?: boolean;
 }
 
 /**
- * T3 Code renders `t3-thread://` links as thread chips. A known `title` labels the chip for
+ * z9code renders `t3-thread://` links as thread chips. A known `title` labels the chip for
  * clients that cannot load this environment's threads.
  */
 export const threadLinkFor = (
@@ -181,11 +181,11 @@ export const threadLinkFor = (
 export class McpInvocationContext extends Context.Service<
   McpInvocationContext,
   McpInvocationScope
->()("t3/mcp/McpInvocationContext") {}
+>()("z9/mcp/McpInvocationContext") {}
 
 /**
  * `McpSchema.EnabledWhen` for tools a delegated child must not see or call.
- * EnabledWhen only receives the MCP client profile, so read the T3 caller from the request fiber.
+ * EnabledWhen only receives the MCP client profile, so read the z9code caller from the request fiber.
  */
 export const hiddenFromSubagents = (): boolean => {
   const fiber = Fiber.getCurrent();
@@ -227,7 +227,7 @@ export const hiddenWhileLinksOff = (): boolean => {
   return scope?.linkedEnvironments !== false;
 };
 
-/** `McpSchema.EnabledWhen` for agent feedback tools, for every client including `t3 feedback`. */
+/** `McpSchema.EnabledWhen` for agent feedback tools, for every client including `z9 feedback`. */
 export const hiddenWhileFeedbackOff = (): boolean => {
   const fiber = Fiber.getCurrent();
   const scope = fiber && Context.getOrUndefined(fiber.context, McpInvocationContext);
@@ -297,7 +297,7 @@ export const requireThreadMcpCapability = <const C extends "preview" | "device">
 const threadCallerRequired = (operation: string) =>
   new OrchestratorMcpFailure({
     code: "thread_credential_required",
-    message: `${operation} acts as the calling T3 thread, so it needs an agent running inside T3 Code. This MCP client signed in from outside a thread.`,
+    message: `${operation} acts as the calling z9code thread, so it needs an agent running inside z9code. This MCP client signed in from outside a thread.`,
   });
 
 export type McpThreadInvocationScope = McpInvocationScope & { readonly thread: McpThreadCaller };

@@ -1,4 +1,4 @@
-import type { ThemeAppearance } from "@t3tools/shared/themePalettes";
+import type { ThemeAppearance } from "@z9code/shared/themePalettes";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -305,7 +305,7 @@ const launchBrowser = Effect.fnUntraced(function* (input: {
       if (url === PAGE_URL && body !== undefined) {
         return yield* fulfillPage(sessionId, paused.requestId, body);
       }
-      // Subframes may show other sites covered by Local Network Access; the main frame stays on T3's page.
+      // Subframes may show other sites covered by Local Network Access; the main frame stays on z9code's page.
       const otherSiteFrame =
         paused.resourceType === "Document" &&
         paused.frameId !== page.mainFrameId &&
@@ -465,7 +465,7 @@ const launchBrowser = Effect.fnUntraced(function* (input: {
       Ignored,
       sessionId,
     );
-    // Intercept T3's page and all document navigations to keep the main frame on it.
+    // Intercept z9code's page and all document navigations to keep the main frame on it.
     yield* send(
       "Fetch.enable",
       {

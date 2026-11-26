@@ -1,4 +1,4 @@
-import type { WorktreeLayoutCommandKind } from "@t3tools/contracts";
+import type { WorktreeLayoutCommandKind } from "@z9code/contracts";
 import { msg, T, useMessages, Var } from "gt-react";
 import { useSyncExternalStore } from "react";
 

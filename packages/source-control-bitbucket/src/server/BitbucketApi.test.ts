@@ -1,4 +1,4 @@
-import { SecretProviderId, SourceControlProviderKind } from "@t3tools/contracts";
+import { SecretProviderId, SourceControlProviderKind } from "@z9code/contracts";
 import { assert, it, vi } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -16,12 +16,12 @@ import * as Schema from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { HttpClient, HttpClientError, HttpClientRequest, HttpClientResponse } from "effect/http";
 
-import * as SourceControlRateLimit from "@t3tools/source-control-core/server/SourceControlRateLimit";
-import type * as SourceControlHost from "@t3tools/source-control-core/server/SourceControlHost";
-import * as TestSourceControlHost from "@t3tools/source-control-testing/TestSourceControlHost";
+import * as SourceControlRateLimit from "@z9code/source-control-core/server/SourceControlRateLimit";
+import type * as SourceControlHost from "@z9code/source-control-core/server/SourceControlHost";
+import * as TestSourceControlHost from "@z9code/source-control-testing/TestSourceControlHost";
 
 import * as BitbucketApi from "./BitbucketApi.ts";
-import { userFacingSourceControlDetail } from "@t3tools/source-control-core/server/SourceControlProvider";
+import { userFacingSourceControlDetail } from "@z9code/source-control-core/server/SourceControlProvider";
 
 type HostGit = SourceControlHost.SourceControlHost["Service"]["git"];
 
@@ -34,32 +34,32 @@ const bitbucketPullRequest = {
   updated_on: "2026-01-02T00:00:00.000Z",
   links: {
     html: {
-      href: "https://bitbucket.org/pingdotgg/t3code/pull-requests/42",
+      href: "https://bitbucket.org/ZelinZhu-Richard/z9code/pull-requests/42",
     },
   },
   source: {
     branch: { name: "feature/source-control" },
     repository: {
-      full_name: "octocat/t3code",
+      full_name: "octocat/z9code",
       workspace: { slug: "octocat" },
     },
   },
   destination: {
     branch: { name: "main" },
     repository: {
-      full_name: "pingdotgg/t3code",
+      full_name: "ZelinZhu-Richard/z9code",
       workspace: { slug: "pingdotgg" },
     },
   },
 };
 
 const repositoryJson = {
-  full_name: "pingdotgg/t3code",
+  full_name: "ZelinZhu-Richard/z9code",
   links: {
-    html: { href: "https://bitbucket.org/pingdotgg/t3code" },
+    html: { href: "https://bitbucket.org/ZelinZhu-Richard/z9code" },
     clone: [
-      { name: "https", href: "https://bitbucket.org/pingdotgg/t3code.git" },
-      { name: "ssh", href: "git@bitbucket.org:pingdotgg/t3code.git" },
+      { name: "https", href: "https://bitbucket.org/ZelinZhu-Richard/z9code.git" },
+      { name: "ssh", href: "git@bitbucket.org:ZelinZhu-Richard/z9code.git" },
     ],
   },
   mainbranch: { name: "main" },
@@ -96,10 +96,10 @@ function makeLayer(input: {
   );
   const gitMock = {
     execute: vi.fn<HostGit["execute"]>(() =>
-      Effect.succeed(gitOutput("git@bitbucket.org:pingdotgg/t3code.git\n")),
+      Effect.succeed(gitOutput("git@bitbucket.org:ZelinZhu-Richard/z9code.git\n")),
     ),
     readConfigValue: vi.fn<HostGit["readConfigValue"]>(() =>
-      Effect.succeed<string | null>("git@bitbucket.org:pingdotgg/t3code.git"),
+      Effect.succeed<string | null>("git@bitbucket.org:ZelinZhu-Richard/z9code.git"),
     ),
     resolvePrimaryRemoteName: vi.fn<HostGit["resolvePrimaryRemoteName"]>(() =>
       Effect.succeed("origin"),
@@ -123,7 +123,7 @@ function makeLayer(input: {
       remotes: [
         {
           name: "origin",
-          url: input.remoteUrl ?? "git@bitbucket.org:pingdotgg/t3code.git",
+          url: input.remoteUrl ?? "git@bitbucket.org:ZelinZhu-Richard/z9code.git",
           pushUrl: Option.none(),
           isPrimary: true,
         },
@@ -150,9 +150,9 @@ function makeLayer(input: {
       ConfigProvider.layer(
         ConfigProvider.fromEnv({
           env: input.env ?? {
-            T3CODE_BITBUCKET_API_BASE_URL: "https://api.test.local/2.0",
-            T3CODE_BITBUCKET_EMAIL: "user@example.com",
-            T3CODE_BITBUCKET_API_TOKEN: "token",
+            Z9CODE_BITBUCKET_API_BASE_URL: "https://api.test.local/2.0",
+            Z9CODE_BITBUCKET_EMAIL: "user@example.com",
+            Z9CODE_BITBUCKET_API_TOKEN: "token",
           },
         }),
       ),
@@ -182,18 +182,18 @@ it.effect("parses pull request responses from the Bitbucket REST API", () => {
     assert.deepStrictEqual(result, {
       number: 42,
       title: "Add Bitbucket provider",
-      url: "https://bitbucket.org/pingdotgg/t3code/pull-requests/42",
+      url: "https://bitbucket.org/ZelinZhu-Richard/z9code/pull-requests/42",
       baseRefName: "main",
       headRefName: "feature/source-control",
       state: "open",
       updatedAt: Option.some(DateTime.makeUnsafe("2026-01-02T00:00:00.000Z")),
       isCrossRepository: true,
-      headRepositoryNameWithOwner: "octocat/t3code",
+      headRepositoryNameWithOwner: "octocat/z9code",
       headRepositoryOwnerLogin: "octocat",
     });
     assert.strictEqual(
       execute.mock.calls[0]?.[0].url,
-      "https://api.test.local/2.0/repositories/pingdotgg/t3code/pullrequests/42",
+      "https://api.test.local/2.0/repositories/ZelinZhu-Richard/z9code/pullrequests/42",
     );
   }).pipe(Effect.provide(layer));
 });
@@ -232,7 +232,7 @@ it.effect.each([false, true])("honors PR URL repositories, context=%s", (withCon
                 baseUrl: "https://bitbucket.org",
               },
               remoteName: "origin",
-              remoteUrl: "git@bitbucket.org:pingdotgg/t3code.git",
+              remoteUrl: "git@bitbucket.org:ZelinZhu-Richard/z9code.git",
             },
           }
         : {}),
@@ -273,7 +273,7 @@ it.effect("adds a fork remote with the protocol of the URL origin fetches from",
       execute: () =>
         Effect.succeed(
           gitOutput(
-            "https://bitbucket.org/pingdotgg/t3code.git\ngit@bitbucket.org:pingdotgg/t3code.git\n",
+            "https://bitbucket.org/ZelinZhu-Richard/z9code.git\ngit@bitbucket.org:ZelinZhu-Richard/z9code.git\n",
           ),
         ),
     },
@@ -283,11 +283,11 @@ it.effect("adds a fork remote with the protocol of the URL origin fetches from",
           ? bitbucketPullRequest
           : {
               ...repositoryJson,
-              full_name: "octocat/t3code",
+              full_name: "octocat/z9code",
               links: {
                 clone: [
-                  { name: "https", href: "https://bitbucket.org/octocat/t3code.git" },
-                  { name: "ssh", href: "git@bitbucket.org:octocat/t3code.git" },
+                  { name: "https", href: "https://bitbucket.org/octocat/z9code.git" },
+                  { name: "ssh", href: "git@bitbucket.org:octocat/z9code.git" },
                 ],
               },
             },
@@ -299,7 +299,7 @@ it.effect("adds a fork remote with the protocol of the URL origin fetches from",
     assert.deepStrictEqual(git.ensureRemote.mock.calls[0]?.[0], {
       cwd: "/repo",
       preferredName: "octocat",
-      url: "https://bitbucket.org/octocat/t3code.git",
+      url: "https://bitbucket.org/octocat/z9code.git",
     });
   }).pipe(Effect.provide(layer));
 });
@@ -311,7 +311,10 @@ it.effect.each([false, true])(
       response: () =>
         Response.json({
           ...bitbucketPullRequest,
-          source: { ...bitbucketPullRequest.source, repository: { full_name: "pingdotgg/t3code" } },
+          source: {
+            ...bitbucketPullRequest.source,
+            repository: { full_name: "ZelinZhu-Richard/z9code" },
+          },
         }),
     });
     return Effect.gen(function* () {
@@ -328,7 +331,7 @@ it.effect.each([false, true])(
                   baseUrl: "https://bitbucket.org",
                 },
                 remoteName: "upstream",
-                remoteUrl: "git@bitbucket.org:PingDotGG/T3Code.git",
+                remoteUrl: "git@bitbucket.org:PingDotGG/Z9Code.git",
               },
             }
           : {}),
@@ -355,7 +358,7 @@ it.effect("lists pull requests with Bitbucket state and source branch query para
             state: "MERGED",
             source: {
               branch: { name: "feature/merged" },
-              repository: { full_name: "pingdotgg/t3code" },
+              repository: { full_name: "ZelinZhu-Richard/z9code" },
             },
           },
         ],
@@ -375,7 +378,7 @@ it.effect("lists pull requests with Bitbucket state and source branch query para
     const request = execute.mock.calls[0]?.[0];
     assert.strictEqual(
       request?.url,
-      "https://api.test.local/2.0/repositories/pingdotgg/t3code/pullrequests",
+      "https://api.test.local/2.0/repositories/ZelinZhu-Richard/z9code/pullrequests",
     );
     assert.deepStrictEqual(request?.urlParams.params, [
       ["pagelen", "10"],
@@ -406,14 +409,14 @@ it.effect("reads repository clone URLs and default branch", () => {
     const bitbucket = yield* BitbucketApi.BitbucketApi;
     const cloneUrls = yield* bitbucket.getRepositoryCloneUrls({
       cwd: "/repo",
-      repository: "pingdotgg/t3code",
+      repository: "ZelinZhu-Richard/z9code",
     });
     const defaultBranch = yield* bitbucket.getDefaultBranch({ cwd: "/repo" });
 
     assert.deepStrictEqual(cloneUrls, {
-      nameWithOwner: "pingdotgg/t3code",
-      url: "https://bitbucket.org/pingdotgg/t3code.git",
-      sshUrl: "git@bitbucket.org:pingdotgg/t3code.git",
+      nameWithOwner: "ZelinZhu-Richard/z9code",
+      url: "https://bitbucket.org/ZelinZhu-Richard/z9code.git",
+      sshUrl: "git@bitbucket.org:ZelinZhu-Richard/z9code.git",
     });
     assert.strictEqual(defaultBranch, "main");
   }).pipe(Effect.provide(layer));
@@ -428,7 +431,7 @@ it.effect.each([false, true])(
 
     return Effect.gen(function* () {
       const bitbucket = yield* BitbucketApi.BitbucketApi;
-      for (const repository of ["t3code", "", " \t "]) {
+      for (const repository of ["z9code", "", " \t "]) {
         const error = yield* bitbucket
           .getRepositoryCloneUrls({
             cwd: "/repo",
@@ -442,7 +445,7 @@ it.effect.each([false, true])(
                       baseUrl: "https://bitbucket.org",
                     },
                     remoteName: "origin",
-                    remoteUrl: "git@bitbucket.org:pingdotgg/t3code.git",
+                    remoteUrl: "git@bitbucket.org:ZelinZhu-Richard/z9code.git",
                   },
                 }
               : {}),
@@ -479,7 +482,10 @@ it.effect("prefers an explicit repository and uses context when the repository i
       remoteName: "origin",
       remoteUrl: "git@bitbucket.org:another/context.git",
     };
-    for (const repository of ["pingdotgg/t3code", "https://bitbucket.org/pingdotgg/t3code.git"]) {
+    for (const repository of [
+      "ZelinZhu-Richard/z9code",
+      "https://bitbucket.org/ZelinZhu-Richard/z9code.git",
+    ]) {
       yield* bitbucket.getRepositoryCloneUrls({ cwd: "/repo", context, repository });
     }
     yield* bitbucket.getDefaultBranch({ cwd: "/repo", context });
@@ -487,8 +493,8 @@ it.effect("prefers an explicit repository and uses context when the repository i
     assert.deepStrictEqual(
       execute.mock.calls.map(([request]) => request.url).toSorted(),
       [
-        "https://api.test.local/2.0/repositories/pingdotgg/t3code",
-        "https://api.test.local/2.0/repositories/pingdotgg/t3code",
+        "https://api.test.local/2.0/repositories/ZelinZhu-Richard/z9code",
+        "https://api.test.local/2.0/repositories/ZelinZhu-Richard/z9code",
         "https://api.test.local/2.0/repositories/another/context",
         "https://api.test.local/2.0/repositories/another/context/branching-model",
       ].toSorted(),
@@ -511,8 +517,8 @@ it.effect("sends a self-hosted Bitbucket remote nowhere unless an API base url i
       remoteUrl,
     };
     const cloudEnv = {
-      T3CODE_BITBUCKET_EMAIL: "user@example.com",
-      T3CODE_BITBUCKET_API_TOKEN: "t",
+      Z9CODE_BITBUCKET_EMAIL: "user@example.com",
+      Z9CODE_BITBUCKET_API_TOKEN: "t",
     };
     const response = (request: HttpClientRequest.HttpClientRequest) =>
       Response.json(request.url.endsWith("/branching-model") ? {} : repositoryJson);
@@ -557,8 +563,8 @@ it.effect("sends a self-hosted Bitbucket remote nowhere unless an API base url i
     const cloud = makeLayer({ response, env: cloudEnv });
     yield* defaultBranch(cloud, false);
     assert.deepStrictEqual(requestedUrls(cloud), [
-      "https://api.bitbucket.org/2.0/repositories/pingdotgg/t3code",
-      "https://api.bitbucket.org/2.0/repositories/pingdotgg/t3code/branching-model",
+      "https://api.bitbucket.org/2.0/repositories/ZelinZhu-Richard/z9code",
+      "https://api.bitbucket.org/2.0/repositories/ZelinZhu-Richard/z9code/branching-model",
     ]);
 
     const configured = makeLayer({ response, remoteUrl });
@@ -596,8 +602,8 @@ it.effect(
       assert.deepStrictEqual(
         execute.mock.calls.map((call) => call[0].url).toSorted(),
         [
-          "https://api.test.local/2.0/repositories/pingdotgg/t3code",
-          "https://api.test.local/2.0/repositories/pingdotgg/t3code/branching-model",
+          "https://api.test.local/2.0/repositories/ZelinZhu-Richard/z9code",
+          "https://api.test.local/2.0/repositories/ZelinZhu-Richard/z9code/branching-model",
         ].toSorted(),
       );
     }).pipe(Effect.provide(layer));
@@ -653,7 +659,7 @@ it.effect("creates pull requests using the official REST payload shape", () => {
     const request = execute.mock.calls[0]?.[0];
     assert.strictEqual(
       request?.url,
-      "https://api.test.local/2.0/repositories/pingdotgg/t3code/pullrequests",
+      "https://api.test.local/2.0/repositories/ZelinZhu-Richard/z9code/pullrequests",
     );
     assert.strictEqual(request?.method, "POST");
     assert.ok(request);
@@ -664,7 +670,7 @@ it.effect("creates pull requests using the official REST payload shape", () => {
       description: "PR body",
       source: {
         branch: { name: "feature/provider" },
-        repository: { full_name: "owner/t3code" },
+        repository: { full_name: "owner/z9code" },
       },
       destination: {
         branch: { name: "main" },
@@ -766,7 +772,7 @@ it.effect("never puts a saved token that is unsafe for an HTTP header on the wir
 it.effect("reports saved credentials as configured when Bitbucket cannot confirm them", () => {
   const { execute, layer } = makeLayer({
     response: () => new Response(null, { status: 401 }),
-    env: { T3CODE_BITBUCKET_API_BASE_URL: "https://api.test.local/2.0" },
+    env: { Z9CODE_BITBUCKET_API_BASE_URL: "https://api.test.local/2.0" },
   });
 
   return Effect.gen(function* () {
@@ -836,15 +842,15 @@ it.effect("keeps Bitbucket response bodies out of checkout diagnostics", () => {
 it.effect("checks out fork pull requests through an ensured fork remote", () => {
   const { git, layer } = makeLayer({
     response: (request) => {
-      if (request.url.endsWith("/repositories/octocat/t3code")) {
+      if (request.url.endsWith("/repositories/octocat/z9code")) {
         return Response.json({
           ...repositoryJson,
-          full_name: "octocat/t3code",
+          full_name: "octocat/z9code",
           links: {
-            html: { href: "https://bitbucket.org/octocat/t3code" },
+            html: { href: "https://bitbucket.org/octocat/z9code" },
             clone: [
-              { name: "https", href: "https://bitbucket.org/octocat/t3code.git" },
-              { name: "ssh", href: "git@bitbucket.org:octocat/t3code.git" },
+              { name: "https", href: "https://bitbucket.org/octocat/z9code.git" },
+              { name: "ssh", href: "git@bitbucket.org:octocat/z9code.git" },
             ],
           },
         });
@@ -854,7 +860,7 @@ it.effect("checks out fork pull requests through an ensured fork remote", () => 
         source: {
           branch: { name: "main" },
           repository: {
-            full_name: "octocat/t3code",
+            full_name: "octocat/z9code",
             workspace: { slug: "octocat" },
           },
         },
@@ -873,23 +879,23 @@ it.effect("checks out fork pull requests through an ensured fork remote", () => 
     assert.deepStrictEqual(git.ensureRemote.mock.calls[0]?.[0], {
       cwd: "/repo",
       preferredName: "octocat",
-      url: "git@bitbucket.org:octocat/t3code.git",
+      url: "git@bitbucket.org:octocat/z9code.git",
     });
     assert.deepStrictEqual(git.fetchRemoteBranch.mock.calls[0]?.[0], {
       cwd: "/repo",
       remoteName: "octocat",
       remoteBranch: "main",
-      localBranch: "t3code/pr-42/main",
+      localBranch: "z9code/pr-42/main",
     });
     assert.deepStrictEqual(git.setBranchUpstream.mock.calls[0]?.[0], {
       cwd: "/repo",
-      branch: "t3code/pr-42/main",
+      branch: "z9code/pr-42/main",
       remoteName: "octocat",
       remoteBranch: "main",
     });
     assert.deepStrictEqual(git.switchRef.mock.calls[0]?.[0], {
       cwd: "/repo",
-      refName: "t3code/pr-42/main",
+      refName: "z9code/pr-42/main",
     });
   }).pipe(Effect.provide(layer));
 });

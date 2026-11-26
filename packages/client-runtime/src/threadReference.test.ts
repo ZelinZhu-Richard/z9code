@@ -1,9 +1,9 @@
-import { EnvironmentId, ThreadId, type ThreadPullRequestLink } from "@t3tools/contracts";
+import { EnvironmentId, ThreadId, type ThreadPullRequestLink } from "@z9code/contracts";
 import {
   decodeComposerContextFragment,
   encodeComposerContextFragment,
-} from "@t3tools/shared/composerContextClipboard";
-import { threadLinkContextReferences } from "@t3tools/shared/composerContextReferences";
+} from "@z9code/shared/composerContextClipboard";
+import { threadLinkContextReferences } from "@z9code/shared/composerContextReferences";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveThreadReferenceCopyTarget } from "./threadReference.ts";
@@ -98,7 +98,7 @@ describe("resolveThreadReferenceCopyTarget", () => {
         }),
       ],
     });
-    // The plain text opens the thread in T3 Code and pastes back as the copied record's chip.
+    // The plain text opens the thread in z9code and pastes back as the copied record's chip.
     expect(target!.value).toBe("<t3-thread://v2/env-1/thread-1>");
     expect(threadLinkContextReferences(target!.value, pasted!.records, () => undefined)).toEqual({
       text: `[Fix the login flow](t3-context://v1/thread/${pasted!.records[0]!.contextId})`,

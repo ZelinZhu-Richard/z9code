@@ -10,18 +10,18 @@ import {
   type DeviceSummary,
   type ServerSettings as Settings,
   type SshDeviceHostConfig,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as NetService from "@t3tools/shared/Net";
-import { SshCommandError } from "@t3tools/ssh/errors";
+import * as NetService from "@z9code/shared/Net";
+import { SshCommandError } from "@z9code/ssh/errors";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import * as SecretResolver from "@t3tools/secret-provider-core/server/SecretResolver";
+import * as SecretResolver from "@z9code/secret-provider-core/server/SecretResolver";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -39,7 +39,7 @@ import * as ProcessRunner from "../processRunner.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as DeviceHost from "./DeviceHost.ts";
 import { makeDeviceHubOperations } from "./DeviceHubOperations.ts";
-import { NodeRuntimeUnavailableError } from "@t3tools/shared/nodeRuntime";
+import { NodeRuntimeUnavailableError } from "@z9code/shared/nodeRuntime";
 
 import * as DeviceService from "./DeviceService.ts";
 import * as SshDeviceHost from "./SshDeviceHost.ts";
@@ -525,14 +525,14 @@ describe("device setup consent", () => {
       exitCode: 1,
       stderr: "private diagnostics",
       expected:
-        "Connected over SSH, but this host runs Windows, and SSH device hosts currently need macOS or Linux. To use this machine's devices, run T3 Code on it and connect to that environment.",
+        "Connected over SSH, but this host runs Windows, and SSH device hosts currently need macOS or Linux. To use this machine's devices, run z9code on it and connect to that environment.",
     },
     {
       name: "a Windows host returning 9009",
       exitCode: 9009,
       stderr: "private diagnostics",
       expected:
-        "Connected over SSH, but this host runs Windows, and SSH device hosts currently need macOS or Linux. To use this machine's devices, run T3 Code on it and connect to that environment.",
+        "Connected over SSH, but this host runs Windows, and SSH device hosts currently need macOS or Linux. To use this machine's devices, run z9code on it and connect to that environment.",
     },
     {
       name: "missing Node on a Windows host with a POSIX shell",
@@ -774,7 +774,7 @@ it.effect.each([
     exitCode: 255,
     stderr: "Host key verification failed.\r\n",
     reason:
-      "SSH encountered an untrusted host key while connecting to probe.test from the machine running this T3 Code server. Connect once with ssh from there to identify the host and verify its key before accepting it.",
+      "SSH encountered an untrusted host key while connecting to probe.test from the machine running this z9code server. Connect once with ssh from there to identify the host and verify its key before accepting it.",
   },
   {
     name: "unrecognized SSH failure",
@@ -2013,7 +2013,7 @@ it.effect.each(["exit", "missing"] as const)(
       expect(error.message).toBe(
         failure === "exit"
           ? "Device update device tool failed: The device command failed (exit code 243)."
-          : "Device update device tool failed: Device support needs npm, which is not on the T3 server's PATH. Install npm (it comes with Node.js from nodejs.org), restart T3 Code, then retry.",
+          : "Device update device tool failed: Device support needs npm, which is not on the z9code server's PATH. Install npm (it comes with Node.js from nodejs.org), restart z9code, then retry.",
       );
     }).pipe(
       Effect.provide(

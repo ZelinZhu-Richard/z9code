@@ -14,7 +14,7 @@ import {
   type SnapShotKeyChord,
   type SnapShotModifier,
   type SnapShotShortcut,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 
 interface AccessibilityTreeNode {
   readonly name?: string;

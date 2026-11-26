@@ -1,6 +1,6 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { expect, it } from "@effect/vitest";
-import { EnvironmentId } from "@t3tools/contracts";
+import { EnvironmentId } from "@z9code/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Stream from "effect/Stream";
@@ -45,7 +45,7 @@ it.effect("start passes an explicit null payload through and defaults an omitted
       const toolkit = yield* WorkflowToolkit;
       for (const input of [{ input: null }, {}]) {
         yield* toolkit
-          .handle("t3_workflow", {
+          .handle("z9_workflow", {
             action: "start",
             workflow: "echo",
             idempotencyKey: "trial",
@@ -82,7 +82,7 @@ it.effect("signal refuses a run destination mixed with a channel destination", (
         ],
         (address) =>
           toolkit
-            .handle("t3_workflow", { action: "signal", value: { choice: "yes" }, ...address })
+            .handle("z9_workflow", { action: "signal", value: { choice: "yes" }, ...address })
             .pipe(
               Stream.unwrap,
               Stream.runCollect,
@@ -112,7 +112,7 @@ const emptyRun = { run: undefined, steps: [], references: [] } as never;
 const call = (input: Record<string, unknown>) =>
   Effect.gen(function* () {
     const toolkit = yield* WorkflowToolkit;
-    return yield* toolkit.handle("t3_workflow", input as never).pipe(
+    return yield* toolkit.handle("z9_workflow", input as never).pipe(
       Stream.unwrap,
       Stream.runCollect,
       Effect.map((parts) => parts.at(-1)?.result),
@@ -221,7 +221,7 @@ it.effect("questions are narrowed to a kind, and runs to a tag", () =>
           { action: "list" as const, tag: "backlog" },
         ],
         (input) =>
-          toolkit.handle("t3_workflow", input).pipe(
+          toolkit.handle("z9_workflow", input).pipe(
             Stream.unwrap,
             Stream.runCollect,
             Effect.map((parts) => parts.at(-1)?.result),

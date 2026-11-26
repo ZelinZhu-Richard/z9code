@@ -1,9 +1,9 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import { ProviderInstanceId } from "@t3tools/contracts";
-import { McpProviderSessions } from "@t3tools/provider-core/server/McpProviderSessions";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
+import { ProviderInstanceId } from "@z9code/contracts";
+import { McpProviderSessions } from "@z9code/provider-core/server/McpProviderSessions";
+import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { McpServer } from "effect/ai";
@@ -111,7 +111,7 @@ const claudeSystemAppend = () => {
     nativeThreadId: "context-budget",
     resume: false,
     cwd: null,
-    mcpServers: { "t3-code": { type: "http", url: "http://127.0.0.1/mcp" } },
+    mcpServers: { z9code: { type: "http", url: "http://127.0.0.1/mcp" } },
   });
   return typeof systemPrompt === "object" && "append" in systemPrompt ? systemPrompt.append : "";
 };

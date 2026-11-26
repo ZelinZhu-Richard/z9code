@@ -6,9 +6,9 @@ import {
   type ProviderInstanceId,
   type ServerProvider,
   type ServerProviderCompatibilityAdvisory,
-} from "@t3tools/contracts";
-import { brokenVersionDetail } from "@t3tools/provider-core/server/compatibility";
-import { satisfiesSemverRange } from "@t3tools/shared/semver";
+} from "@z9code/contracts";
+import { brokenVersionDetail } from "@z9code/provider-core/server/compatibility";
+import { satisfiesSemverRange } from "@z9code/shared/semver";
 import * as Schema from "effect/Schema";
 import packageJson from "../../package.json" with { type: "json" };
 
@@ -91,11 +91,11 @@ export function resolveProviderCompatibility(
       : "unknown";
   const message =
     status === "broken"
-      ? "This provider version is known to be incompatible with this T3 Code release."
+      ? "This provider version is known to be incompatible with this z9code release."
       : status === "unsupported"
-        ? "This provider version is outside the supported range for this T3 Code release."
+        ? "This provider version is outside the supported range for this z9code release."
         : status === "graceful"
-          ? "This provider version has limited compatibility with this T3 Code release."
+          ? "This provider version has limited compatibility with this z9code release."
           : null;
   const recommendedVersion = policy.recommendedVersion ?? null;
   const recommendedRange = policy.recommendedRange ?? null;

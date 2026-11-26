@@ -7,7 +7,7 @@ import {
   type ProjectTrackedFolder,
   TaskFolderError,
   ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -475,10 +475,10 @@ it.live("adopts the checkouts a project's own layout command makes, and runs its
           worktreeLayout: {
             // A plain project's folder is no worktree, even when the command leaves a `.git` there.
             create:
-              'mkdir -p "$T3_WORKTREE_PROJECT_PATH/cache" && git init -q "$T3_WORKTREE_PROJECT_PATH" && printf %s "$T3_WORKTREE_REPOSITORIES" > "$T3_WORKTREE_PROJECT_PATH/chosen" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH/api" "$T3_WORKTREE_BASE"',
+              'mkdir -p "$Z9_WORKTREE_PROJECT_PATH/cache" && git init -q "$Z9_WORKTREE_PROJECT_PATH" && printf %s "$Z9_WORKTREE_REPOSITORIES" > "$Z9_WORKTREE_PROJECT_PATH/chosen" && git -C "$Z9_PROJECT_ROOT/api" worktree add -q -b "$Z9_WORKTREE_BRANCH" "$Z9_WORKTREE_PROJECT_PATH/api" "$Z9_WORKTREE_BASE"',
             // Cleanup never deletes files that exist only here, so the teardown clears its own.
             remove:
-              'touch "$T3_PROJECT_ROOT/torn-down" && rm -rf "$T3_WORKTREE_PROJECT_PATH/cache" "$T3_WORKTREE_PROJECT_PATH/chosen" "$T3_WORKTREE_PROJECT_PATH/.git"',
+              'touch "$Z9_PROJECT_ROOT/torn-down" && rm -rf "$Z9_WORKTREE_PROJECT_PATH/cache" "$Z9_WORKTREE_PROJECT_PATH/chosen" "$Z9_WORKTREE_PROJECT_PATH/.git"',
           },
         }),
       );
@@ -531,8 +531,8 @@ it.live("keeps a checkout that gained work while its folder's remove command wai
         path.join(shop, "t3.json"),
         JSON.stringify({
           worktreeLayout: {
-            create: `mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH/api"`,
-            remove: `echo "$T3_WORKTREE_ROOT" >> "${ran}"; rm -f "$T3_WORKTREE_PROJECT_PATH/api/draft.txt"`,
+            create: `mkdir -p "$Z9_WORKTREE_PROJECT_PATH" && git -C "$Z9_PROJECT_ROOT/api" worktree add -q -b "$Z9_WORKTREE_BRANCH" "$Z9_WORKTREE_PROJECT_PATH/api"`,
+            remove: `echo "$Z9_WORKTREE_ROOT" >> "${ran}"; rm -f "$Z9_WORKTREE_PROJECT_PATH/api/draft.txt"`,
           },
         }),
       );
@@ -601,7 +601,7 @@ it.live("leaves a project's layout commands out for a request that may not run t
         path.join(shop, "t3.json"),
         JSON.stringify({
           worktreeLayout: {
-            create: `echo create >> "${ran}" && mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH/api"`,
+            create: `echo create >> "${ran}" && mkdir -p "$Z9_WORKTREE_PROJECT_PATH" && git -C "$Z9_PROJECT_ROOT/api" worktree add -q -b "$Z9_WORKTREE_BRANCH" "$Z9_WORKTREE_PROJECT_PATH/api"`,
             remove: `echo remove >> "${ran}"`,
           },
         }),
@@ -680,26 +680,26 @@ it.live(
         });
 
         yield* attempt(
-          'mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH/api" && exit 1',
+          'mkdir -p "$Z9_WORKTREE_PROJECT_PATH" && git -C "$Z9_PROJECT_ROOT/api" worktree add -q -b "$Z9_WORKTREE_BRANCH" "$Z9_WORKTREE_PROJECT_PATH/api" && exit 1',
         );
         assert.equal(yield* worktreeCount(api), 1);
 
         // A clone has no worktree registration to remove, and no thread branch to rename.
         const refused = yield* attempt(
-          'mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git clone -q "$T3_PROJECT_ROOT/api" "$T3_WORKTREE_PROJECT_PATH/api"',
+          'mkdir -p "$Z9_WORKTREE_PROJECT_PATH" && git clone -q "$Z9_PROJECT_ROOT/api" "$Z9_WORKTREE_PROJECT_PATH/api"',
         );
         assert.include(refused.detail, "is not a Git worktree of");
 
         // The refused checkout's folder is deleted, so its registration must go too.
         const wrongBranch = yield* attempt(
-          'mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/api" worktree add -q -b other "$T3_WORKTREE_PROJECT_PATH/api"',
+          'mkdir -p "$Z9_WORKTREE_PROJECT_PATH" && git -C "$Z9_PROJECT_ROOT/api" worktree add -q -b other "$Z9_WORKTREE_PROJECT_PATH/api"',
         );
         assert.include(wrongBranch.detail, "is not on the branch feature");
         assert.equal(yield* worktreeCount(api), 1);
 
         // A branch that was there before the command checked it out outlives the rollback.
         yield* attempt(
-          'mkdir -p "$T3_WORKTREE_PROJECT_PATH" && git -C "$T3_PROJECT_ROOT/web" worktree add -q "$T3_WORKTREE_PROJECT_PATH/web" "$T3_WORKTREE_BRANCH" && exit 1',
+          'mkdir -p "$Z9_WORKTREE_PROJECT_PATH" && git -C "$Z9_PROJECT_ROOT/web" worktree add -q "$Z9_WORKTREE_PROJECT_PATH/web" "$Z9_WORKTREE_BRANCH" && exit 1',
         );
         assert.equal(yield* worktreeCount(web), 1);
         assert.deepEqual((yield* run(web, "branch", "--format=%(refname:short)")).split("\n"), [
@@ -725,7 +725,7 @@ it.live.each([{ linked: false }, { linked: true }])(
           JSON.stringify({
             worktreeLayout: {
               create:
-                '(git worktree add -q "$T3_WORKTREE_PROJECT_PATH" "$T3_WORKTREE_BRANCH" 2>/dev/null || git worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH") && touch "$T3_WORKTREE_PROJECT_PATH/prepared"',
+                '(git worktree add -q "$Z9_WORKTREE_PROJECT_PATH" "$Z9_WORKTREE_BRANCH" 2>/dev/null || git worktree add -q -b "$Z9_WORKTREE_BRANCH" "$Z9_WORKTREE_PROJECT_PATH") && touch "$Z9_WORKTREE_PROJECT_PATH/prepared"',
             },
           }),
         );
@@ -1168,7 +1168,7 @@ const layoutProject = Effect.gen(function* () {
       JSON.stringify({
         worktreeLayout: {
           // Restore runs it again, when the branch is already there.
-          create: `touch "${path.join(tmp, create)}" && (git worktree add -q "$T3_WORKTREE_PROJECT_PATH" "$T3_WORKTREE_BRANCH" 2>/dev/null || git worktree add -q -b "$T3_WORKTREE_BRANCH" "$T3_WORKTREE_PROJECT_PATH")`,
+          create: `touch "${path.join(tmp, create)}" && (git worktree add -q "$Z9_WORKTREE_PROJECT_PATH" "$Z9_WORKTREE_BRANCH" 2>/dev/null || git worktree add -q -b "$Z9_WORKTREE_BRANCH" "$Z9_WORKTREE_PROJECT_PATH")`,
           remove: `touch "${path.join(tmp, remove)}"`,
         },
       }),
@@ -1431,7 +1431,7 @@ it.live(
           path.join(project, "t3.json"),
           JSON.stringify({
             worktreeLayout: {
-              create: `[ "$T3_WORKTREE_BRANCH" = one ] && git worktree add -q -b one "$T3_WORKTREE_PROJECT_PATH"`,
+              create: `[ "$Z9_WORKTREE_BRANCH" = one ] && git worktree add -q -b one "$Z9_WORKTREE_PROJECT_PATH"`,
             },
           }),
         );

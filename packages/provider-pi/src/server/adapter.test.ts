@@ -18,7 +18,7 @@ import {
   type OrchestrationV2ProviderThread,
   OrchestrationV2UserInputQuestion,
   type OrchestrationV2ProviderTurn,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Cause from "effect/Cause";
 import * as PlatformError from "effect/PlatformError";
 import * as DateTime from "effect/DateTime";
@@ -39,16 +39,16 @@ import * as TestClock from "effect/testing/TestClock";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import * as TestProviderHost from "@t3tools/provider-testing/TestProviderHost";
-import * as ProviderContinuationRequests from "@t3tools/provider-core/server/ProviderContinuationRequests";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
-import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
-import { handoffBudget } from "@t3tools/provider-core/server/handoffBudget";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { AgentScope } from "@t3tools/shared/AgentScope";
-import { toolOutputImages, compactDynamicToolOutput } from "@t3tools/shared/toolOutput";
+import * as TestProviderHost from "@z9code/provider-testing/TestProviderHost";
+import * as ProviderContinuationRequests from "@z9code/provider-core/server/ProviderContinuationRequests";
+import * as McpProviderSessions from "@z9code/provider-core/server/McpProviderSessions";
+import * as IdAllocator from "@z9code/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
+import * as ProviderHost from "@z9code/provider-core/server/ProviderHost";
+import { handoffBudget } from "@z9code/provider-core/server/handoffBudget";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { AgentScope } from "@z9code/shared/AgentScope";
+import { toolOutputImages, compactDynamicToolOutput } from "@z9code/shared/toolOutput";
 import {
   makePiAdapterV2,
   PiAdapterV2Driver,
@@ -187,7 +187,7 @@ interface FakePi {
     readonly model?: string;
     readonly thinking?: string;
   }) => void;
-  /** T3 extension's service tier as each prompt was sent; Pi resets it with each session. */
+  /** z9code extension's service tier as each prompt was sent; Pi resets it with each session. */
   readonly promptServiceTiers: ReadonlyArray<string | null>;
   /** Pi reloads extensions without the adapter seeing it, e.g. a user extension's ctx.newSession(). */
   readonly reloadExtensions: (newSessionFile?: string) => void;
@@ -2003,7 +2003,7 @@ describe("PiAdapterV2", () => {
       }).pipe(Effect.scoped, Effect.provide(layerTest)),
   );
 
-  it.effect("stops provider-initiated work that has no T3 turn owner", () =>
+  it.effect("stops provider-initiated work that has no z9code turn owner", () =>
     Effect.gen(function* () {
       const fake = yield* makeFakePi;
       const { runtime, takeEvent } = yield* openRuntime(fake);
@@ -2064,7 +2064,7 @@ describe("PiAdapterV2", () => {
         Effect.provideService(AgentScope, {
           ...AgentScope.defaultValue(),
           wrap: ({ command, args }) =>
-            Effect.succeed({ command, args, unit: "t3code-pi-test.scope" }),
+            Effect.succeed({ command, args, unit: "z9code-pi-test.scope" }),
           stop: (unit) =>
             Effect.sync(() => void stopped.push({ unit, processReleased })).pipe(
               Effect.andThen(Deferred.succeed(scopeStopped, undefined)),
@@ -2073,7 +2073,7 @@ describe("PiAdapterV2", () => {
         }),
       );
       assert.deepStrictEqual(stopped, [
-        { unit: "t3code-pi-test.scope", processReleased: exit === "session" },
+        { unit: "z9code-pi-test.scope", processReleased: exit === "session" },
       ]);
     }).pipe(Effect.provide(layerTest)),
   );
@@ -2186,7 +2186,7 @@ describe("PiAdapterV2", () => {
     }).pipe(Effect.scoped, Effect.provide(layerTest)),
   );
 
-  it.effect("injects the T3 MCP extension and bearer when a session exists", () =>
+  it.effect("injects the z9code MCP extension and bearer when a session exists", () =>
     Effect.gen(function* () {
       yield* (yield* McpProviderSessions.McpProviderSessions).set({
         environmentId: EnvironmentId.make("environment-pi-mcp"),
@@ -2209,10 +2209,10 @@ describe("PiAdapterV2", () => {
       assert.notInclude(spawn.args, "--offline");
       assert.isUndefined(spawn.env.PI_OFFLINE);
       assert.isTrue(extensions.some((path) => path?.endsWith("pi-t3-mcp-extension.ts")));
-      assert.equal(spawn.env.T3_MCP_URL, "http://127.0.0.1:43123/mcp");
-      assert.equal(spawn.env.T3_MCP_BEARER_TOKEN, "secret-pi-token");
-      assert.equal(spawn.env.T3_PI_RUNTIME_MODE, "full-access");
-      assert.equal(spawn.env.T3CODE_THREAD_ID, THREAD_ID);
+      assert.equal(spawn.env.Z9_MCP_URL, "http://127.0.0.1:43123/mcp");
+      assert.equal(spawn.env.Z9_MCP_BEARER_TOKEN, "secret-pi-token");
+      assert.equal(spawn.env.Z9_PI_RUNTIME_MODE, "full-access");
+      assert.equal(spawn.env.Z9CODE_THREAD_ID, THREAD_ID);
     }).pipe(Effect.scoped, Effect.provide(layerTest)),
   );
 
@@ -3483,11 +3483,11 @@ describe("PiAdapterV2", () => {
             expected: { content, structuredContent: structured },
           },
           {
-            toolName: "mcp__t3-code__preview_snapshot",
+            toolName: "mcp__z9code__preview_snapshot",
             result: {
               content,
               structuredContent: scriptResult,
-              details: { server: "t3-code", tool: "preview_snapshot" },
+              details: { server: "z9code", tool: "preview_snapshot" },
             },
             expected: { content, structuredContent: { threadId: "child-thread" } },
           },
@@ -3502,7 +3502,7 @@ describe("PiAdapterV2", () => {
             expected: { content, structuredContent: { content: ["domain content"], ready: true } },
           },
           {
-            toolName: "mcp__t3-code__preview_snapshot",
+            toolName: "mcp__z9code__preview_snapshot",
             result: {
               content: [
                 { type: "text", text: "first" },
@@ -3514,7 +3514,7 @@ describe("PiAdapterV2", () => {
                   { type: "text", text: "second" },
                 ],
               },
-              details: { server: "t3-code", tool: "preview_snapshot" },
+              details: { server: "z9code", tool: "preview_snapshot" },
             },
             expected: {
               content: [
@@ -3688,7 +3688,7 @@ describe("PiAdapterV2", () => {
           const bridge = yield* Effect.promise(() =>
             loadMcpBridge({ modern: true, result: { content, structuredContent: metadata } }),
           );
-          const tool = bridge.tools.find((tool) => tool.name === "mcp__t3-code__preview_snapshot")!;
+          const tool = bridge.tools.find((tool) => tool.name === "mcp__z9code__preview_snapshot")!;
           const result = yield* Effect.promise(() => tool.execute("screenshot", {}));
           assert.deepEqual(result.structuredContent, { content, structuredContent: metadata });
           yield* fake.emit(
@@ -4516,7 +4516,7 @@ describe("PiAdapterV2", () => {
       assert.deepEqual(forkedEntries(), []);
       assert.equal(missing._tag, "Failure");
 
-      // An adopted wake precedes its T3 turn, but follows turn 1 and its steer.
+      // An adopted wake precedes its z9code turn, but follows turn 1 and its steer.
       fake.queueEntries(UNCAPTURED_TURN_TREE);
       yield* rollBackToFirst(uncapturedTurns(providerThread.id));
       assert.deepEqual(forkedEntries(), ["u2"]);
@@ -4565,7 +4565,7 @@ describe("PiAdapterV2", () => {
         leafId: "a3",
       };
 
-      // The adopted wake precedes T3's first turn; its steer must be discarded with it.
+      // The adopted wake precedes z9code's first turn; its steer must be discarded with it.
       fake.queueEntries(entries);
       yield* rollBackToStart(150);
       assert.deepEqual(forkedEntries(), ["u2"]);

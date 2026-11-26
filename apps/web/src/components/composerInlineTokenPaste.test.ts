@@ -1,10 +1,10 @@
-import { threadChipCopyTarget } from "@t3tools/client-runtime/thread-reference";
-import { type ComposerContextClipboardFragment, EnvironmentId, ThreadId } from "@t3tools/contracts";
+import { threadChipCopyTarget } from "@z9code/client-runtime/thread-reference";
+import { type ComposerContextClipboardFragment, EnvironmentId, ThreadId } from "@z9code/contracts";
 import {
   COMPOSER_CONTEXT_CLIPBOARD_MIME,
   encodeComposerContextFragment,
-} from "@t3tools/shared/composerContextClipboard";
-import { threadContextRecord } from "@t3tools/shared/composerContextReferences";
+} from "@z9code/shared/composerContextClipboard";
+import { threadContextRecord } from "@z9code/shared/composerContextReferences";
 import { describe, expect, it } from "vite-plus/test";
 
 import { importPastedComposerText } from "./composerInlineTokenPaste";
@@ -42,7 +42,7 @@ describe("importPastedComposerText", () => {
     expect(imported.map((fragment) => fragment.records)).toEqual([target.fragment!.records]);
   });
 
-  it("makes a chip of a v2 link pasted without T3's clipboard format", () => {
+  it("makes a chip of a v2 link pasted without z9code's clipboard format", () => {
     const text = importPastedComposerText(
       clipboard({ "text/plain": "[Login](t3-thread://v2/env-1/thread-1)" }),
       importAll([]),

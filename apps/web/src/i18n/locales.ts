@@ -1,4 +1,4 @@
-import { resolveLocale } from "@t3tools/client-runtime/locales";
+import { resolveLocale } from "@z9code/client-runtime/locales";
 
 import gtConfig from "../../gt.config.json";
 

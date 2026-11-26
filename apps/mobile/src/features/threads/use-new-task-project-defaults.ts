@@ -1,10 +1,10 @@
-import { resolveFilesystemReadAccess } from "@t3tools/client-runtime/state/filesystem";
-import { isScratchProject } from "@t3tools/client-runtime/state/projects";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
-import type { ProjectReadFileResult } from "@t3tools/contracts";
-import { DEFAULT_SERVER_SETTINGS, T3_PROJECT_FILE_NAME } from "@t3tools/contracts";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@t3tools/shared/projectSettings";
-import { parseT3ProjectFile } from "@t3tools/shared/t3ProjectFile";
+import { resolveFilesystemReadAccess } from "@z9code/client-runtime/state/filesystem";
+import { isScratchProject } from "@z9code/client-runtime/state/projects";
+import type { EnvironmentProject } from "@z9code/client-runtime/state/shell";
+import type { ProjectReadFileResult } from "@z9code/contracts";
+import { DEFAULT_SERVER_SETTINGS, Z9_PROJECT_FILE_NAME } from "@z9code/contracts";
+import { resolveNewThreadEnvMode, resolveProjectSettings } from "@z9code/shared/projectSettings";
+import { parseT3ProjectFile } from "@z9code/shared/t3ProjectFile";
 
 import { m } from "../../i18n/messages";
 import { useEnvironmentServerConfig } from "../../state/entities";
@@ -45,7 +45,7 @@ export function useNewTaskProjectDefaults(project: EnvironmentProject | null) {
           environmentId: project.environmentId,
           input: {
             cwd: project.workspaceRoot,
-            relativePath: T3_PROJECT_FILE_NAME,
+            relativePath: Z9_PROJECT_FILE_NAME,
             allowMissing: true,
           },
         })

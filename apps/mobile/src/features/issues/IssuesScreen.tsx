@@ -8,16 +8,16 @@ import {
   issueOrder,
   type EnvironmentIssueEntry,
   type HeldIssuePage,
-} from "@t3tools/client-runtime/issue-list";
-import { issueTrackerDetailText } from "@t3tools/client-runtime/state/issue-trackers";
-import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
+} from "@z9code/client-runtime/issue-list";
+import { issueTrackerDetailText } from "@z9code/client-runtime/state/issue-trackers";
+import { squashAtomCommandFailure } from "@z9code/client-runtime/state/runtime";
 import type {
   EnvironmentId,
   IssueInvolvement,
   IssueListInput,
   IssueListSort,
   IssueListState,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { msg, useGT, useMessages } from "gt-react-native";
 import { use, useRef, useState, type ReactNode } from "react";
@@ -511,7 +511,7 @@ export function IssuesScreen(
                     : capable.length > 0
                       ? gt("Reconnect to load issues.")
                       : environments.length > 0
-                        ? gt("Update the environment's T3 Code server to browse issues.")
+                        ? gt("Update the environment's z9code server to browse issues.")
                         : gt("Add an environment in Settings to browse its issues."))
                 }
                 variant="plain"

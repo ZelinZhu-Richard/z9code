@@ -1,5 +1,5 @@
-import { ProviderDriverKind } from "@t3tools/contracts";
-import { defineProviderClient } from "@t3tools/provider-core/client";
+import { ProviderDriverKind } from "@z9code/contracts";
+import { defineProviderClient } from "@z9code/provider-core/client";
 
 import { OpenCodeSettings } from "./settings.ts";
 

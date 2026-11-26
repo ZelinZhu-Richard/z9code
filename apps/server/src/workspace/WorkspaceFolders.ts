@@ -9,13 +9,13 @@ import {
   type WorkspaceListFoldersResult,
   type WorkspaceScanFoldersInput,
   type WorkspaceScanFoldersResult,
-} from "@t3tools/contracts";
-import { expandHomePath } from "@t3tools/provider-core/server/pathExpansion";
-import { splitsSurrogatePair } from "@t3tools/shared/assistantCitations";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { fromLenientJson } from "@t3tools/shared/schemaJson";
-import { T3_PROJECT_FILE_NAME } from "@t3tools/contracts";
-import { parseT3ProjectFile } from "@t3tools/shared/t3ProjectFile";
+} from "@z9code/contracts";
+import { expandHomePath } from "@z9code/provider-core/server/pathExpansion";
+import { splitsSurrogatePair } from "@z9code/shared/assistantCitations";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { fromLenientJson } from "@z9code/shared/schemaJson";
+import { Z9_PROJECT_FILE_NAME } from "@z9code/contracts";
+import { parseT3ProjectFile } from "@z9code/shared/t3ProjectFile";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -75,7 +75,7 @@ export class WorkspaceFolders extends Context.Service<
       input: WorkspaceScanFoldersInput,
     ) => Effect.Effect<WorkspaceScanFoldersResult, WorkspaceFoldersError>;
   }
->()("t3/workspace/WorkspaceFolders") {}
+>()("z9/workspace/WorkspaceFolders") {}
 
 const DETECTION_CONCURRENCY = 8;
 // What `ProjectTrackedFolder.name` allows.
@@ -287,7 +287,7 @@ export const discoverFolders = Effect.fn("WorkspaceFolders.discover")(function* 
   const ignored = (
     parseT3ProjectFile(
       yield* fileSystem
-        .readFileString(path.join(root, T3_PROJECT_FILE_NAME))
+        .readFileString(path.join(root, Z9_PROJECT_FILE_NAME))
         .pipe(Effect.orElseSucceed(() => "")),
     )?.ignoreRepositories ?? []
   ).map((entry) => path.resolve(root, entry));

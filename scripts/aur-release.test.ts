@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
@@ -62,9 +62,9 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("AUR release", 
         yield* fs.chmod(file, 0o755);
       }
       const version = nightly ? "1.2.4-nightly.20261104.1" : "1.2.3";
-      const pkgname = nightly ? "t3code-nightly-bin" : "t3code-bin";
+      const pkgname = nightly ? "z9code-nightly-bin" : "z9code-bin";
       const prefix =
-        naming === "versioned" ? `T3-Code-${version}` : nightly ? "T3-Code-Nightly" : "T3-Code";
+        naming === "versioned" ? `z9code-${version}` : nightly ? "z9code-Nightly" : "z9code";
       const assets = [
         { name: `${prefix}-x86_64.AppImage`, digest: `sha256:${"a".repeat(64)}` },
         ...(failure === "missing"
@@ -73,7 +73,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("AUR release", 
               {
                 name:
                   failure === "version"
-                    ? "T3-Code-1.2.2-arm64.AppImage"
+                    ? "z9code-1.2.2-arm64.AppImage"
                     : `${prefix}-arm64.AppImage`,
                 digest: failure === "digest" ? "invalid" : `sha256:${"b".repeat(64)}`,
               },
@@ -113,11 +113,11 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("AUR release", 
           { ...env, CARCH: arch },
         );
         assert.equal(Number(selected.code), 0, selected.stderr);
-        const localName = `T3-Code-${version}-${upstreamArch}.AppImage`;
+        const localName = `z9code-${version}-${upstreamArch}.AppImage`;
         assert.deepEqual(selected.stdout.trim().split("\n"), [
           version.replace("-nightly.", "_nightly."),
           "x86_64 aarch64",
-          `${localName}::https://github.com/pingdotgg/t3code/releases/download/v${version}/${prefix}-${upstreamArch}.AppImage`,
+          `${localName}::https://github.com/ZelinZhu-Richard/z9code/releases/download/v${version}/${prefix}-${upstreamArch}.AppImage`,
           checksum.repeat(64),
           localName,
         ]);

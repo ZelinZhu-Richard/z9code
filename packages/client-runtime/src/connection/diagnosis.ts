@@ -18,7 +18,7 @@ export interface ConnectionDiagnosisHop {
 }
 
 export interface ConnectionDiagnosis {
-  /** Names the part that failed, e.g. "T3 Code on Mac mini did not answer". */
+  /** Names the part that failed, e.g. "z9code on Mac mini did not answer". */
   readonly headline: string;
   readonly hops: ReadonlyArray<ConnectionDiagnosisHop>;
   readonly steps: ReadonlyArray<string>;
@@ -63,7 +63,7 @@ function headline(
     case "offline":
       return resolve(msg("This device is offline"));
     case "outdated":
-      return resolve(msg("{host} runs an older T3 Code", { host }));
+      return resolve(msg("{host} runs an older z9code", { host }));
     case "clock_skew":
       return resolve(msg("This device's clock is off"));
     case null:
@@ -74,8 +74,8 @@ function headline(
       return resolve(msg("This device could not prepare the connection"));
     case "server":
       return failure?.reason === "authentication" || failure?.reason === "permission"
-        ? resolve(msg("T3 Code on {host} did not accept this device", { host }))
-        : resolve(msg("T3 Code on {host} did not answer", { host }));
+        ? resolve(msg("z9code on {host} did not accept this device", { host }))
+        : resolve(msg("z9code on {host} did not answer", { host }));
   }
 }
 
@@ -87,9 +87,9 @@ function steps(
 ): string[] {
   switch (located.cause) {
     case "offline":
-      return [resolve(msg("Connect this device to the internet. T3 Code reconnects on its own."))];
+      return [resolve(msg("Connect this device to the internet. z9code reconnects on its own."))];
     case "outdated":
-      return [resolve(msg("Update T3 Code on {host}.", { host }))];
+      return [resolve(msg("Update z9code on {host}.", { host }))];
     case "clock_skew":
       return [
         resolve(
@@ -104,7 +104,7 @@ function steps(
   switch (located.hop) {
     case "device":
       return [
-        resolve(msg("Restart T3 Code on this device.")),
+        resolve(msg("Restart z9code on this device.")),
         resolve(
           msg("If it keeps failing, remove {host} from this device and add it again.", { host }),
         ),
@@ -120,7 +120,7 @@ function steps(
             ),
           ]
         : [
-            resolve(msg("Make sure T3 Code is running on {host}.", { host })),
+            resolve(msg("Make sure z9code is running on {host}.", { host })),
             resolve(msg("Retry. If it keeps failing, copy the diagnostics.")),
           ];
   }
@@ -133,7 +133,7 @@ function hopLabel(hop: ConnectionHop, host: string, resolve: MFunctionType): str
     case "device":
       return resolve(msg("This device"));
     case "server":
-      return resolve(msg("T3 Code on {host}", { host }));
+      return resolve(msg("z9code on {host}", { host }));
   }
 }
 
@@ -198,7 +198,7 @@ const HOP_MARK = { ok: "ok", failed: "FAILED", unchecked: "not checked" } as con
 /** One plain-text block for bug reports. */
 export function connectionDiagnosisText(hostLabel: string, diagnosis: ConnectionDiagnosis): string {
   return [
-    `T3 Code connection to ${hostLabel}: ${diagnosis.headline}`,
+    `z9code connection to ${hostLabel}: ${diagnosis.headline}`,
     "",
     ...diagnosis.hops.map((hop) => `${hop.label}: ${HOP_MARK[hop.result]}`),
     "",

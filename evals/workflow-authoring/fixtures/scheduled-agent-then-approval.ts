@@ -1,6 +1,6 @@
 // Written the way an agent with only the skill would write it.
 // @effect-diagnostics globalDateInEffect:off globalJsonInEffect:off
-const { workflow, agent, ask, stop, daily, Tick } = T3;
+const { workflow, agent, ask, stop, daily, Tick } = z9code;
 
 export default [
   workflow(

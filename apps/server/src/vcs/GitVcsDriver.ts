@@ -39,10 +39,10 @@ import {
   type VcsStatusInput,
   type VcsStatusResult,
   type WorktreeSubmodules,
-} from "@t3tools/contracts";
-import { isMissingExecutable } from "@t3tools/source-control-core/server/discovery";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { quoteGitPatchPath } from "@t3tools/shared/gitPatchPath";
+} from "@z9code/contracts";
+import { isMissingExecutable } from "@z9code/source-control-core/server/discovery";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { quoteGitPatchPath } from "@z9code/shared/gitPatchPath";
 import {
   makeGitVcsDriverCore,
   PATCH_RENDER_PREFIX_ARGS,
@@ -347,12 +347,12 @@ export interface GitRemoteStatusOptions {
  * slow status fetch land. Its status read waits for a running fetch instead of using the last
  * fetched references after five seconds. The fetch keeps its own safety limit.
  */
-export const AwaitStatusFetch = Context.Reference<boolean>("t3/vcs/AwaitStatusFetch", {
+export const AwaitStatusFetch = Context.Reference<boolean>("z9/vcs/AwaitStatusFetch", {
   defaultValue: () => false,
 });
 
 /** Set by background discovery so its Git commands run in their own small lane, not the user's. */
-export const BackgroundGitWork = Context.Reference<boolean>("t3/vcs/BackgroundGitWork", {
+export const BackgroundGitWork = Context.Reference<boolean>("z9/vcs/BackgroundGitWork", {
   defaultValue: () => false,
 });
 
@@ -413,7 +413,7 @@ export class GitVcsDriver extends Context.Service<
       key: string,
     ) => Effect.Effect<string | null, GitCommandError>;
     /**
-     * The branch, named as on the host, that T3 recorded `branch` was cut from. Null when none
+     * The branch, named as on the host, that z9code recorded `branch` was cut from. Null when none
      * was recorded.
      */
     readonly readBranchBase: (
@@ -509,7 +509,7 @@ export class GitVcsDriver extends Context.Service<
     readonly invalidateRefs: (cwd: string) => Effect.Effect<void>;
     readonly listLocalBranchNames: (cwd: string) => Effect.Effect<string[], GitCommandError>;
   }
->()("t3/vcs/GitVcsDriver") {}
+>()("z9/vcs/GitVcsDriver") {}
 
 const WORKSPACE_FILES_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 const FLAGGED_INDEX_ENTRIES_MAX_BYTES = 1024 * 1024;
@@ -655,7 +655,7 @@ const gitCommand = Effect.fn("GitVcsDriver.gitCommand")(
 );
 
 const HEAD_MOVES_SCAN_LIMIT = 512;
-const HEAD_MARK_TRAILER = "T3-Head-Moved-At";
+const HEAD_MARK_TRAILER = "z9code-Head-Moved-At";
 const HEAD_MARK_TRAILER_PATTERN = new RegExp(`^${HEAD_MARK_TRAILER}: (\\d+) (\\d+)$`, "m");
 
 // Parses "git version 2.34.1" or "git version 2.45.1.windows.1".
@@ -1145,10 +1145,10 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
     (excludePaths ?? []).map((relativePath) => `:(exclude,literal)${relativePath}`);
 
   const checkpointIdentity: NodeJS.ProcessEnv = {
-    GIT_AUTHOR_NAME: "T3 Code",
-    GIT_AUTHOR_EMAIL: "t3code@users.noreply.github.com",
-    GIT_COMMITTER_NAME: "T3 Code",
-    GIT_COMMITTER_EMAIL: "t3code@users.noreply.github.com",
+    GIT_AUTHOR_NAME: "z9code",
+    GIT_AUTHOR_EMAIL: "z9code@users.noreply.github.com",
+    GIT_COMMITTER_NAME: "z9code",
+    GIT_COMMITTER_EMAIL: "z9code@users.noreply.github.com",
   };
 
   // Index files known to hold no assume-unchanged or skip-worktree entry, by their stat. Setting
@@ -1333,10 +1333,10 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
         GIT_ALTERNATE_OBJECT_DIRECTORIES: quotedObjects.startsWith('"')
           ? quotedObjects
           : `"${quotedObjects}"`,
-        GIT_AUTHOR_NAME: "T3 Code",
-        GIT_AUTHOR_EMAIL: "t3code@users.noreply.github.com",
-        GIT_COMMITTER_NAME: "T3 Code",
-        GIT_COMMITTER_EMAIL: "t3code@users.noreply.github.com",
+        GIT_AUTHOR_NAME: "z9code",
+        GIT_AUTHOR_EMAIL: "z9code@users.noreply.github.com",
+        GIT_COMMITTER_NAME: "z9code",
+        GIT_COMMITTER_EMAIL: "z9code@users.noreply.github.com",
         // Any command on the scratch index can run the clean filter, not just add.
         ...VcsProcess.gitConfigEnv(hostEnv, "lfs.storage", privateLfs, hostPlatform),
       };
@@ -1813,7 +1813,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
                     "-p",
                     commit,
                     "-m",
-                    `t3 checkpoint turn start ref=${input.checkpointRef}`,
+                    `z9 checkpoint turn start ref=${input.checkpointRef}`,
                   ],
                   // listAuthoredPaths reads commits newer than the start as the turn's own.
                   env: { ...commitEnv, GIT_COMMITTER_DATE: `${capturedAt} +0000` },
@@ -1829,7 +1829,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
                 ),
               );
 
-        const message = `t3 checkpoint ref=${input.checkpointRef}${
+        const message = `z9 checkpoint ref=${input.checkpointRef}${
           headMark === undefined ? "" : `\n\n${HEAD_MARK_TRAILER}: ${headMark}`
         }`;
         // HEAD is the first parent so listAuthoredPaths can see how HEAD moved between checkpoints.
@@ -2049,7 +2049,7 @@ export const makeVcsDriverShape = Effect.fn("makeGitVcsDriverShape")(function* (
             "-p",
             input.head,
             "-m",
-            `t3 checkpoint ref=${input.checkpointRef}${
+            `z9 checkpoint ref=${input.checkpointRef}${
               headMark === undefined ? "" : `\n\n${HEAD_MARK_TRAILER}: ${headMark}`
             }`,
           ],

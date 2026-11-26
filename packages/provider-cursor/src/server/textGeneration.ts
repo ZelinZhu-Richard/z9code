@@ -8,15 +8,15 @@ import {
   type ProviderSetupError,
   type ServerProviderModel,
   TextGenerationError,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import type { CursorSettings } from "../settings.ts";
 
-import * as TextGenerationOperations from "@t3tools/provider-core/server/textGenerationOperations";
+import * as TextGenerationOperations from "@z9code/provider-core/server/textGenerationOperations";
 import { cursorSdkModelSelection } from "./sdkModel.ts";
 import type { CursorAuth } from "./auth.ts";
 import * as CursorAgentSdk from "./CursorAgentSdk.ts";
 import * as CursorSdk from "./CursorSdk.ts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 
 const CURSOR_TIMEOUT_MS = 180_000;
 
@@ -209,7 +209,7 @@ export const makeCursorTextGeneration = Effect.fn("makeCursorTextGeneration")(fu
     if (!cursorSettings.enabled) {
       return yield* new TextGenerationError({
         operation,
-        detail: "Cursor is disabled in T3 Code settings.",
+        detail: "Cursor is disabled in z9code settings.",
       });
     }
 

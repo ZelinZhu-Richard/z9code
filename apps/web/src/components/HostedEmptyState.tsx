@@ -35,7 +35,7 @@ export function HostedEmptyState() {
               {localEnvironmentOff ? (
                 <T>Turn it back on, or connect a different computer.</T>
               ) : (
-                <T>Your agents run on your computer. Start T3 Code there first.</T>
+                <T>Your agents run on your computer. Start z9code there first.</T>
               )}
             </EmptyDescription>
           </EmptyHeader>
@@ -60,7 +60,7 @@ function PairingSteps() {
   return (
     <>
       <SetupStep number={1}>
-        <RunOnComputer command="t3 pair" />
+        <RunOnComputer command="z9 pair" />
       </SetupStep>
       <SetupStep number={2}>
         <Button render={<Link to="/settings/connections" />} size="sm">

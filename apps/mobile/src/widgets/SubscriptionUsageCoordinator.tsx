@@ -48,7 +48,7 @@ export function SubscriptionUsageCoordinator() {
   const locale = useLocale();
   const snapshot = useAtomValue(snapshotAtom(locale, resolve));
   const androidAppearance = Platform.OS === "android" ? themeAppearance : null;
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- publishes subscription usage and theme to the native home screen widget
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- publishes subscription usage and theme to the native home screen widget
   useEffect(() => {
     if (!catalog.isReady || !appearanceReady) return;
     void Promise.resolve()

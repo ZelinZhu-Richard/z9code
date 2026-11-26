@@ -1,12 +1,12 @@
 # Outside agents
 
-Agents that T3 Code did not start can work with an environment through its MCP
+Agents that z9code did not start can work with an environment through its MCP
 server. They can read projects and threads, start and message threads, and
 check which providers and models are available. This covers Claude Code or
 Codex in your own terminal, ChatGPT, and bots that support MCP. Each agent signs
 in once, and you choose what it may do.
 
-## Add T3 Code to an assistant app
+## Add z9code to an assistant app
 
 In the app, add a remote MCP server with OAuth and paste the environment's MCP URL (below). Apps
 that require their own client ID cannot connect. To reach your other machines through the same
@@ -49,7 +49,7 @@ page names the agent and where its access goes:
   Anyone who runs that service gets the access.
 
 Only approve a sign-in you just started. Enter a code from **Settings → Sharing &
-access** or `t3 auth pairing create` on the host. A browser already signed in to
+access** or `z9 auth pairing create` on the host. A browser already signed in to
 the environment with permission to manage access can approve without a code.
 
 Choose what the agent may do here: **Auto** is
@@ -68,48 +68,48 @@ policy. Approving without a code starts at **Read only**:
 
 ## What outside agents can call
 
-Some tools only work for an agent running inside a T3 thread, because they act
+Some tools only work for an agent running inside a z9code thread, because they act
 as that thread: subagents, secret requests, rendered HTML, the browser preview,
 devices, and worktree handoff. They still appear in an outside agent's tool
 list, but calling one returns an error saying it needs an agent running inside
-T3 Code.
+z9code.
 
-- To hand off work, start a thread with `t3_thread_launch`, then follow it with
-  `t3_thread_wait` or `t3_thread_read`, instead of `create_threads` or
+- To hand off work, start a thread with `z9_thread_launch`, then follow it with
+  `z9_thread_wait` or `z9_thread_read`, instead of `create_threads` or
   `delegate_task`.
 - Tools that default to the caller's own project or thread need an explicit
   `projectId` or `threadId`.
-- To list threads across projects, call `t3_thread_list` with
-  `allProjects: true`, or use `t3_thread_search`.
+- To list threads across projects, call `z9_thread_list` with
+  `allProjects: true`, or use `z9_thread_search`.
 
 ## Claude Code
 
 ```sh
-claude mcp add --transport http t3 https://<environment-address>/mcp
+claude mcp add --transport http z9 https://<environment-address>/mcp
 claude mcp login t3
 ```
 
 `claude mcp login` opens the sign-in page in your browser. On a machine
 without a browser, add `--no-browser`, open the printed URL elsewhere, and
-paste the final URL back when asked. `claude mcp list` shows `t3` as connected
+paste the final URL back when asked. `claude mcp list` shows `z9` as connected
 once you approve.
 
 ## Codex
 
 ```sh
-codex mcp add t3 --url https://<environment-address>/mcp
+codex mcp add z9 --url https://<environment-address>/mcp
 codex mcp login t3
 ```
 
 `codex mcp login --no-browser` prints the sign-in URL instead of opening it.
-`codex mcp list` shows `t3` with OAuth once you approve.
+`codex mcp list` shows `z9` with OAuth once you approve.
 
 ## ChatGPT
 
 Add the environment as a custom MCP app in ChatGPT's apps settings:
 
 1. Create a new app or plugin with a custom MCP server.
-2. Set the server URL to `https://<environment-address>/mcp`, using the T3
+2. Set the server URL to `https://<environment-address>/mcp`, using the z9code
    Connect address.
 3. Choose **OAuth** for authentication. ChatGPT discovers the rest; you do not
    need a client ID or secret.
@@ -134,20 +134,20 @@ away longer, or reconnects after a restart, is told some may be missing and
 should reread what it cares about. Webhooks go only to public `https` addresses,
 a subscription lasts at most an hour before the bot must renew it, and signing
 the bot out ends its subscriptions. To test with a receiver on your own machine
-or network, start the environment with `T3CODE_MCP_WEBHOOK_ALLOWED_HOSTS` set to
+or network, start the environment with `Z9CODE_MCP_WEBHOOK_ALLOWED_HOSTS` set to
 its host names, for example `localhost,127.0.0.1`; those hosts may also use
 plain `http`.
 
 ## Scripts on the host
 
-On the machine that runs the environment, `t3 thread` uses the same tools
+On the machine that runs the environment, `z9 thread` uses the same tools
 without a sign-in:
 
 ```sh
-id=$(t3 thread start . "Find why the tests are slow")
-t3 thread send "$id" "Now fix it" --wait
-t3 thread show "$id"
-t3 thread list
+id=$(z9 thread start . "Find why the tests are slow")
+z9 thread send "$id" "Now fix it" --wait
+z9 thread show "$id"
+z9 thread list
 ```
 
 `.` means the project that contains the current folder, or a git worktree of

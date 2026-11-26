@@ -1,4 +1,4 @@
-import { formatPercent } from "@t3tools/shared/usageFormat";
+import { formatPercent } from "@z9code/shared/usageFormat";
 import { useMessages } from "gt-react";
 import type { ReactNode } from "react";
 

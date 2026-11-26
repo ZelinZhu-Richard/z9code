@@ -1,4 +1,4 @@
-import { EnvironmentId, type ServerConfig, ThreadId, TurnItemId } from "@t3tools/contracts";
+import { EnvironmentId, type ServerConfig, ThreadId, TurnItemId } from "@z9code/contracts";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vite-plus/test";
 

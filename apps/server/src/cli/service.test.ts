@@ -1,7 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NetService from "@t3tools/shared/Net";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import * as NetService from "@z9code/shared/Net";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -21,8 +21,8 @@ const status = {
   supported: true,
   installed: true,
   current: true,
-  unitPath: "/home/me/.config/systemd/user/t3code.service",
-  logPath: "/home/me/.t3/userdata/logs/boot-service.log",
+  unitPath: "/home/me/.config/systemd/user/z9code.service",
+  logPath: "/home/me/.z9code/userdata/logs/boot-service.log",
 } as const;
 
 const newerServiceStatus = { ...status, current: false, installedVersion: "999.0.0" };
@@ -107,20 +107,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
   );
 
   it.effect.each([
-    { label: "a new service", installed: false, env: "", expected: "T3CODE_LAN=false\n" },
-    // Services installed before T3CODE_LAN existed keep listening on the local network.
+    { label: "a new service", installed: false, env: "", expected: "Z9CODE_LAN=false\n" },
+    // Services installed before Z9CODE_LAN existed keep listening on the local network.
     { label: "an older service", installed: true, env: "", expected: "" },
     {
       label: "a set host",
       installed: false,
-      env: "T3CODE_HOST=::\n",
-      expected: "T3CODE_HOST=::\n",
+      env: "Z9CODE_HOST=::\n",
+      expected: "Z9CODE_HOST=::\n",
     },
     {
       label: "a quoted multiline value",
       installed: false,
-      env: 'CUSTOM="first\nT3CODE_LAN=example\nlast"\n',
-      expected: 'CUSTOM="first\nT3CODE_LAN=example\nlast"\nT3CODE_LAN=false\n',
+      env: 'CUSTOM="first\nZ9CODE_LAN=example\nlast"\n',
+      expected: 'CUSTOM="first\nZ9CODE_LAN=example\nlast"\nZ9CODE_LAN=false\n',
     },
   ])("install keeps $label off the local network only when it is new", (input) =>
     Effect.gen(function* () {
@@ -159,7 +159,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
     }),
   );
 
-  it.effect("protect refuses root before creating any T3 directories", () =>
+  it.effect("protect refuses root before creating any z9code directories", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const parent = yield* fs.makeTempDirectoryScoped({ prefix: "t3-service-cli-test-" });
@@ -202,7 +202,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
           Layer.succeed(BootService.BootService, service),
         );
         const node = "/home/me/.nvm/versions/node/v26.8.2/bin/node";
-        const script = "/home/me/.nvm/versions/node/v26.8.2/lib/node_modules/t3/dist/bin.mjs";
+        const script = "/home/me/.nvm/versions/node/v26.8.2/lib/node_modules/z9/dist/bin.mjs";
 
         const output = yield* Command.runWith(serviceCommand, { version: packageJson.version })([
           command,
@@ -222,7 +222,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("service commands
             ),
           ),
         );
-        expect(output).toContain(`t3@${packageJson.version}`);
+        expect(output).toContain(`z9@${packageJson.version}`);
         expect(output).toContain(script);
         expect(installOptions).toEqual([]);
       }),

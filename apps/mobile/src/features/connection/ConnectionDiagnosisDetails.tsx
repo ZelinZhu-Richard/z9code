@@ -6,8 +6,8 @@ import {
   connectionDiagnosisText,
   presentConnectionDiagnosis,
   type EnvironmentPresentation,
-} from "@t3tools/client-runtime/connection";
-import type { EnvironmentId } from "@t3tools/contracts";
+} from "@z9code/client-runtime/connection";
+import type { EnvironmentId } from "@z9code/contracts";
 import Constants from "expo-constants";
 import { AsyncResult } from "effect/reactivity";
 import { View } from "react-native";

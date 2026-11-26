@@ -1,5 +1,5 @@
 import { pipe } from "effect/Function";
-import { THEME_CSS_MAX_LENGTH, type EnvironmentTheme } from "@t3tools/contracts";
+import { THEME_CSS_MAX_LENGTH, type EnvironmentTheme } from "@z9code/contracts";
 import * as Equal from "effect/Equal";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -13,9 +13,9 @@ import {
   GROVE_THEME,
   IRIS_THEME,
   OCEAN_THEME,
-  T3_CHAT_THEME,
-  T3_CODE_LIGHT_THEME_COLORS,
-  T3_CODE_DARK_THEME_COLORS,
+  Z9_CHAT_THEME,
+  Z9_CODE_LIGHT_THEME_COLORS,
+  Z9_CODE_DARK_THEME_COLORS,
   RESERVED_THEME_IDS,
   THEME_COLOR_ROLES,
   type ThemeAppearance,
@@ -23,7 +23,7 @@ import {
   type ThemeColors,
   type ThemeDefinition,
   type ThemeVariants,
-} from "@t3tools/shared/themePalettes";
+} from "@z9code/shared/themePalettes";
 import {
   CONTEXT_CHIP_ACCENTS,
   contextChipColorVariable,
@@ -36,20 +36,20 @@ import { applyThemeBackground } from "./themeBackground";
 import { applyThemeCss } from "./themeCss";
 import { themeServerEnvironmentThemesAtom } from "./state/server";
 
-export { EMBER_THEME, GROVE_THEME, IRIS_THEME, OCEAN_THEME, T3_CHAT_THEME, THEME_COLOR_ROLES };
+export { EMBER_THEME, GROVE_THEME, IRIS_THEME, OCEAN_THEME, Z9_CHAT_THEME, THEME_COLOR_ROLES };
 export type { ThemeAppearance, ThemeColorRole, ThemeColors, ThemeDefinition, ThemeVariants };
 
-const T3_CHAT_THEME_ID = "t3-chat" as const;
+const Z9_CHAT_THEME_ID = "t3-chat" as const;
 const GROVE_THEME_ID = "grove" as const;
 const OCEAN_THEME_ID = "ocean" as const;
 const EMBER_THEME_ID = "ember" as const;
 const IRIS_THEME_ID = "iris" as const;
 export const THEME_FILE_VERSION = 1 as const;
-export const CUSTOM_THEMES_STORAGE_KEY = "t3code:themes:v1";
-export const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "t3code:theme-follow-system";
-export const THEME_APPEARANCE_MODE_STORAGE_KEY = "t3code:theme-appearance-mode";
-export const THEME_HALVES_STORAGE_KEY = "t3code:theme-halves:v1";
-export const ENVIRONMENT_THEMES_STORAGE_KEY = "t3code:environment-themes:v1";
+export const CUSTOM_THEMES_STORAGE_KEY = "z9code:themes:v1";
+export const THEME_FOLLOW_SYSTEM_STORAGE_KEY = "z9code:theme-follow-system";
+export const THEME_APPEARANCE_MODE_STORAGE_KEY = "z9code:theme-appearance-mode";
+export const THEME_HALVES_STORAGE_KEY = "z9code:theme-halves:v1";
+export const ENVIRONMENT_THEMES_STORAGE_KEY = "z9code:environment-themes:v1";
 
 const LEGACY_T3_CHAT_DARK_THEME_ID = "t3-chat-dark";
 
@@ -407,7 +407,7 @@ export function subscribeToCustomThemes(listener: () => void): () => void {
 }
 
 const LEGACY_THEME_ID_ALIASES: Readonly<Record<string, string>> = {
-  [LEGACY_T3_CHAT_DARK_THEME_ID]: T3_CHAT_THEME_ID,
+  [LEGACY_T3_CHAT_DARK_THEME_ID]: Z9_CHAT_THEME_ID,
   "t3-grove": GROVE_THEME_ID,
   "t3-ocean": OCEAN_THEME_ID,
   "t3-ember": EMBER_THEME_ID,
@@ -435,11 +435,11 @@ function legacyThemeMode(theme: ThemePreference): ThemeAppearance | null {
 export function getStandardThemeColors(appearance: ThemeAppearance): ThemeColors {
   if (appearance === "dark") {
     return (standardDarkThemeColors ??= decodeThemeColors({
-      ...T3_CODE_DARK_THEME_COLORS,
+      ...Z9_CODE_DARK_THEME_COLORS,
       canvas: "#000000",
     }));
   }
-  return (standardLightThemeColors ??= decodeThemeColors(T3_CODE_LIGHT_THEME_COLORS));
+  return (standardLightThemeColors ??= decodeThemeColors(Z9_CODE_LIGHT_THEME_COLORS));
 }
 
 // index.css paints the light bubble a step darker than the shared palette mobile uses.
@@ -1025,7 +1025,7 @@ function standardMutedThemeText(
 }
 
 export function getDefaultThemeColors(appearance: ThemeAppearance): ThemeColors {
-  return appearance === "dark" ? T3_CHAT_THEME.variants!.dark! : T3_CHAT_THEME.colors;
+  return appearance === "dark" ? Z9_CHAT_THEME.variants!.dark! : Z9_CHAT_THEME.colors;
 }
 
 export function updateThemeColorFamily(

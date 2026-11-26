@@ -1,7 +1,7 @@
 // Deletion marks a thread and runs its cleanup effects; this sweep then removes every row keyed
 // by the thread, its events except a scrubbed tombstone, and its provider logs. Threads a live
 // fork still shows wait for that fork.
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";

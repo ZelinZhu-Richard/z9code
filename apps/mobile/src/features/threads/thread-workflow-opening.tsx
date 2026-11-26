@@ -1,14 +1,14 @@
 import { useAtomValue } from "@effect/atom-react";
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { scopeThreadRef } from "@z9code/client-runtime/environment";
 import {
   resolveWorkflowOpening,
   workflowMemberModelSelection,
   workflowOpeningHeadline,
   workflowOpeningParentThreadId,
   type RuntimeSubagent,
-} from "@t3tools/client-runtime/state/subagentRuntime";
-import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@t3tools/contracts";
-import type { EnvironmentThread } from "@t3tools/client-runtime/state/shell";
+} from "@z9code/client-runtime/state/subagentRuntime";
+import type { EnvironmentId, ScopedThreadRef, ThreadId } from "@z9code/contracts";
+import type { EnvironmentThread } from "@z9code/client-runtime/state/shell";
 import { Atom } from "effect/reactivity";
 import { T, useGT, useMessages } from "gt-react-native";
 import { useState } from "react";

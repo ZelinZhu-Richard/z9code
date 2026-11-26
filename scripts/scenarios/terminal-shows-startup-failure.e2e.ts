@@ -6,7 +6,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 
-import { APP_DIR, T3_HOME } from "../e2e.config.ts";
+import { APP_DIR, Z9_HOME } from "../e2e.config.ts";
 import { run } from "./shell.ts";
 import { runPromise, test, WEB } from "./t3.ts";
 
@@ -14,13 +14,13 @@ const decodeRuntime = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Struct({ pid: Schema.Int })),
 );
 
-/** The scenario's own server: the pid its T3 home records, running from the app checkout. */
+/** The scenario's own server: the pid its z9code home records, running from the app checkout. */
 const scenarioServerPid = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const runtime = yield* Effect.firstSuccessOf(
     ["userdata", "dev"].map((dir) =>
-      fs.readFileString(path.join(T3_HOME, dir, "server-runtime.json")),
+      fs.readFileString(path.join(Z9_HOME, dir, "server-runtime.json")),
     ),
   );
   const { pid } = yield* decodeRuntime(runtime);

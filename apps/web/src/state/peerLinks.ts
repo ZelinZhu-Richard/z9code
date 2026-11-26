@@ -3,13 +3,13 @@ import {
   linkableMachines,
   linkedEnvironmentNames,
   offersLinkedEnvironments,
-} from "@t3tools/client-runtime/link-request";
-import { linkBackOffer, type LinkBackOffer } from "@t3tools/client-runtime/link-batch";
+} from "@z9code/client-runtime/link-request";
+import { linkBackOffer, type LinkBackOffer } from "@z9code/client-runtime/link-batch";
 import {
   createPeerLinkEnvironmentAtoms,
   linkThroughRoutes,
-} from "@t3tools/client-runtime/state/peerLinks";
-import { AuthAccessReadScope, AuthAccessWriteScope, type EnvironmentId } from "@t3tools/contracts";
+} from "@z9code/client-runtime/state/peerLinks";
+import { AuthAccessReadScope, AuthAccessWriteScope, type EnvironmentId } from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import { Atom } from "effect/reactivity";
 import { useContext, useEffect } from "react";
@@ -58,7 +58,7 @@ export function useLinkedEnvironments(
   );
   const registry = useContext(RegistryContext);
   const queried = offered ? environmentId : null;
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- links made outside this client are not pushed, so meeting an unknown machine asks the server again
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- links made outside this client are not pushed, so meeting an unknown machine asks the server again
   useEffect(() => {
     if (queried === null || wanted === undefined) return;
     peerLinkEnvironment.refreshNamesLacking(registry, queried, [wanted]);

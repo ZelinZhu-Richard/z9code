@@ -5,7 +5,7 @@ import {
   ProviderInstanceId,
   type ServerProvider,
   type ServerSettings,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {

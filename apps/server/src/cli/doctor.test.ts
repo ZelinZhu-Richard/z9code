@@ -1,6 +1,6 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import { assert, it } from "@effect/vitest";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -113,7 +113,7 @@ it.effect(
       ).pipe(Effect.flip);
       assert.equal(
         refused.message,
-        `Stop T3 Code server process ${state.pid}, which the background service did not start, before repairing the database.`,
+        `Stop z9code server process ${state.pid}, which the background service did not start, before repairing the database.`,
       );
       assert.deepEqual(calls, ["pause", "resume"]);
     }).pipe(Effect.provide(layerHost)),

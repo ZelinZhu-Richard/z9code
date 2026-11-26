@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { ComposerContextId, GuestMessageId, ScheduledTaskId } from "@t3tools/contracts";
-import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@t3tools/shared/composerContextReferences";
+import { ComposerContextId, GuestMessageId, ScheduledTaskId } from "@z9code/contracts";
+import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@z9code/shared/composerContextReferences";
 
 import {
   resolveUserMessageFileCards,
@@ -200,8 +200,8 @@ describe("resolveUserMessagePresentation", () => {
     ).toEqual({ text: "Why?", attribution: "guest", scheduledTaskId: undefined, guestName: "Sam" });
   });
 
-  it("attributes older server-sent restart continuations to T3 Code, not another agent", () => {
-    const text = "Note: the T3 server restarted.";
+  it("attributes older server-sent restart continuations to z9code, not another agent", () => {
+    const text = "Note: the z9code server restarted.";
     expect(
       resolveUserMessagePresentation({
         role: "user",
@@ -209,7 +209,7 @@ describe("resolveUserMessagePresentation", () => {
         creationSource: "server",
         text,
       }),
-    ).toMatchObject({ attribution: "t3code" });
+    ).toMatchObject({ attribution: "z9code" });
     for (const creationSource of ["mcp", "provider"] as const) {
       expect(
         resolveUserMessagePresentation({ role: "user", createdBy: "agent", creationSource, text }),

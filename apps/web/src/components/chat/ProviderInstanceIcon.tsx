@@ -4,9 +4,9 @@ import {
   normalizeProviderAccentColor,
   providerAccentForegroundColor,
   providerInstanceInitials,
-} from "@t3tools/client-runtime/state/provider-instance-display";
+} from "@z9code/client-runtime/state/provider-instance-display";
 
-import { ProviderDriverKind } from "@t3tools/contracts";
+import { ProviderDriverKind } from "@z9code/contracts";
 import { AnthropicIcon, ClaudeAI, Icon, OllamaIcon, OpenAI, OpenRouterIcon } from "../Icons";
 
 import { cn } from "~/lib/utils";

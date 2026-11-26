@@ -25,9 +25,9 @@ import {
   PRIMARY_LOCAL_ENVIRONMENT_ID,
   DesktopTelemetryControlMessage,
   type DesktopTelemetryControlMessage as DesktopTelemetryControlMessageValue,
-} from "@t3tools/contracts";
-import { isRunningDatabaseMigrations } from "@t3tools/shared/databaseMigrationLog";
-import { waitForHttpReady as waitForHttpReadyShared } from "@t3tools/shared/httpReadiness";
+} from "@z9code/contracts";
+import { isRunningDatabaseMigrations } from "@z9code/shared/databaseMigrationLog";
+import { waitForHttpReady as waitForHttpReadyShared } from "@z9code/shared/httpReadiness";
 
 import * as DesktopObservability from "../app/DesktopObservability.ts";
 import * as DesktopTelemetryPublisher from "../telemetry/DesktopTelemetryPublisher.ts";
@@ -81,7 +81,7 @@ export interface BackendReadinessProbe {
 export interface DesktopBackendStartConfig extends BackendProcessContext {
   readonly args: ReadonlyArray<string>;
   readonly env: Record<string, string | undefined>;
-  /** False passes env verbatim, preventing the Windows T3CODE_HOME from leaking into WSL. */
+  /** False passes env verbatim, preventing the Windows Z9CODE_HOME from leaking into WSL. */
   readonly extendEnv: boolean;
   readonly bootstrap: DesktopBackendBootstrapValue;
   readonly bootstrapDelivery: DesktopBackendBootstrapDelivery;

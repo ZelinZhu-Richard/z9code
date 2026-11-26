@@ -1,11 +1,11 @@
 ---
 name: test-t3-app
-description: Test T3 Code's web and desktop UI through its built-in Browser panel against isolated development state. Use for browser verification, browser pairing recovery, and test fixtures. Use test-t3-mobile for native mobile verification.
+description: Test z9code's web and desktop UI through its built-in Browser panel against isolated development state. Use for browser verification, browser pairing recovery, and test fixtures. Use test-t3-mobile for native mobile verification.
 ---
 
-# Test T3 web and desktop
+# Test z9code web and desktop
 
-Use T3's built-in Browser panel for verification. Follow the recovery steps
+Use z9code's built-in Browser panel for verification. Follow the recovery steps
 below before declaring it unavailable. Do not install or switch to another
 automation system. For native mobile testing, use
 [test-t3-mobile](../test-t3-mobile/SKILL.md).
@@ -15,7 +15,7 @@ automation system. For native mobile testing, use
 Reuse this task's healthy dev server. Otherwise run `vp run dev` from the
 repository root and retain its terminal session. Use the worktree's ignored
 `.t3` state and read the actual ports and pairing URL from the dev-runner output.
-Never run against `~/.t3/userdata` or set `VITE_HTTP_URL` or `VITE_WS_URL`.
+Never run against `~/.z9code/userdata` or set `VITE_HTTP_URL` or `VITE_WS_URL`.
 
 Test with meaningful project and thread data. Read
 [references/sqlite-fixtures.md](references/sqlite-fixtures.md) only when
@@ -43,7 +43,7 @@ Stop verification and explain the blocker only if the tools are absent or
 `preview_open` reports unavailable or fails.
 
 Navigate to the complete startup pairing URL once with
-`preview_navigate`, then use `preview_snapshot` and T3's interaction tools.
+`preview_navigate`, then use `preview_snapshot` and z9code's interaction tools.
 If the token was consumed or expired, run `node apps/server/src/bin.ts pair`
 for a fresh one. Keep using the same tab.
 

@@ -1,5 +1,5 @@
-import { BearerConnectionTarget, SshConnectionTarget } from "@t3tools/client-runtime/connection";
-import { EnvironmentId } from "@t3tools/contracts";
+import { BearerConnectionTarget, SshConnectionTarget } from "@z9code/client-runtime/connection";
+import { EnvironmentId } from "@z9code/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import { folderDropTarget } from "./folderDrop";

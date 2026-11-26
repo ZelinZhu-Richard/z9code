@@ -27,7 +27,7 @@ import type {
 } from "@anthropic-ai/claude-agent-sdk/sdk-tools";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { toolOutputImages } from "@t3tools/shared/toolOutput";
+import { toolOutputImages } from "@z9code/shared/toolOutput";
 import {
   ChatAttachmentId,
   type ChatAttachment,
@@ -54,8 +54,8 @@ import {
   RunAttemptId,
   RunId,
   ThreadId,
-} from "@t3tools/contracts";
-import { mcpAppFromToolItem } from "@t3tools/shared/toolOutput";
+} from "@z9code/contracts";
+import { mcpAppFromToolItem } from "@z9code/shared/toolOutput";
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -79,19 +79,19 @@ import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { Tool } from "effect/ai";
-import { formatClaudeResumeCompactionQuestion } from "@t3tools/shared/claudeCompaction";
-import { backgroundWorkHoldsCompletion } from "@t3tools/shared/orchestrationV2PendingBackgroundWork";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { getModelSelectionStringOptionValue } from "@t3tools/shared/model";
-import { SpawnExecutableResolution } from "@t3tools/shared/shell";
+import { formatClaudeResumeCompactionQuestion } from "@z9code/shared/claudeCompaction";
+import { backgroundWorkHoldsCompletion } from "@z9code/shared/orchestrationV2PendingBackgroundWork";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { getModelSelectionStringOptionValue } from "@z9code/shared/model";
+import { SpawnExecutableResolution } from "@z9code/shared/shell";
 
 import * as PortScanner from "../../preview/PortScanner.ts";
 import { attachmentRelativePath } from "../../attachmentStore.ts";
 import { WorkflowAgentTranscriptReadObserver } from "../workflowAgentTranscript.ts";
 import * as ServerConfig from "../../config.ts";
-import * as McpProviderSession from "@t3tools/provider-core/server/mcpSession";
-import { T3_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH } from "@t3tools/provider-core/server/orchestrationInstructions";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
+import * as McpProviderSession from "@z9code/provider-core/server/mcpSession";
+import { Z9_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH } from "@z9code/provider-core/server/orchestrationInstructions";
+import * as McpProviderSessions from "@z9code/provider-core/server/McpProviderSessions";
 import { PreviewControlsToolkit } from "../../mcp/toolkits/previewControls/tools.ts";
 import { HtmlToolkit } from "../../mcp/toolkits/html/tools.ts";
 import { MessageToolkit } from "../../mcp/toolkits/message/tools.ts";
@@ -114,16 +114,16 @@ import {
   resolveClaudeModelSettingsKey,
 } from "../../provider/ClaudeCodeModelRoutes.ts";
 import { resolveProviderCatalog } from "../../provider/ModelManifest.ts";
-import * as ProviderEventLoggers from "@t3tools/provider-core/server/ProviderEventLoggers";
-import { AGENT_FEEDBACK_INSTRUCTIONS } from "@t3tools/provider-core/server/runtimeInstructions";
-import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
-import type * as ProviderContinuationRequests from "@t3tools/provider-core/server/ProviderContinuationRequests";
+import * as ProviderEventLoggers from "@z9code/provider-core/server/ProviderEventLoggers";
+import { AGENT_FEEDBACK_INSTRUCTIONS } from "@z9code/provider-core/server/runtimeInstructions";
+import * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
+import type * as ProviderContinuationRequests from "@z9code/provider-core/server/ProviderContinuationRequests";
 import {
   makeProviderFailure,
   PROVIDER_RETRY_BUDGET_MS,
-} from "@t3tools/provider-core/server/failure";
+} from "@z9code/provider-core/server/failure";
 import * as ClaudeAdapterV2 from "./ClaudeAdapterV2.ts";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
+import * as IdAllocator from "@z9code/provider-core/server/IdAllocator";
 import * as ProviderInstallationGate from "../../provider/ProviderInstallationGate.ts";
 import { ClaudeOrchestratorReplayHarness } from "./ClaudeAdapterV2.testkit.ts";
 import { withInlineContext } from "../ContextHandoffDelivery.ts";
@@ -720,8 +720,8 @@ describe("ClaudeAdapterV2 runtime query policy", () => {
 });
 
 describe("ClaudeAdapterV2 MCP query overrides", () => {
-  const T3_MCP_SERVERS = {
-    "t3-code": {
+  const Z9_MCP_SERVERS = {
+    z9code: {
       type: "http",
       url: "http://127.0.0.1:43123/mcp",
       headers: {
@@ -744,7 +744,7 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
     browserToolsAvailable: true,
   });
 
-  it("pre-approves only read-only t3-code tools in a read-only sandbox", () => {
+  it("pre-approves only read-only z9code tools in a read-only sandbox", () => {
     const threadId = ThreadId.make("thread-claude-mcp-read-only");
     const mcpSession = mcpSessionFor(threadId);
     const overrides = ClaudeAdapterV2.claudeMcpQueryOverrides({
@@ -758,7 +758,7 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
         ...ClaudeAdapterV2.CLAUDE_READ_ONLY_ALLOWED_TOOLS,
         ...ClaudeAdapterV2.CLAUDE_READ_ONLY_T3_MCP_ALLOWED_TOOLS,
       ],
-      mcpServers: T3_MCP_SERVERS,
+      mcpServers: Z9_MCP_SERVERS,
     });
     assert.isFalse(overrides.allowedTools?.includes(ClaudeAdapterV2.CLAUDE_T3_MCP_TOOL_WILDCARD));
   });
@@ -820,11 +820,11 @@ describe("ClaudeAdapterV2 MCP query overrides", () => {
       ...Object.values(MessageToolkit.tools),
     ]
       .filter((tool) => Context.get(tool.annotations, Tool.Readonly))
-      .map((tool) => `mcp__t3-code__${tool.name}`)
+      .map((tool) => `mcp__z9code__${tool.name}`)
       .sort();
 
     // regression: #32022 Claude Plan mode asks before every non-read-only MCP call
-    assert.include(readOnlyToolNames, "mcp__t3-code__t3_background_wait");
+    assert.include(readOnlyToolNames, "mcp__z9code__t3_background_wait");
     assert.deepEqual(
       [...ClaudeAdapterV2.CLAUDE_READ_ONLY_T3_MCP_ALLOWED_TOOLS].sort(),
       readOnlyToolNames,
@@ -884,9 +884,9 @@ describe("ClaudeAdapterV2 native protocol logging", () => {
       allowedTools: ["Read"],
     });
     assert.deepEqual(overrides, {
-      allowedTools: ["Read", "mcp__t3-code__*"],
+      allowedTools: ["Read", "mcp__z9code__*"],
       mcpServers: {
-        "t3-code": {
+        z9code: {
           type: "http",
           url: "http://127.0.0.1:43123/mcp",
           headers: {
@@ -918,8 +918,8 @@ describe("ClaudeAdapterV2 native protocol logging", () => {
     assert.equal(systemPrompt.type, "preset");
     assert.equal(systemPrompt.preset, "claude_code");
     assert.include(systemPrompt.append ?? "", "Use `delegate_task`");
-    assert.include(systemPrompt.append ?? "", "call `t3_background_wait`");
-    assert.notInclude(systemPrompt.append ?? "", "## T3 Code devices");
+    assert.include(systemPrompt.append ?? "", "call `z9_background_wait`");
+    assert.notInclude(systemPrompt.append ?? "", "## z9code devices");
     const logged = ClaudeAdapterV2.loggedClaudeQueryOptions(options);
     assert.equal(logged.hasMcpServers, true);
     assert.notInclude(JSON.stringify(logged), "secret-claude-token");
@@ -939,7 +939,7 @@ describe("ClaudeAdapterV2 native protocol logging", () => {
   });
 });
 
-describe("ClaudeAdapterV2 T3 tool instructions", () => {
+describe("ClaudeAdapterV2 z9code tool instructions", () => {
   const options = (input: {
     readonly mcp: boolean;
     readonly deviceToolsAvailable: boolean;
@@ -954,7 +954,7 @@ describe("ClaudeAdapterV2 T3 tool instructions", () => {
       resume: false,
       cwd: "/workspace",
       ...(input.mcp
-        ? { mcpServers: { "t3-code": { type: "http" as const, url: "http://127.0.0.1/mcp" } } }
+        ? { mcpServers: { z9code: { type: "http" as const, url: "http://127.0.0.1/mcp" } } }
         : {}),
       deviceToolsAvailable: input.deviceToolsAvailable,
       agentFeedback: input.agentFeedback ?? "off",
@@ -965,18 +965,18 @@ describe("ClaudeAdapterV2 T3 tool instructions", () => {
 
   it("gives a session with device access the device block and the ToolSearch line to load it", () => {
     const text = append({ mcp: true, deviceToolsAvailable: true });
-    assert.include(text, T3_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH);
+    assert.include(text, Z9_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH);
     assert.include(text, "Use `delegate_task`");
   });
 
-  it("leaves the device block out without device access or without T3 tools", () => {
-    assert.notInclude(append({ mcp: true, deviceToolsAvailable: false }), "## T3 Code devices");
-    assert.notInclude(append({ mcp: false, deviceToolsAvailable: true }), "## T3 Code devices");
+  it("leaves the device block out without device access or without z9code tools", () => {
+    assert.notInclude(append({ mcp: true, deviceToolsAvailable: false }), "## z9code devices");
+    assert.notInclude(append({ mcp: false, deviceToolsAvailable: true }), "## z9code devices");
   });
 
-  it("gives the agent feedback line only to a session with T3 tools", () => {
+  it("gives the agent feedback line only to a session with z9code tools", () => {
     const feedback = (mcp: boolean, agentFeedback: "off" | "auto") =>
-      append({ mcp, deviceToolsAvailable: false, agentFeedback }).includes("t3_feedback");
+      append({ mcp, deviceToolsAvailable: false, agentFeedback }).includes("z9_feedback");
     assert.include(
       append({ mcp: true, deviceToolsAvailable: false, agentFeedback: "auto" }),
       AGENT_FEEDBACK_INSTRUCTIONS.auto,
@@ -1010,13 +1010,13 @@ describe("ClaudeAdapterV2 T3 tool instructions", () => {
       {
         hookSpecificOutput: {
           hookEventName: "SubagentStart",
-          additionalContext: T3_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH,
+          additionalContext: Z9_CODE_DEVICE_TOOL_INSTRUCTIONS_WITH_TOOL_SEARCH,
         },
       },
     ]);
     assert.deepEqual(await subagentContext({ mcp: true, deviceToolsAvailable: false }), []);
     assert.deepEqual(await subagentContext({ mcp: false, deviceToolsAvailable: true }), []);
-    // A custom subagent can lack T3 tools even when this session has them.
+    // A custom subagent can lack z9code tools even when this session has them.
     assert.notInclude(
       JSON.stringify(
         await subagentContext({
@@ -1025,7 +1025,7 @@ describe("ClaudeAdapterV2 T3 tool instructions", () => {
           agentFeedback: "auto",
         }),
       ),
-      "t3_feedback",
+      "z9_feedback",
     );
   });
 });
@@ -1597,7 +1597,7 @@ describe("ClaudeAdapterV2 append-system-prompt-file launch argument", () => {
     ),
   );
 
-  it.effect("sends append launch arguments to Claude after the T3 instructions", () =>
+  it.effect("sends append launch arguments to Claude after the z9code instructions", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3-claude-append-cwd-" });
@@ -1628,11 +1628,11 @@ describe("ClaudeAdapterV2 append-system-prompt-file launch argument", () => {
     ),
   );
 
-  // regression: #15073 the SDK replaced the --settings launch argument with T3's settings
+  // regression: #15073 the SDK replaced the --settings launch argument with z9code's settings
   it.effect.each([
     `--settings '{"skillOverrides":{"lint":"off"},"showThinkingSummaries":false}'`,
     "--settings user-settings.json",
-  ])("merges %s beneath T3's settings", (launchArgs) =>
+  ])("merges %s beneath z9code's settings", (launchArgs) =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3-claude-settings-" });
@@ -3395,11 +3395,11 @@ describe("ClaudeAdapterV2 MCP credential channel", () => {
           ...ClaudeAdapterV2.makeClaudeQueryOptions({
             modelSelection: CLAUDE_TEST_MODEL_SELECTION,
             nativeThreadId: "native-thread-claude-mcp-channel",
-            title: "Existing T3 title",
+            title: "Existing z9code title",
             resume: false,
             cwd: null,
             environment: { PATH: "/usr/bin" },
-            mcpServers: { "t3-code": t3McpServer },
+            mcpServers: { z9code: t3McpServer },
           }),
           pathToClaudeCodeExecutable: "/opt/claude/cli.js",
           spawnClaudeCodeProcess: cli.spawn,
@@ -3448,11 +3448,11 @@ describe("ClaudeAdapterV2 MCP credential channel", () => {
 
       assert.deepInclude(cli.controlRequests, {
         subtype: "mcp_set_servers",
-        servers: { "t3-code": t3McpServer },
+        servers: { z9code: t3McpServer },
       });
       assert.deepInclude(
         cli.controlRequests.find((request) => Reflect.get(request, "subtype") === "initialize"),
-        { title: "Existing T3 title" },
+        { title: "Existing z9code title" },
       );
       const spawned = JSON.stringify(cli.spawns);
       assert.notInclude(spawned, "--title");
@@ -3627,7 +3627,7 @@ describe("ClaudeAdapterV2 native session identity", () => {
     }),
   );
 
-  it.effect("resumes an imported native session on its first T3 turn", () =>
+  it.effect("resumes an imported native session on its first z9code turn", () =>
     Effect.gen(function* () {
       const openedQueries = yield* openTurnWithOrdinal(1, false, "imported-native-session");
       assert.equal(openedQueries.length, 1);
@@ -7016,7 +7016,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         server: "probe.server",
       });
       assert.deepInclude(tool, { name: "show_weather", inputSchema: { type: "object" } });
-      // T3 skips the app-call confirmation only for `readOnlyHint` tools.
+      // z9code skips the app-call confirmation only for `readOnlyHint` tools.
       assert.deepInclude(appOnlyTool, {
         annotations: { readOnlyHint: true, destructiveHint: false },
       });
@@ -7155,7 +7155,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       readOnly: false,
     },
     {
-      case: "a deny rule for this tool on a server alias T3 can't list",
+      case: "a deny rule for this tool on a server alias z9code can't list",
       rules: [{ behavior: "deny", rule: "mcp__probe_alias__refresh_weather" }],
       called: false,
       readOnly: false,
@@ -11680,7 +11680,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
     ),
   );
 
-  describe("warm process after the session changed outside T3", () => {
+  describe("warm process after the session changed outside z9code", () => {
     const firstReply = "00000000-0000-4000-8000-000000000c01";
     const secondReply = "00000000-0000-4000-8000-000000000c02";
     const terminalPrompt = "00000000-0000-4000-8000-000000000c03";
@@ -11702,7 +11702,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       entry("user", terminalPrompt, secondReply, "Typed in the terminal") +
       entry("assistant", terminalReply, terminalPrompt, [{ type: "text", text: "Answered." }]);
 
-    // Streams one T3 turn of two reply blocks, writes the transcript, then starts the next turn.
+    // Streams one z9code turn of two reply blocks, writes the transcript, then starts the next turn.
     const nextTurnAfter = Effect.fnUntraced(function* (input: {
       readonly transcript: ((promptUuid: string) => string) | null;
       readonly backgroundShell?: boolean;
@@ -11800,11 +11800,11 @@ describe("ClaudeAdapterV2 background wake turns", () => {
 
     it.effect.each([
       {
-        name: "the session transcript gained messages outside T3",
+        name: "the session transcript gained messages outside z9code",
         transcript: (promptUuid: string) => t3Turn(promptUuid) + terminalExchange,
       },
       {
-        // The terminal's rows alone are longer than the tail T3 reads first.
+        // The terminal's rows alone are longer than the tail z9code reads first.
         name: "a long terminal exchange followed its last message",
         transcript: (promptUuid: string) =>
           t3Turn(promptUuid) +
@@ -11830,7 +11830,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
           entry("assistant", firstReply, promptUuid, [{ type: "text", text: "Working." }]),
       },
       {
-        name: "only bookkeeping follows T3's reply",
+        name: "only bookkeeping follows z9code's reply",
         transcript: (promptUuid: string) =>
           t3Turn(promptUuid) +
           line({
@@ -11872,7 +11872,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         wakeFiresDuringRead: true,
       },
       {
-        // Longer than the tail T3 reads, and the process's own messages are not written yet.
+        // Longer than the tail z9code reads, and the process's own messages are not written yet.
         name: "a long transcript's tail holds none of its messages",
         transcript: () =>
           entry("user", "old-1", null, "x".repeat(1_200_000)) +
@@ -17426,7 +17426,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
 
   // regression: #17531 a mod that holds a tool behind a focused pane must fail the turn, not hang it
   it.effect.each([
-    { case: "fails a turn whose mod requests focus for a pane T3 cannot show", focus: true },
+    { case: "fails a turn whose mod requests focus for a pane z9code cannot show", focus: true },
     { case: "keeps a turn running beside a passive mod pane", focus: false },
   ] as const)("$case", ({ focus }) =>
     Effect.gen(function* () {
@@ -18739,7 +18739,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
         );
         assert.lengthOf(harness.continuationRequests, 1);
 
-        // An empty session-task lifecycle result arriving before T3 opens the
+        // An empty session-task lifecycle result arriving before z9code opens the
         // wake run must not replace the root's terminal usage-limit result.
         yield* harness.offerAndWait(wakeTurnInit);
         yield* harness.offerAndWait(
@@ -21672,7 +21672,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
 
       const routing = subagentRouting(harness.events, ["toolu-early-bash"]);
       assert.isDefined(routing.childThreadId);
-      // Agents quote this id back to t3_thread_send/t3_thread_read.
+      // Agents quote this id back to z9_thread_send/z9_thread_read.
       const childThreadId = routing.childThreadId ?? "";
       assert.notInclude(childThreadId, "%");
       assert.isAtMost(childThreadId.length, 64);
@@ -26394,7 +26394,7 @@ describe("ClaudeAdapterV2 background wake turns", () => {
       ),
     );
 
-    it.effect("ends a goal check without re-prompting while T3 work will wake the thread", () =>
+    it.effect("ends a goal check without re-prompting while z9code work will wake the thread", () =>
       Effect.gen(function* () {
         const harness = yield* makeWakeHarness;
         const mcpSessions = yield* McpProviderSessions.McpProviderSessions;

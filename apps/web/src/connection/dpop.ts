@@ -1,7 +1,7 @@
 import { msg } from "gt-react";
 import { m } from "../i18n/messages";
-import * as DpopProof from "@t3tools/client-runtime/dpop";
-import { computeDpopJwkThumbprint, DpopPublicJwk } from "@t3tools/shared/dpop";
+import * as DpopProof from "@z9code/client-runtime/dpop";
+import { computeDpopJwkThumbprint, DpopPublicJwk } from "@z9code/shared/dpop";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Signature from "effect/crypto/Signature";
@@ -23,7 +23,7 @@ export class BrowserDpopError extends Schema.TaggedError<BrowserDpopError>()("Br
 const isBrowserDpopError = Schema.is(BrowserDpopError);
 
 // Named as older builds stored it, so a browser keeps the key its paired hosts already trust.
-const DPOP_DATABASE_NAME = "t3code:cloud-auth";
+const DPOP_DATABASE_NAME = "z9code:cloud-auth";
 const DPOP_DATABASE_VERSION = 1;
 const DPOP_KEY_STORE_NAME = "keys";
 const DPOP_KEY_ID = "relay-dpop-proof-key";

@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 
-import { APP_DIR, T3_HOME } from "../e2e.config.ts";
+import { APP_DIR, Z9_HOME } from "../e2e.config.ts";
 import { run } from "./shell.ts";
 import { runPromise, test, WEB } from "./t3.ts";
 
@@ -70,7 +70,7 @@ test(
           "showcase",
           "--json",
           "--base-dir",
-          T3_HOME,
+          Z9_HOME,
         ],
         { cwd: APP_DIR, env: { PATH: process.env.PATH, HOME: process.env.HOME } },
       ).pipe(Effect.flatMap(({ stdout }) => decodeLaunched(stdout))),
@@ -88,6 +88,6 @@ test(
         async () => (await git("worktree", "list", "--porcelain")).match(/^worktree /gm)?.length,
       )
       .toBe(1);
-    await expect.poll(() => git("branch", "--list", "t3/*")).toBe("");
+    await expect.poll(() => git("branch", "--list", "z9/*")).toBe("");
   },
 );

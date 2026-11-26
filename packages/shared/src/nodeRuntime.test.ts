@@ -44,7 +44,7 @@ describe("Self invocation", () => {
 describe("Node runtime selection", () => {
   it.effect("keeps the current Node or Electron runtime without requiring Node on PATH", () =>
     Effect.gen(function* () {
-      for (const executable of ["/runtime/node", "/Applications/T3 Code.app/Electron"]) {
+      for (const executable of ["/runtime/node", "/Applications/z9code.app/Electron"]) {
         expect(
           yield* resolveNodeExecutable("Local device support", { PATH: "" }).pipe(
             Effect.provideService(HostProcess.ExecutablePath, executable),
@@ -55,7 +55,7 @@ describe("Node runtime selection", () => {
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("uses installed Node instead of the standalone T3 executable", () =>
+  it.effect("uses installed Node instead of the standalone z9code executable", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
       expect(
@@ -149,7 +149,7 @@ describe("Node runtime selection", () => {
       const path = yield* Path.Path;
       const directory = yield* fs.makeTempDirectoryScoped();
       const platform = yield* HostProcess.Platform;
-      const executable = path.join(directory, platform === "win32" ? "t3.exe" : "t3");
+      const executable = path.join(directory, platform === "win32" ? "z9.exe" : "z9");
       const node = path.join(directory, platform === "win32" ? "node.exe" : "node");
       yield* fs.writeFileString(executable, "standalone executable fixture");
       yield* fs.chmod(executable, 0o755);

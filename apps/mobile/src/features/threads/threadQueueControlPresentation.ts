@@ -1,11 +1,11 @@
-import type { EnvironmentId, RunId, ThreadId } from "@t3tools/contracts";
+import type { EnvironmentId, RunId, ThreadId } from "@z9code/contracts";
 import { msg } from "gt-react-native";
-import { assistantCitationsToPlainText } from "@t3tools/shared/assistantCitations";
+import { assistantCitationsToPlainText } from "@z9code/shared/assistantCitations";
 import {
   isAttachmentOnlyBootstrapPrompt,
   replaceComposerContextReferences,
-} from "@t3tools/shared/composerContextReferences";
-import { composerFileLinksToPlainText } from "@t3tools/shared/composerInlineTokens";
+} from "@z9code/shared/composerContextReferences";
+import { composerFileLinksToPlainText } from "@z9code/shared/composerInlineTokens";
 
 export const REMOVE_QUEUED_MESSAGE_ACCESSIBILITY_LABEL = msg("Remove queued message");
 

@@ -1,7 +1,7 @@
-import type { ThreadId } from "@t3tools/contracts";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { isNetworkPath } from "@t3tools/shared/path";
+import type { ThreadId } from "@z9code/contracts";
+import * as McpProviderSessions from "@z9code/provider-core/server/McpProviderSessions";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { isNetworkPath } from "@z9code/shared/path";
 import {
   clampHtmlRenderHeight,
   HTML_RENDER_COLUMN_WIDTH,
@@ -12,12 +12,12 @@ import {
   htmlRenderThemeFragment,
   injectHtmlRenderBootstrap,
   type HtmlRenderReference,
-} from "@t3tools/shared/htmlRender";
+} from "@z9code/shared/htmlRender";
 import {
-  T3_CODE_DARK_THEME_COLORS,
-  T3_CODE_LIGHT_THEME_COLORS,
+  Z9_CODE_DARK_THEME_COLORS,
+  Z9_CODE_LIGHT_THEME_COLORS,
   type ThemeAppearance,
-} from "@t3tools/shared/themePalettes";
+} from "@z9code/shared/themePalettes";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -177,7 +177,7 @@ export class HtmlRender extends Context.Service<
       | HeadlessChrome.HtmlRenderBrowserError
     >;
   }
->()("t3/htmlRender/HtmlRender") {}
+>()("z9/htmlRender/HtmlRender") {}
 
 const IMAGE_MIME_TYPES: Record<string, string> = {
   png: "image/png",
@@ -362,7 +362,7 @@ const MAX_CONCURRENT_BROWSERS = 2;
 const MEASURE_TIMEOUT = "6 seconds";
 
 const MEASURE_FRAGMENT = htmlRenderThemeFragment(
-  htmlRenderTheme(T3_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_MEASURE_FONTS),
+  htmlRenderTheme(Z9_CODE_DARK_THEME_COLORS, "dark", HTML_RENDER_MEASURE_FONTS),
 );
 
 const make = Effect.gen(function* () {
@@ -575,7 +575,7 @@ const make = Effect.gen(function* () {
     const inlined = yield* inline(source);
     const executable = yield* previewBrowser.executable;
     const theme = htmlRenderTheme(
-      appearance === "light" ? T3_CODE_LIGHT_THEME_COLORS : T3_CODE_DARK_THEME_COLORS,
+      appearance === "light" ? Z9_CODE_LIGHT_THEME_COLORS : Z9_CODE_DARK_THEME_COLORS,
       appearance,
       HTML_RENDER_MEASURE_FONTS,
     );

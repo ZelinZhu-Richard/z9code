@@ -1,4 +1,4 @@
-import type { SnapShotAccessibilityNode, SnapShotSource } from "@t3tools/contracts";
+import type { SnapShotAccessibilityNode, SnapShotSource } from "@z9code/contracts";
 
 export function resizeSnapShotSource(
   source: SnapShotSource,

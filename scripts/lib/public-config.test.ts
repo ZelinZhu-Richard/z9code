@@ -29,7 +29,7 @@ describe("loadRepoEnv", () => {
 });
 
 function makeTemporaryDirectory() {
-  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "t3code-public-config-"));
+  const directory = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "z9code-public-config-"));
   temporaryDirectories.push(directory);
   return directory;
 }

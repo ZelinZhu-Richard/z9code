@@ -6,7 +6,7 @@ import {
   EnvironmentId,
   ProviderInstanceId,
   ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -135,7 +135,7 @@ const layerDeviceServiceMock = Layer.mock(DeviceService.DeviceService)({
   screenshot: () => Effect.succeed({ device, png }),
   close: () => Effect.void,
   testHost: () => Effect.die("not used"),
-  // As for an Expo device, agent-device knows the device by a different id than T3.
+  // As for an Expo device, agent-device knows the device by a different id than z9code.
   agentTarget: () =>
     Effect.succeed({
       agentDeviceId: "SIM-UDID",
@@ -190,7 +190,7 @@ it.effect("registers the device tools and returns the screenshot as image conten
       expect(openedContent.quickStart).toContain(
         `${openedContent.agentDevice.command} snapshot -i`,
       );
-      // The launcher selects the device by agent-device's id for it, not T3's.
+      // The launcher selects the device by agent-device's id for it, not z9code's.
       expect(openedContent.agentDevice.command).toBe(
         "/state/device/targets/thread-device/--platform_ios_--udid_SIM-UDID_--config_/host.json_--session_thread-device/agent-device",
       );

@@ -1,14 +1,14 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- The fixture holds Git's HTTP request open.
 import * as NodeHttp from "node:http";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
-import { ProjectId } from "@t3tools/contracts";
+import { ProjectId } from "@z9code/contracts";
 import { expect } from "e2e";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Stream from "effect/Stream";
 
-import { T3_HOME } from "../e2e.config.ts";
+import { Z9_HOME } from "../e2e.config.ts";
 import { rpcClient, runPromise, test, WEB } from "./t3.ts";
 
 test(
@@ -41,7 +41,7 @@ test(
 
       await runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(T3_HOME, origin);
+          const client = yield* rpcClient(Z9_HOME, origin);
           const createdAt = DateTime.formatIso(yield* DateTime.now);
           yield* client["projectClone.start"]({
             projectId,
@@ -74,7 +74,7 @@ test(
       response.writeHead(404).end();
       await runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(T3_HOME, origin);
+          const client = yield* rpcClient(Z9_HOME, origin);
           yield* client.subscribeProjectClones({}).pipe(
             Stream.filter((clones) =>
               clones.some((clone) => clone.projectId === projectId && clone.phase === "failed"),
@@ -96,7 +96,7 @@ test(
       remote.once("request", (_request, response) => retryRequest.resolve(response));
       const retry = await runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(T3_HOME, origin);
+          const client = yield* rpcClient(Z9_HOME, origin);
           return yield* client["projectClone.retry"]({ projectId });
         }).pipe(Effect.scoped),
       );

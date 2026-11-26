@@ -1,14 +1,14 @@
-import { type KnownTerminalSession } from "@t3tools/client-runtime/state/terminal";
-import { DEFAULT_TERMINAL_ID, type ProjectScript } from "@t3tools/contracts";
-import { nextTerminalId } from "@t3tools/shared/terminalLabels";
-import { resolveTerminalSessionLabel } from "@t3tools/shared/terminalLabelsCopy";
+import { type KnownTerminalSession } from "@z9code/client-runtime/state/terminal";
+import { DEFAULT_TERMINAL_ID, type ProjectScript } from "@z9code/contracts";
+import { nextTerminalId } from "@z9code/shared/terminalLabels";
+import { resolveTerminalSessionLabel } from "@z9code/shared/terminalLabelsCopy";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import { msg } from "gt-react-native";
 
 import { m, type MessageResolver } from "../../i18n/messages";
 
-export { resolveTerminalSessionLabel } from "@t3tools/shared/terminalLabelsCopy";
+export { resolveTerminalSessionLabel } from "@z9code/shared/terminalLabelsCopy";
 
 export interface TerminalMenuSession {
   readonly terminalId: string;

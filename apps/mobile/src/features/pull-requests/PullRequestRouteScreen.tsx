@@ -2,7 +2,7 @@ import {
   isFileDiffCollapsed,
   withFileDiffFold,
   type FileDiffFoldChoices,
-} from "@t3tools/client-runtime/pull-request-diff-fold";
+} from "@z9code/client-runtime/pull-request-diff-fold";
 import {
   parsePullRequestAnchor,
   pullRequestAnchorMatchesUrl,
@@ -10,7 +10,7 @@ import {
   pullRequestLinkCommit,
   resolvePullRequestAnchorRange,
   resolvePullRequestReviewAnchor,
-} from "@t3tools/shared/pullRequestAnchor";
+} from "@z9code/shared/pullRequestAnchor";
 import { T, useGT, useMessages, Var } from "gt-react-native";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { Chip } from "../../components/ui/Chip";
@@ -50,7 +50,7 @@ import {
   pullRequestDiffInitialPosition,
 } from "./pullRequestDiffDebug";
 import { usePullRequestDiffHighlightFiles } from "./usePullRequestDiffHighlightFiles";
-import { isTestChangedFile } from "@t3tools/shared/changedFileKind";
+import { isTestChangedFile } from "@z9code/shared/changedFileKind";
 import {
   useFocusEffect,
   useNavigation,
@@ -59,14 +59,14 @@ import {
 } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RegistryContext, useAtomRefresh, useAtomValue } from "@effect/atom-react";
-import { runAtomCommand } from "@t3tools/client-runtime/state/runtime";
+import { runAtomCommand } from "@z9code/client-runtime/state/runtime";
 import { pullRequestReviewKey } from "./pullRequestReviewDrafts";
 import {
   pullRequestConversationThreads,
   type PullRequestDetail,
   type PullRequestListEntry,
   type PullRequestSummary,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { PullRequestOverviewLoading } from "./PullRequestOverviewLoading";
 import { copyPullRequestLink, sharePullRequestLink } from "./pullRequestLink";
 import { pullRequestStatus } from "./pullRequestStatus";
@@ -144,7 +144,7 @@ import { PullRequestStackCard } from "./PullRequestStackCard";
 import { usePullRequestStack, type PullRequestStackState } from "./usePullRequestStack";
 import { usePullRequestEnvironmentFallback } from "./usePullRequestEnvironmentFallback";
 import { subscribePullRequestFileJump } from "./pullRequestFileJump";
-import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import { sourceControlClients } from "@z9code/client-runtime/source-control-clients";
 import { changeRequestTermKind } from "../../lib/changeRequestTerm";
 
 function usePullRequestActivityRows(params: PullRequestParams, filter: ActivityFilter) {
@@ -492,7 +492,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
       selectSection("overview");
     }
   });
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- a link selects its native PR section or diff even when the route is reused
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- a link selects its native PR section or diff even when the route is reused
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- URL navigation selects the PR section and makes its target visible
     followLink();
@@ -532,7 +532,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
     }
   });
   const targetThreadId = activityContent.targetThread?.id;
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- reveals the requested activity once its asynchronous rows arrive
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- reveals the requested activity once its asynchronous rows arrive
   useEffect(() => {
     revealActivity();
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- reruns when activity resolves the URL target, even a thread the filter hides
@@ -1208,7 +1208,7 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
   });
   // Subscribed for the whole screen, so a pick made while the diff is still loading is kept for
   // the first draw.
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- subscribes to pull request file jump requests for the screen's lifetime
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- subscribes to pull request file jump requests for the screen's lifetime
   useEffect(() => subscribePullRequestFileJump(routeKey, (path) => jumpToFile(path)), [routeKey]);
   const { nativeReviewDiffStyle } = useAppearanceCodeSurface();
   const { themeAppearance, appearance, setCodeWordBreak } = useAppearancePreferences();
@@ -1223,7 +1223,7 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
     canHighlight: true,
   });
   const [NativeDiffView] = useState(() => resolveNativeReviewDiffView());
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- requests the next page of the paged diff query until the jump target file has loaded
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- requests the next page of the paged diff query until the jump target file has loaded
   useEffect(() => {
     if (!targetFile) loadMore();
   }, [targetFile, loadMore]);

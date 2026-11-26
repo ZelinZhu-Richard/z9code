@@ -1,4 +1,4 @@
-// `test` for web scenarios: e2e's web test plus `t3`, which seeds state and opens the signed-in
+// `test` for web scenarios: e2e's web test plus `z9`, which seeds state and opens the signed-in
 // app. `t3-mobile.ts` is the same for the iOS app.
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -11,8 +11,8 @@ import {
   type ProjectMutation,
   ProjectId,
   WsRpcGroup,
-} from "@t3tools/contracts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+} from "@z9code/contracts";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Clock from "effect/Clock";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
@@ -33,10 +33,10 @@ import {
 import { RpcClient, RpcSerialization } from "effect/rpc";
 import { Socket } from "effect/socket";
 
-import { APP_DIR, T3_HOME } from "../e2e.config.ts";
+import { APP_DIR, Z9_HOME } from "../e2e.config.ts";
 import { run, ScenarioError } from "./shell.ts";
 
-export interface T3State {
+export interface Z9State {
   /** Creates a git repository holding `files` and adds it as a project. Returns its path. */
   readonly project: (
     title: string,
@@ -52,19 +52,19 @@ export interface T3State {
     readonly title: string;
     readonly messages: ReadonlyArray<string>;
     readonly model?: string;
-  }) => Promise<T3Thread>;
+  }) => Promise<Z9Thread>;
 }
 
-export interface T3Thread {
+export interface Z9Thread {
   readonly threadId: string;
 }
 
-export interface T3 extends T3State {
+export interface z9code extends Z9State {
   /**
    * Opens the app, signed in, at a path or on a thread `t3.thread` returned. Opening the thread
    * by its link is the reliable way to reach it: a sidebar row covers its own title text.
    */
-  readonly open: (target?: string | T3Thread) => Promise<void>;
+  readonly open: (target?: string | Z9Thread) => Promise<void>;
 }
 
 /** e2e's fixtures are promise functions; this is the one place an Effect becomes a promise. */
@@ -209,7 +209,7 @@ export function makeState(home: string, env: NodeJS.ProcessEnv = {}) {
     const started = yield* turn(["start", input.project, first, "--title", input.title, ...replay]);
     const { threadId } = yield* decodeLaunched(started.stdout);
     for (const message of rest) yield* turn(["send", threadId, message]);
-    return { threadId } satisfies T3Thread;
+    return { threadId } satisfies Z9Thread;
   });
 
   return {
@@ -217,7 +217,7 @@ export function makeState(home: string, env: NodeJS.ProcessEnv = {}) {
     state: {
       project: (title, files = {}) => runPromise(project(title, files)),
       thread: (input) => runPromise(thread(input)),
-    } satisfies T3State,
+    } satisfies Z9State,
     // The server outlives the test, so the next one must not see this one's projects.
     cleanup: Effect.forEach(
       projects,
@@ -244,7 +244,7 @@ const sameSite = { lax: "Lax", strict: "Strict", none: "None" } as const;
 const signIn = Effect.fn("scenario.signIn")(function* (baseUrl: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const credential = yield* fs.readFileString(path.join(T3_HOME, "browser-dev-token"));
+  const credential = yield* fs.readFileString(path.join(Z9_HOME, "browser-dev-token"));
   const client = yield* HttpApiClient.make(EnvironmentHttpApi, { baseUrl });
   // Only the cookies are read: a proof runs this against a base server whose body may differ.
   const response = yield* client.auth
@@ -323,9 +323,9 @@ export const rpcClient = Effect.fn("scenario.rpcClient")(function* (home: string
   return yield* RpcClient.make(WsRpcGroup).pipe(Effect.provideContext(protocol));
 });
 
-export const test = base.extend<{ t3: T3 }>({
+export const test = base.extend<{ t3: z9code }>({
   t3: async ({ app, browser }, use) => {
-    const { state, cleanup } = makeState(T3_HOME);
+    const { state, cleanup } = makeState(Z9_HOME);
     await use({
       ...state,
       open: async (target = "/") => {

@@ -16,10 +16,10 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
-import type * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -538,7 +538,7 @@ it.effect("gives a fork's guest the commands the fork shows from its source thre
     const render = yield* writeItem("item:render", {
       type: "dynamic_tool",
       status: "completed",
-      toolName: "mcp__t3-code__html_render",
+      toolName: "mcp__z9code__html_render",
       input: {},
       output: [
         {

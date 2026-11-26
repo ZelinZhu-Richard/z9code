@@ -1,9 +1,9 @@
 import * as Schema from "effect/Schema";
-import { splitFilePathPosition } from "@t3tools/shared/fileLinks";
+import { splitFilePathPosition } from "@z9code/shared/fileLinks";
 import {
   audioMimeTypeFromExtension,
   mediaMimeTypeFromExtension,
-} from "@t3tools/shared/mediaPreview";
+} from "@z9code/shared/mediaPreview";
 import {
   extractInlineCodeSpans,
   extractMarkdownLinkHrefs,
@@ -12,7 +12,7 @@ import {
   normalizeMarkdownLinkDestination,
   parseMarkdownFileLink,
   resolveMarkdownFileLinkTarget,
-} from "@t3tools/shared/markdownLinks";
+} from "@z9code/shared/markdownLinks";
 import {
   needsWorkspaceBasenameLookup,
   pickWorkspaceLinkMatch,

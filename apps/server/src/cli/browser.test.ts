@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -16,7 +16,7 @@ import * as PreviewBrowserHost from "../preview/PreviewBrowserHost.ts";
 import { browserCommand } from "./browser.ts";
 
 const USERNS_RESTRICTION = "/proc/sys/kernel/apparmor_restrict_unprivileged_userns";
-const BROWSER_ROOT = "/home/me/.t3/tools/chrome-headless-shell";
+const BROWSER_ROOT = "/home/me/.z9code/tools/chrome-headless-shell";
 const BROWSER = `${BROWSER_ROOT}/linux64/154/chrome-headless-shell`;
 
 const notFound = (method: string, path: string) =>
@@ -128,12 +128,12 @@ it.effect.each([
     written: CUSTOMIZED_PROFILE,
     said: "Reloaded the AppArmor profile",
   },
-])("t3 browser setup as root $label", (input) =>
+])("z9 browser setup as root $label", (input) =>
   Effect.gen(function* () {
     const result = yield* runSetupAsRoot({ profile: input.profile });
     expect(result.loads).toEqual([LOAD]);
     expect(result.profile).toBe(input.written);
     expect(result.output).toContain(input.said);
-    expect(result.output).toContain("This host is ready for T3's browser.");
+    expect(result.output).toContain("This host is ready for z9code's browser.");
   }),
 );

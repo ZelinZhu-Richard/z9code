@@ -2,7 +2,7 @@
 // connection per WebSocket. Raw bytes, so pages keep their own origin, HMR sockets and TLS.
 import * as NodeHttpServerRequest from "@effect/platform-node/NodeHttpServerRequest";
 import * as NodeSocket from "@effect/platform-node/NodeSocket";
-import { allowsPreviewTunnel, AuthTerminalOperateScope } from "@t3tools/contracts";
+import { allowsPreviewTunnel, AuthTerminalOperateScope } from "@z9code/contracts";
 import type * as NodeNet from "node:net";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -35,7 +35,7 @@ export class PreviewTunnelPortRefusedError extends Schema.TaggedError<PreviewTun
   { port: Schema.Number },
 ) {
   override get message(): string {
-    return `Port ${this.port} is this T3 Code server's own port.`;
+    return `Port ${this.port} is this z9code server's own port.`;
   }
 }
 
@@ -44,7 +44,7 @@ export class PreviewTunnelDisabledError extends Schema.TaggedError<PreviewTunnel
   {},
 ) {
   override get message(): string {
-    return "The preview tunnel is turned off on this T3 Code server.";
+    return "The preview tunnel is turned off on this z9code server.";
   }
 }
 
@@ -75,7 +75,7 @@ export class PreviewTunnel extends Context.Service<
      */
     readonly watchTurnedOff: Effect.Effect<Effect.Effect<void>, never, Scope.Scope>;
   }
->()("t3/preview/PreviewTunnel") {}
+>()("z9/preview/PreviewTunnel") {}
 
 const make = Effect.gen(function* () {
   const serverSettings = yield* ServerSettingsService;

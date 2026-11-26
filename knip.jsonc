@@ -10,7 +10,6 @@
       "project": ["*.{js,mjs,cjs,ts,mts,cts}", ".github/**/*.cjs"],
       "entry": [
         // CodeRabbit loads its configuration by filename.
-        ".coderabbit.config.ts",
         ".github/scripts/thread-transfer-report.cjs",
         ".github/scripts/pr-limits.cjs",
       ],
@@ -47,7 +46,7 @@
         "verify-windows-desktop-artifact.ts",
       ],
       "ignoreDependencies": ["esbuild"],
-      // The `t3` npm package's files: copied into the package, never imported.
+      // The `z9` npm package's files: copied into the package, never imported.
       // knip-schemas.test.ts writes a throwaway project to .knip-test-*, which a
       // knip run beside it in check:changed must not report.
       "ignore": ["npm-launcher/**", ".knip-test-*/**"],
@@ -75,7 +74,7 @@
       // CLI archive and desktop sidecar stage them from this manifest.
       "ignoreDependencies": [
         "@effect/platform-node-shared",
-        "@t3tools/web",
+        "@z9code/web",
         "@napi-rs/keyring",
         "ffi-rs",
         "transcribe-cpp",
@@ -126,8 +125,8 @@
       // Fonts are configured as asset paths; Expo autolinks the native packages.
       "ignoreDependencies": [
         "@expo-google-fonts/dm-sans",
-        "@t3tools/mobile-review-diff-native",
-        "@t3tools/mobile-terminal-native",
+        "@z9code/mobile-review-diff-native",
+        "@z9code/mobile-terminal-native",
       ],
     },
     "apps/mobile/modules/t3-highlights": {

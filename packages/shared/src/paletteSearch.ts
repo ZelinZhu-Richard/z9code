@@ -1,6 +1,6 @@
 /** Shared ranking keeps command palettes and MCP thread search consistent across surfaces. */
 
-import type { OrchestrationV2ThreadOpens } from "@t3tools/contracts";
+import type { OrchestrationV2ThreadOpens } from "@z9code/contracts";
 
 import { WORKTREE_BRANCH_PREFIX } from "./git.ts";
 
@@ -214,7 +214,7 @@ function matchToken(
       (ownBoundary ??= !ALPHANUMERIC.test(token[0]!) && !SYMBOL.test(token[0]!))
     ) {
       // Whole when the match ends where a word ends: "t3c" is a prefix of
-      // "t3code", ".ts" whole in "index.ts" but a prefix in "parser.tsx".
+      // "z9code", ".ts" whole in "index.ts" but a prefix in "parser.tsx".
       const end = index + token.length;
       const whole =
         end >= field.text.length ||
@@ -238,7 +238,7 @@ function matchToken(
     if (joined) return joined;
   }
   if ((best !== null && best.score > MID_WORD) || !typos || token.length < 3) return best;
-  // Numbers skip typos to keep pull requests distinct. Words with digits ("t3code") do not.
+  // Numbers skip typos to keep pull requests distinct. Words with digits ("z9code") do not.
   if (LETTER.test(token)) {
     for (let index = 0; index < field.text.length; index++) {
       if (!field.wordStarts[index]) continue;
@@ -930,12 +930,12 @@ export interface SearchMatchHint {
   readonly ranges: ReadonlyArray<SearchRange>;
 }
 
-// Most threads' branches start with the app's own worktree prefix ("t3/", and
-// "t3code/" before it, "t3-<hex>" when a "t3" branch blocks nested refs), so
-// "t3 connect" would match nearly every thread.
-// Only before more text, so typing "t3/" does not empty the list for a keystroke.
+// Most threads' branches start with the app's own worktree prefix ("z9/", and
+// "z9code/" before it, "t3-<hex>" when a "z9" branch blocks nested refs), so
+// "z9 connect" would match nearly every thread.
+// Only before more text, so typing "z9/" does not empty the list for a keystroke.
 const WORKTREE_BRANCH_PREFIX_PATTERN = new RegExp(
-  `^(?:(?:${WORKTREE_BRANCH_PREFIX}|t3code)/(?=\\S)|${WORKTREE_BRANCH_PREFIX}-(?=[0-9a-f]{8}$))`,
+  `^(?:(?:${WORKTREE_BRANCH_PREFIX}|z9code)/(?=\\S)|${WORKTREE_BRANCH_PREFIX}-(?=[0-9a-f]{8}$))`,
 );
 
 // The flat prefix anywhere in a query, while its hex is still being typed, so

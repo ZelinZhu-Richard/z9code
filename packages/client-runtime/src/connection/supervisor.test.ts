@@ -1,4 +1,4 @@
-import { EnvironmentId, type ServerConfig, type ServerConfigStreamEvent } from "@t3tools/contracts";
+import { EnvironmentId, type ServerConfig, type ServerConfigStreamEvent } from "@z9code/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";

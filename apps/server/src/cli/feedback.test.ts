@@ -3,8 +3,8 @@ import * as NodeSqlite from "node:sqlite";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import { AuthSessionId } from "@t3tools/contracts";
-import * as NetService from "@t3tools/shared/Net";
+import { AuthSessionId } from "@z9code/contracts";
+import * as NetService from "@z9code/shared/Net";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -18,7 +18,7 @@ import { vi } from "vite-plus/test";
 
 import { makeCli } from "../binCli.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
-import { FEEDBACK_OFF_MESSAGE, T3_CLI_COMMANDS } from "../feedback/FeedbackReport.ts";
+import { FEEDBACK_OFF_MESSAGE, Z9_CLI_COMMANDS } from "../feedback/FeedbackReport.ts";
 import * as McpBridge from "../mcp/AcpMcpStdioBridge.ts";
 import {
   makePersistedServerRuntimeState,
@@ -51,13 +51,13 @@ const listedPaths = (command: Command.Command.Any, path: string): ReadonlyArray<
   ),
 ];
 
-it("feedback subjects name every listed t3 command", () => {
-  expect([...T3_CLI_COMMANDS].sort()).toEqual([...listedPaths(makeCli(), "t3")].sort());
+it("feedback subjects name every listed z9 command", () => {
+  expect([...Z9_CLI_COMMANDS].sort()).toEqual([...listedPaths(makeCli(), "z9")].sort());
 });
 
 const hidden = (tool: string) =>
   new McpBridge.AcpMcpBridgeError({
-    message: "T3 Code MCP tools/call failed.",
+    message: "z9code MCP tools/call failed.",
     rpcError: { code: -32602, message: `Tool '${tool}' not found` },
   });
 
@@ -111,9 +111,9 @@ it.effect("points to Labs only when the server hides the feedback tool", () =>
           Effect.fail(
             new McpBridge.AcpMcpBridgeError({ message: "fetch failed: connection refused" }),
           ),
-        stderr: `Could not reach the T3 Code server at ${runtimeState.origin}.`,
+        stderr: `Could not reach the z9code server at ${runtimeState.origin}.`,
       },
-      { args: submit, running: false, stderr: "No running T3 Code server uses" },
+      { args: submit, running: false, stderr: "No running z9code server uses" },
     ];
     for (const { args, running, call, stderr } of cases) {
       yield* running === false
@@ -185,7 +185,7 @@ it.effect("points to Labs only when the server hides the feedback tool", () =>
       .prepare(
         `INSERT INTO agent_feedback (id, thread_id, run_id, created_at, kind, subject, expected,
           actual, workaround, user_requested, trace, source, sent)
-        VALUES ('r1', 't1', 'run1', '2026-11-17T00:00:00.000Z', 'bug', 't3_thread_read', 'a', 'b',
+        VALUES ('r1', 't1', 'run1', '2026-11-17T00:00:00.000Z', 'bug', 'z9_thread_read', 'a', 'b',
           '', 1, ?, 'mcp', 1)`,
       )
       .run(JSON.stringify(trace));
@@ -196,7 +196,7 @@ it.effect("points to Labs only when the server hides the feedback tool", () =>
         threadId: "t1",
         createdAt: "2026-11-17T00:00:00.000Z",
         kind: "bug",
-        subject: "t3_thread_read",
+        subject: "z9_thread_read",
         expected: "a",
         actual: "b",
         workaround: "",
@@ -213,7 +213,7 @@ it.effect("points to Labs only when the server hides the feedback tool", () =>
         NodeServices.layer,
         NodeCrypto.layer,
         NetService.layer,
-        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { T3CODE_PORT: "3773" } })),
+        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { Z9CODE_PORT: "3773" } })),
       ),
     ),
   ),

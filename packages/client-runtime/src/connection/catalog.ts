@@ -1,4 +1,4 @@
-import { DesktopSshEnvironmentTargetSchema, EnvironmentId } from "@t3tools/contracts";
+import { DesktopSshEnvironmentTargetSchema, EnvironmentId } from "@z9code/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 

@@ -7,14 +7,14 @@ import {
   replaceCatalogValue,
   Persistence,
   ThreadTriageOutboxStore,
-} from "@t3tools/client-runtime/platform";
+} from "@z9code/client-runtime/platform";
 import {
   ConnectionTransientError,
   CredentialStore,
   ProfileStore,
   PullRequestRoutingPermissions,
   makePullRequestRoutingPermissions,
-} from "@t3tools/client-runtime/connection";
+} from "@z9code/client-runtime/connection";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";

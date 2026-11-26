@@ -2,10 +2,10 @@ import {
   createPreviewFramePainter,
   createPreviewStreamClient,
   type PreviewStreamClient,
-} from "@t3tools/client-runtime/preview/server-browser-stream";
-import type { EnvironmentId, ThreadId } from "@t3tools/contracts";
-import { scopedThreadKey } from "@t3tools/client-runtime/environment";
-import { previewPdfAssetUrl } from "@t3tools/shared/preview";
+} from "@z9code/client-runtime/preview/server-browser-stream";
+import type { EnvironmentId, ThreadId } from "@z9code/contracts";
+import { scopedThreadKey } from "@z9code/client-runtime/environment";
+import { previewPdfAssetUrl } from "@z9code/shared/preview";
 import { useSyncExternalStore } from "react";
 
 import { readPreviewStreamAccess } from "~/state/previewStream";

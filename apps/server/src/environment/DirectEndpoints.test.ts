@@ -1,6 +1,6 @@
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { EnvironmentId } from "@t3tools/contracts";
+import { EnvironmentId } from "@z9code/contracts";
 import { it as effectIt } from "@effect/vitest";
 import type * as NodeOS from "node:os";
 import * as Effect from "effect/Effect";
@@ -331,7 +331,7 @@ const layerTailscaleUp = Layer.succeed(
   ),
 );
 
-const T3_DESCRIPTOR_BODY = JSON.stringify({
+const Z9_DESCRIPTOR_BODY = JSON.stringify({
   environmentId: "serve-test",
   label: "Serve test",
   platform: { os: "darwin", arch: "arm64" },
@@ -342,7 +342,7 @@ const T3_DESCRIPTOR_BODY = JSON.stringify({
 const serveProbeResponse = (request: HttpClientRequest.HttpClientRequest, status: number) =>
   HttpClientResponse.fromWeb(
     request,
-    new Response(status === 200 ? T3_DESCRIPTOR_BODY : null, { status }),
+    new Response(status === 200 ? Z9_DESCRIPTOR_BODY : null, { status }),
   );
 
 const layerServeProbe = (status: number) =>

@@ -1,6 +1,6 @@
 // RFC 9449 DPoP proofs for requests to a host. Platforms supply the key: web keeps a
 // non-extractable WebCrypto key, mobile signs with the platform's P-256 through a native module.
-import { normalizeDpopHtu, type DpopPublicJwk } from "@t3tools/shared/dpopCommon";
+import { normalizeDpopHtu, type DpopPublicJwk } from "@z9code/shared/dpopCommon";
 import * as Cache from "effect/Cache";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -58,7 +58,7 @@ export class DpopSigner extends Context.Service<
     readonly thumbprint: Effect.Effect<string, DpopKeyLoadError>;
     readonly createProof: (input: DpopProofInput) => Effect.Effect<string, DpopProofCreationError>;
   }
->()("@t3tools/client-runtime/dpop/signer/DpopSigner") {}
+>()("@z9code/client-runtime/dpop/signer/DpopSigner") {}
 
 export class DpopProofError extends Schema.TaggedError<DpopProofError>()("DpopProofError", {
   message: Schema.String,

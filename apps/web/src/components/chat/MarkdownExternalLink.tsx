@@ -1,7 +1,7 @@
 import { GlobeIcon } from "lucide-react";
 import { Children, memo, type ReactNode } from "react";
 
-import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import { sourceControlClients } from "@z9code/client-runtime/source-control-clients";
 
 import { sourceControlIcon } from "../../sourceControlPresentation";
 

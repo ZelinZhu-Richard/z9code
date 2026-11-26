@@ -8,8 +8,8 @@ import * as NodePath from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NetService from "@t3tools/shared/Net";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import * as NetService from "@z9code/shared/Net";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -100,7 +100,7 @@ function commandArgs(command: ChildProcess.Command): ReadonlyArray<string> {
 
 const ARCHIVE = { archiveVersion: "1.2.3-preview.20260911.4" } as const;
 
-// Emulates `t3 serve`: it takes the home owner lock at startup, then binds
+// Emulates `z9 serve`: it takes the home owner lock at startup, then binds
 // once a second server has tried the same home (or after 2s), so a concurrent
 // launch always sees the home still unclaimed. Like the real server, it
 // publishes server-runtime.json after it starts answering HTTP, if at all.
@@ -228,7 +228,7 @@ describe("ssh tunnel scripts", () => {
       const fs = yield* FileSystem.FileSystem;
       const home = yield* fs.makeTempDirectoryScoped({ prefix: "t3-ssh-launch-log-" });
       const target = { alias: "devbox", hostname: "devbox", username: null, port: null };
-      const stateDir = NodePath.join(home, ".t3", "ssh-launch", yield* remoteStateKey(target));
+      const stateDir = NodePath.join(home, ".z9code", "ssh-launch", yield* remoteStateKey(target));
       const bin = NodePath.join(home, "bin");
       yield* fs.makeDirectory(stateDir, { recursive: true });
       yield* fs.makeDirectory(bin);
@@ -301,7 +301,7 @@ describe("ssh tunnel scripts", () => {
     }
     assert.include(
       SshTunnel.buildRemoteT3RunnerScript(ARCHIVE),
-      "T3_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
+      "Z9_ARCHIVE_VERSION='1.2.3-preview.20260911.4'",
     );
   });
 
@@ -335,12 +335,15 @@ describe("ssh tunnel scripts", () => {
         assert.notEqual(result.status, 0);
         if (downloads) {
           assert.include(result.stderr, "download attempt");
-          // A bare curl error does not tell the user that t3 itself could not be downloaded.
+          // A bare curl error does not tell the user that z9 itself could not be downloaded.
           assert.include(result.stderr, ARCHIVE.archiveVersion);
-          assert.include(result.stderr, "https://github.com/pingdotgg/t3code/releases/download");
+          assert.include(
+            result.stderr,
+            "https://github.com/ZelinZhu-Richard/z9code/releases/download",
+          );
         } else {
           assert.notInclude(result.stderr, "download attempt");
-          assert.include(result.stderr, "has no t3 release archive.");
+          assert.include(result.stderr, "has no z9 release archive.");
         }
       } finally {
         NodeFS.rmSync(root, { recursive: true, force: true });
@@ -353,7 +356,7 @@ describe("ssh tunnel scripts", () => {
     { installed: ARCHIVE.archiveVersion, status: 1, reuses: false },
     { installed: "9.9.9", status: 0, reuses: false },
   ])(
-    "reuses a host t3 only at exactly the requested version: installed $installed, status $status",
+    "reuses a host z9 only at exactly the requested version: installed $installed, status $status",
     ({ installed, status, reuses }) => {
       const root = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "t3-ssh-runner-"));
       try {
@@ -367,8 +370,8 @@ describe("ssh tunnel scripts", () => {
           { mode: 0o755 },
         );
         NodeFS.writeFileSync(
-          NodePath.join(bin, "t3"),
-          `#!/bin/sh\ncase "$1" in --version) echo "t3 v${installed}"; exit ${status} ;; *) echo "host t3 $*" ;; esac\n`,
+          NodePath.join(bin, "z9"),
+          `#!/bin/sh\ncase "$1" in --version) echo "z9 v${installed}"; exit ${status} ;; *) echo "host t3 $*" ;; esac\n`,
           { mode: 0o755 },
         );
         const runner = NodePath.join(root, "run-t3.sh");
@@ -379,10 +382,10 @@ describe("ssh tunnel scripts", () => {
         });
         if (reuses) {
           assert.equal(result.status, 0);
-          assert.equal(result.stdout, "host t3 serve\n");
+          assert.equal(result.stdout, "host z9 serve\n");
         } else {
           assert.notEqual(result.status, 0);
-          assert.include(result.stderr, "has no t3 release archive.");
+          assert.include(result.stderr, "has no z9 release archive.");
         }
       } finally {
         NodeFS.rmSync(root, { recursive: true, force: true });
@@ -404,11 +407,11 @@ describe("ssh tunnel scripts", () => {
       const archive = `t3-${ARCHIVE.archiveVersion}-linux-x64.tar.gz`;
       NodeFS.mkdirSync(bin);
       NodeFS.mkdirSync(home);
-      NodeFS.mkdirSync(NodePath.join(release, "t3"), { recursive: true });
-      NodeFS.writeFileSync(NodePath.join(release, "t3", "t3"), "#!/bin/sh\necho ok\n", {
+      NodeFS.mkdirSync(NodePath.join(release, "z9"), { recursive: true });
+      NodeFS.writeFileSync(NodePath.join(release, "z9", "z9"), "#!/bin/sh\necho ok\n", {
         mode: 0o755,
       });
-      NodeChildProcess.execFileSync("tar", ["-czf", archive, "t3"], { cwd: release });
+      NodeChildProcess.execFileSync("tar", ["-czf", archive, "z9"], { cwd: release });
       NodeChildProcess.execFileSync("sh", ["-c", `sha256sum ${archive} > SHA256SUMS`], {
         cwd: release,
       });
@@ -530,7 +533,7 @@ describe("ssh tunnel scripts", () => {
         yield* fs.chmod(bash, 0o755);
         yield* fs.writeFileString(
           startupFile,
-          "if shopt -q login_shell; then export T3_SSH_LOGIN_ENV=loaded; fi\n",
+          "if shopt -q login_shell; then export Z9_SSH_LOGIN_ENV=loaded; fi\n",
         );
         const target = { alias: "login-test", hostname: "login-test", username: null, port: null };
         const remoteCommands: string[] = [];
@@ -549,7 +552,7 @@ describe("ssh tunnel scripts", () => {
         );
         yield* fs.writeFileString(
           `${directory}/.zprofile`,
-          "if [[ -o login ]]; then export T3_SSH_LOGIN_ENV=loaded; fi\n",
+          "if [[ -o login ]]; then export Z9_SSH_LOGIN_ENV=loaded; fi\n",
         );
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const cases = [
@@ -586,11 +589,11 @@ describe("ssh tunnel scripts", () => {
                 SHELL: shell,
                 BASH_ENV: startupFile,
                 ZDOTDIR: directory,
-                T3_SSH_LOGIN_ENV: "",
+                Z9_SSH_LOGIN_ENV: "",
               },
               stdin: {
                 stream: Stream.make(
-                  new TextEncoder().encode('printf "%s:%s" "${T3_SSH_LOGIN_ENV:-missing}" "$1"'),
+                  new TextEncoder().encode('printf "%s:%s" "${Z9_SSH_LOGIN_ENV:-missing}" "$1"'),
                 ),
                 endOnDone: true,
               },
@@ -1315,7 +1318,7 @@ describe("ssh tunnel scripts", () => {
 child.on("exit", (code) => process.exit(code ?? 1));`,
         );
         // A launch that died holding the lock must not block or double-admit later ones.
-        const launchLock = path.join(home, ".t3", "ssh-launch", ".launch.lock");
+        const launchLock = path.join(home, ".z9code", "ssh-launch", ".launch.lock");
         yield* fs.makeDirectory(path.dirname(launchLock), { recursive: true });
         yield* fs.writeFileString(launchLock, "999999999\n");
         const targets = [
@@ -1333,7 +1336,7 @@ child.on("exit", (code) => process.exit(code ?? 1));`,
         ).pipe(Effect.provide(localRemoteShellLayer(home)));
 
         const ownerPid = Number(
-          yield* fs.readFileString(path.join(home, ".t3", "userdata", "server.lock")),
+          yield* fs.readFileString(path.join(home, ".z9code", "userdata", "server.lock")),
         );
         assert.sameMembers(
           launches.map((launch) => launch.remoteServerKind),
@@ -1347,7 +1350,7 @@ child.on("exit", (code) => process.exit(code ?? 1));`,
           if (launch.remoteServerKind !== "managed") continue;
           const stateKey = yield* remoteStateKey(targets[index]!);
           const recordedPid = yield* fs.readFileString(
-            path.join(home, ".t3", "ssh-launch", stateKey, "pid"),
+            path.join(home, ".z9code", "ssh-launch", stateKey, "pid"),
           );
           assert.equal(
             Number(recordedPid.trim()),
@@ -1450,7 +1453,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
         holderPort,
         sshAsLocalShell,
         staleId: staleId === "an unrelated process" ? holder.pid : tid,
-        stateDir: `${home}/.t3/ssh-launch/${yield* remoteStateKey(target)}`,
+        stateDir: `${home}/.z9code/ssh-launch/${yield* remoteStateKey(target)}`,
       };
     });
 
@@ -1484,7 +1487,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
       // Reboot: our server is gone and its recorded PID now names something that
       // answers on the recorded port.
       process.kill(firstPid, "SIGKILL");
-      yield* fs.remove(`${home}/.t3/userdata/server-runtime.json`);
+      yield* fs.remove(`${home}/.z9code/userdata/server-runtime.json`);
       yield* fs.writeFileString(`${stateDir}/pid`, `${staleId}\n`);
       yield* fs.writeFileString(`${stateDir}/port`, `${holderPort}\n`);
 
@@ -1524,7 +1527,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
       const error = yield* Effect.flip(launch);
       assert.include(
         error.message,
-        `The previous remote T3 server (PID ${pid}) is still shutting down.`,
+        `The previous remote z9code server (PID ${pid}) is still shutting down.`,
       );
       assert.isTrue(yield* isRunning(pid), "the launcher signalled the stopping server");
     }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
@@ -1549,7 +1552,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
           launcherId,
         ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, sshAsLocalShell));
       const runtimePid = fs
-        .readFileString(`${home}/.t3/userdata/server-runtime.json`)
+        .readFileString(`${home}/.z9code/userdata/server-runtime.json`)
         .pipe(Effect.map((runtime) => Number(JSON.parse(runtime).pid)));
       const launchedPids: Array<number> = [];
       yield* Effect.addFinalizer(() =>
@@ -1626,7 +1629,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
             launcherId,
           ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, sshAsLocalShell));
         const runtimePid = fs
-          .readFileString(`${home}/.t3/userdata/server-runtime.json`)
+          .readFileString(`${home}/.z9code/userdata/server-runtime.json`)
           .pipe(Effect.map((runtime) => Number(JSON.parse(runtime).pid)));
 
         assert.equal((yield* launch("a".repeat(32))).remoteServerKind, "managed");
@@ -1698,7 +1701,7 @@ server.listen(Number(flag("--port") ?? 0), "127.0.0.1", () => {
 
 // Reuse decisions live in generated shell, so drive the real launch script in
 // a temporary HOME. Each archive version gets a pre-installed fake runtime
-// whose server writes the default runtime file the way `t3 serve` does.
+// whose server writes the default runtime file the way `z9 serve` does.
 describe("archive launch script", () => {
   const windowsHost = HostProcess.Platform.defaultValue() === "win32";
   const FAKE_T3 = `const fs = require("node:fs");
@@ -1807,19 +1810,19 @@ const canBind = (port) =>
 
   // Installs a fake runtime per version so the runner never downloads. The
   // seeded remembered port keeps the test off the default 3773, which a live
-  // T3 on this machine may own.
+  // z9code on this machine may own.
   const prepareLaunch = (versions: ReadonlyArray<string>) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "t3-archive-launch-" });
       const home = `${root}/home`;
-      const stateDir = `${home}/.t3/ssh-launch/test-state`;
+      const stateDir = `${home}/.z9code/ssh-launch/test-state`;
       const fakeT3 = `${root}/fake-t3.cjs`;
       yield* fs.makeDirectory(stateDir, { recursive: true });
       yield* fs.writeFileString(`${stateDir}/port`, `${yield* freeLoopbackPort}\n`);
       yield* fs.writeFileString(fakeT3, FAKE_T3);
       for (const version of versions) {
-        const runtimeDir = `${home}/.t3/runtime/versions/${version}`;
+        const runtimeDir = `${home}/.z9code/runtime/versions/${version}`;
         yield* fs.makeDirectory(runtimeDir, { recursive: true });
         // The runner gets only HOME, so `node` would resolve on sh's default PATH, which may not have it.
         yield* fs.writeFileString(
@@ -1833,7 +1836,7 @@ const canBind = (port) =>
         .readFileString(`${stateDir}/pid`)
         .pipe(Effect.map((pid) => Number(pid.trim())));
       const readServerVersion = fs
-        .readFileString(`${home}/.t3/userdata/server-runtime.json`)
+        .readFileString(`${home}/.z9code/userdata/server-runtime.json`)
         .pipe(Effect.map((raw) => (JSON.parse(raw) as { serverVersion: string }).serverVersion));
       // Launched servers outlive the script, so stop each PID it recorded.
       const launchedPids = new Set<number>();

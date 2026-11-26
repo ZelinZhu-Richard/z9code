@@ -1,4 +1,4 @@
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
@@ -23,7 +23,7 @@ import * as CliService from "./service.ts";
 interface Setup {
   readonly service: BootService.BootServiceStatus;
   readonly lan: boolean;
-  /** An installed service with no T3CODE_LAN or T3CODE_HOST keeps the old default: on. */
+  /** An installed service with no Z9CODE_LAN or Z9CODE_HOST keeps the old default: on. */
   readonly lanFromOldDefault: boolean;
   readonly host: string | undefined;
 }
@@ -33,7 +33,7 @@ const readSetup = Effect.fn("cli.up.read_setup")(function* () {
   const service = yield* (yield* BootService.BootService).status;
   const { entries } = yield* CliService.readServiceEnv(baseDir);
   // Parsed as the server parses it.
-  const lan = yield* Config.Boolean("T3CODE_LAN")
+  const lan = yield* Config.Boolean("Z9CODE_LAN")
     .pipe(Config.option)
     .parse(ConfigProvider.fromEnv({ env: entries }));
   // Another home's service doesn't read this home's service.env.
@@ -41,12 +41,12 @@ const readSetup = Effect.fn("cli.up.read_setup")(function* () {
   return {
     service,
     lan: Option.getOrElse(lan, () => servesThisHome),
-    lanFromOldDefault: Option.isNone(lan) && servesThisHome && entries.T3CODE_HOST === undefined,
-    host: entries.T3CODE_HOST,
+    lanFromOldDefault: Option.isNone(lan) && servesThisHome && entries.Z9CODE_HOST === undefined,
+    host: entries.Z9CODE_HOST,
   } satisfies Setup;
 });
 
-/** A running service reads T3CODE_LAN only when it starts. */
+/** A running service reads Z9CODE_LAN only when it starts. */
 const needsRestart = (before: boolean, after: boolean) => after !== before;
 
 /** The commands hints name, run with the caller's --base-dir and launcher. */
@@ -71,7 +71,7 @@ const formatSetup = (setup: Setup, hints: Hints) => {
   // This home's access settings reach no service, so only the service is shown.
   if (service.otherBaseDir !== undefined) {
     return [
-      `  ${"Service".padEnd(15)}installed for another T3 home · ${service.otherBaseDir}`,
+      `  ${"Service".padEnd(15)}installed for another z9code home · ${service.otherBaseDir}`,
       "",
       `Pass \`${BootService.formatBootServiceBaseDirOption(service.otherBaseDir)}\` to manage it.`,
     ].join("\n");
@@ -82,13 +82,13 @@ const formatSetup = (setup: Setup, hints: Hints) => {
       !service.supported
         ? "unavailable"
         : service.installed
-          ? `installed · t3@${service.installedVersion ?? packageJson.version}`
+          ? `installed · z9@${service.installedVersion ?? packageJson.version}`
           : "not installed",
     ],
     [
       "Local network",
       setup.host !== undefined
-        ? `overridden · T3CODE_HOST=${setup.host}`
+        ? `overridden · Z9CODE_HOST=${setup.host}`
         : setup.lanFromOldDefault
           ? "on · kept from an older install"
           : setup.lan
@@ -117,8 +117,8 @@ const formatNextSteps = (lan: boolean, serviceInstalled: boolean, hints: Hints) 
       ? []
       : [
           serviceInstalled
-            ? "Remote access is off. T3 Code still runs here in the background."
-            : `Remote access is off. Run \`${hints.run}\` to use T3 Code here.`,
+            ? "Remote access is off. z9code still runs here in the background."
+            : `Remote access is off. Run \`${hints.run}\` to use z9code here.`,
         ]),
   ].join("\n");
 
@@ -163,7 +163,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     return yield* new CliError.UserError({
       cause: "routes",
       userMessage:
-        "No terminal. Choose access with --lan or --no-lan, or use --yes for the default. See `t3 up --help`.",
+        "No terminal. Choose access with --lan or --no-lan, or use --yes for the default. See `z9 up --help`.",
     });
   }
   if (routes.lan && !current.lan) {
@@ -174,7 +174,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
   }
   // Nothing to run in the background, but a route left on still gets turned off.
   if (!before.service.installed && !routes.lan) {
-    if (current.lan) yield* CliService.writeServiceEnv(baseDir, { T3CODE_LAN: "false" });
+    if (current.lan) yield* CliService.writeServiceEnv(baseDir, { Z9CODE_LAN: "false" });
     return yield* Console.log(formatNextSteps(routes.lan, false, hints));
   }
   const { installedVersion } = before.service;
@@ -196,7 +196,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     const confirmed = yield* Prompt.run(
       Prompt.Confirm({
         message: update
-          ? "Update and restart T3 Code? Running agent turns will stop."
+          ? "Update and restart z9code? Running agent turns will stop."
           : "Apply changes and restart? Running agent turns will stop.",
         initial: true,
       }),
@@ -204,13 +204,13 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     if (!confirmed) return yield* Console.log("Nothing changed.");
   }
 
-  const previousLan = (yield* CliService.readServiceEnv(baseDir)).entries.T3CODE_LAN;
-  // Also with no service manager: the file records the choice that `t3 status` shows.
-  yield* CliService.writeServiceEnv(baseDir, { T3CODE_LAN: String(routes.lan) });
+  const previousLan = (yield* CliService.readServiceEnv(baseDir)).entries.Z9CODE_LAN;
+  // Also with no service manager: the file records the choice that `z9 status` shows.
+  yield* CliService.writeServiceEnv(baseDir, { Z9CODE_LAN: String(routes.lan) });
   // When the service step fails, an installed service still runs with the old
   // value, so the file goes back to match it.
   const restoreServiceEnv = before.service.installed
-    ? CliService.writeServiceEnv(baseDir, { T3CODE_LAN: previousLan })
+    ? CliService.writeServiceEnv(baseDir, { Z9CODE_LAN: previousLan })
     : Effect.void;
   // A failed update or restart may still have started the service with the new
   // settings, so restart it once more on the old ones.
@@ -219,22 +219,22 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     : Effect.void;
   if (before.host !== undefined) {
     yield* Console.warn(
-      `T3CODE_HOST=${before.host} in service.env overrides the network choice. Remove it to apply it.`,
+      `Z9CODE_HOST=${before.host} in service.env overrides the network choice. Remove it to apply it.`,
     );
   }
 
   const printServeCommand = Effect.fn(function* (reason: string) {
     const { command } = yield* resolveHostCliCommand("serve", [
       ...baseDirArgs,
-      // Explicit either way, so a T3CODE_LAN in the shell cannot override the choice.
+      // Explicit either way, so a Z9CODE_LAN in the shell cannot override the choice.
       routes.lan ? "--lan" : "--no-lan",
     ]);
     yield* Console.log(`${reason} Keep this command running:\n  ${command}`);
     // A host wins over --lan and --no-lan, as it does in service.env.
-    const shellHost = (yield* HostProcess.Environment).T3CODE_HOST;
+    const shellHost = (yield* HostProcess.Environment).Z9CODE_HOST;
     if (shellHost !== undefined) {
       yield* Console.warn(
-        `T3CODE_HOST=${shellHost} in this shell overrides that choice. Unset it before you run the command.`,
+        `Z9CODE_HOST=${shellHost} in this shell overrides that choice. Unset it before you run the command.`,
       );
     }
   });
@@ -243,10 +243,10 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
     yield* printServeCommand("Background service unavailable.");
   } else {
     if (newer) {
-      yield* Console.log(`Keeping installed service version t3@${installedVersion}.`);
+      yield* Console.log(`Keeping installed service version z9@${installedVersion}.`);
     }
     if (update && !interactive) {
-      yield* Console.log("Updating T3 Code. Running agent turns will stop.");
+      yield* Console.log("Updating z9code. Running agent turns will stop.");
     }
     const result = newer
       ? ({ changed: false } as const)
@@ -269,7 +269,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
       yield* Console.log(CliService.formatServiceChange(result));
     } else if (restart) {
       if (!interactive && !stopped) {
-        yield* Console.log("Restarting T3 Code. Running agent turns will stop.");
+        yield* Console.log("Restarting z9code. Running agent turns will stop.");
       }
       const outcome = yield* service.restart.pipe(Effect.tapError(() => rollBack));
       if (outcome === "queued") {
@@ -277,7 +277,7 @@ const setUp = Effect.fn("cli.up")(function* (flags: {
       }
       if (outcome === "skipped") {
         yield* Console.log(
-          "The installed service was not restarted. Run `t3 service status` to see why.",
+          "The installed service was not restarted. Run `z9 service status` to see why.",
         );
       }
     }
@@ -331,21 +331,21 @@ export const upCommand = Command.make("up", {
     Flag.withDefault(false),
   ),
 }).pipe(
-  Command.withShortDescription("Set up remote access and the T3 Code background service."),
+  Command.withShortDescription("Set up remote access and the z9code background service."),
   Command.withDescription(
-    "Set up remote access and the T3 Code background service. An access flag skips the question. Without a terminal, a needed restart runs without asking and stops running agent turns.",
+    "Set up remote access and the z9code background service. An access flag skips the question. Without a terminal, a needed restart runs without asking and stops running agent turns.",
   ),
   Command.withExamples([
-    { command: "t3 up", description: "Choose remote access." },
-    { command: "t3 up --lan", description: "Allow LAN access with pairing codes." },
-    { command: "t3 up --no-lan", description: "Stop LAN access." },
-    { command: "t3 up --yes", description: "Take the defaults with no questions." },
-    { command: "t3 status --json", description: "Read the settings from a script." },
+    { command: "z9 up", description: "Choose remote access." },
+    { command: "z9 up --lan", description: "Allow LAN access with pairing codes." },
+    { command: "z9 up --no-lan", description: "Stop LAN access." },
+    { command: "z9 up --yes", description: "Take the defaults with no questions." },
+    { command: "z9 status --json", description: "Read the settings from a script." },
   ]),
   Command.withHandler((flags) => runUpCommand(flags, setUp(flags))),
 );
 
-/** `t3 status --json`, for scripts and agents. */
+/** `z9 status --json`, for scripts and agents. */
 const setupJson = (setup: Setup) =>
   JSON.stringify(
     {
@@ -374,8 +374,8 @@ export const statusCommand = Command.make("status", {
 }).pipe(
   Command.withDescription("Show service setup and remote access settings."),
   Command.withExamples([
-    { command: "t3 status", description: "Show the settings." },
-    { command: "t3 status --json", description: "Print them for scripts and agents." },
+    { command: "z9 status", description: "Show the settings." },
+    { command: "z9 status --json", description: "Print them for scripts and agents." },
   ]),
   Command.withHandler(
     Effect.fn("cli.status")(function* (flags) {

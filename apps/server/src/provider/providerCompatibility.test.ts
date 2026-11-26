@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@t3tools/contracts";
+import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@z9code/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Fiber from "effect/Fiber";
 import * as Effect from "effect/Effect";
@@ -12,11 +12,11 @@ import * as Stream from "effect/Stream";
 import * as ServerConfig from "../config.ts";
 import * as ModelManifest from "./ModelManifest.ts";
 import * as ProviderRegistry from "./ProviderRegistry.ts";
-import * as ProviderLatestVersions from "@t3tools/provider-core/server/ProviderLatestVersions";
+import * as ProviderLatestVersions from "@z9code/provider-core/server/ProviderLatestVersions";
 import * as ProviderInstanceRegistry from "./ProviderInstanceRegistry.ts";
 import * as ProviderInstanceRegistryMutator from "./ProviderInstanceRegistryMutator.ts";
-import type { ProviderInstance } from "@t3tools/provider-core/server/driver";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@t3tools/provider-core/server/maintenanceResolver";
+import type { ProviderInstance } from "@z9code/provider-core/server/driver";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@z9code/provider-core/server/maintenanceResolver";
 import * as Schema from "effect/Schema";
 import {
   applyProviderCompatibility,
@@ -140,7 +140,7 @@ describe("provider compatibility", () => {
     }
   });
 
-  it("applies policies only within their T3 Code version range", () => {
+  it("applies policies only within their z9code version range", () => {
     const scopedPolicy = { ...policy, t3CodeRange: ">=0.0.42 <0.1.0" };
     for (const version of ["0.0.42", "0.0.45"]) {
       assert.strictEqual(

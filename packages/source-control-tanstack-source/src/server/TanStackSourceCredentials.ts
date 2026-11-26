@@ -2,11 +2,11 @@ import {
   requireSettingsSecretLiteral,
   type ServerSettings,
   type SettingsSecretUnresolvedError,
-} from "@t3tools/contracts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { normalizeHost } from "@t3tools/source-control-core/server/pullRequestUtils";
-import * as SourceControlHost from "@t3tools/source-control-core/server/SourceControlHost";
-import { readSourceControlHostSettings } from "@t3tools/source-control-core/shared/definition";
+} from "@z9code/contracts";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { normalizeHost } from "@z9code/source-control-core/server/pullRequestUtils";
+import * as SourceControlHost from "@z9code/source-control-core/server/SourceControlHost";
+import { readSourceControlHostSettings } from "@z9code/source-control-core/shared/definition";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -97,9 +97,9 @@ export class TanStackSourceCredentials extends Context.Service<
     ) => Effect.Effect<TanStackSourceCredential, TanStackSourceCredentialUnavailableError>;
     readonly invalidate: (host: string) => Effect.Effect<void>;
   }
->()("@t3tools/source-control-tanstack-source/server/TanStackSourceCredentials") {}
+>()("@z9code/source-control-tanstack-source/server/TanStackSourceCredentials") {}
 
-/** `src` sends SRC_TOKEN only to SRC_HOST (default source.tanstack.com); so does T3. */
+/** `src` sends SRC_TOKEN only to SRC_HOST (default source.tanstack.com); so does z9code. */
 export function environmentToken(
   host: string,
   env: Readonly<Record<string, string | undefined>>,

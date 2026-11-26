@@ -1,12 +1,12 @@
-import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
-import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import type { EnvironmentThreadShell } from "@z9code/client-runtime/state/shell";
+import { sourceControlClients } from "@z9code/client-runtime/source-control-clients";
 import { changeRequestTermKind } from "../../lib/changeRequestTerm";
 import {
   pullRequestListLines,
   resolveThreadPullRequestChains,
   threadPullRequestKeyOf,
   type PullRequestListLine,
-} from "@t3tools/client-runtime/thread-pull-requests";
+} from "@z9code/client-runtime/thread-pull-requests";
 import { useGT, useMessages } from "gt-react-native";
 import { memo, useMemo } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";

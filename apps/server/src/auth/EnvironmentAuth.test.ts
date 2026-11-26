@@ -1,6 +1,6 @@
 import * as NodePlatformCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { authScopeResponse, AuthAdministrativeClientScopes } from "@t3tools/contracts";
+import { authScopeResponse, AuthAdministrativeClientScopes } from "@z9code/contracts";
 import { expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -102,7 +102,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodePlatformCrypto.layer))(
         >[0];
 
         const authenticated = yield* serverAuth.authenticateHttpRequest(request);
-        expect(devExchange.cookieName).toMatch(/^t3_dev_session_/);
+        expect(devExchange.cookieName).toMatch(/^z9_dev_session_/);
         expect(devExchange.expireNormalCookie).toBe(true);
         expect(devExchange.response).toMatchObject(
           authScopeResponse(AuthAdministrativeClientScopes),
@@ -285,7 +285,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodePlatformCrypto.layer))(
         const sessions = yield* SessionStore.SessionStore;
         const bearer = yield* serverAuth.issueSession();
         const verified = yield* serverAuth.authenticateHttpRequest({
-          cookies: { [sessions.legacyCookieName ?? "t3_session"]: "stale" },
+          cookies: { [sessions.legacyCookieName ?? "z9_session"]: "stale" },
           headers: { authorization: `Bearer ${bearer.token}` },
         } as never);
 
@@ -406,7 +406,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodePlatformCrypto.layer))(
         const day = 24 * 60 * 60 * 1000;
         const issue = (peerLink: boolean) =>
           serverAuth.issueMcpClientSession({
-            label: peerLink ? "T3 Code · A" : "ChatGPT",
+            label: peerLink ? "z9code · A" : "ChatGPT",
             access: "auto",
             peerLink,
             client: requestMetadata,
@@ -627,7 +627,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodePlatformCrypto.layer))(
         const paired = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
           pairing.credential,
           undefined,
-          { ...requestMetadata, label: "T3 Code Desktop" },
+          { ...requestMetadata, label: "z9code Desktop" },
         );
         const first = yield* serverAuth.exchangeBootstrapCredentialForAccessToken(
           "desktop-bootstrap-token",
@@ -854,7 +854,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodePlatformCrypto.layer))(
           origin: "https://box.tail1234.ts.net",
           "x-forwarded-host": "box.tail1234.ts.net",
         });
-        yield* upgrade({ origin: "t3code://app" });
+        yield* upgrade({ origin: "z9code://app" });
         yield* upgrade({ origin: "http://localhost:5733" });
         yield* upgrade({});
 

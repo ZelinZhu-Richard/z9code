@@ -2,9 +2,9 @@ import {
   ServerNpmReleaseError,
   ServerNpmReleaseInput,
   type ServerNpmRelease,
-} from "@t3tools/contracts";
-import { npmReleaseDatabaseMigration } from "@t3tools/shared/cliRelease";
-import { resolveCommandPath } from "@t3tools/shared/shell";
+} from "@z9code/contracts";
+import { npmReleaseDatabaseMigration } from "@z9code/shared/cliRelease";
+import { resolveCommandPath } from "@z9code/shared/shell";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -18,8 +18,8 @@ import { FetchHttpClient, HttpClient } from "effect/http";
 import * as ProcessRunner from "../processRunner.ts";
 
 const Version = Schema.String.check(Schema.isPattern(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/));
-const Manifest = Schema.Struct({ version: Version, t3code: Schema.optionalKey(Schema.Unknown) });
-// npm prints a bare version string when the release has no `t3code` field.
+const Manifest = Schema.Struct({ version: Version, z9code: Schema.optionalKey(Schema.Unknown) });
+// npm prints a bare version string when the release has no `z9code` field.
 const decodeManifest = Schema.decodeUnknownOption(
   Schema.fromJsonString(Schema.Union([Manifest, Schema.Tuple([Manifest]), Version])),
 );
@@ -35,7 +35,7 @@ export class NpmRelease extends Context.Service<
       input: ServerNpmReleaseInput,
     ) => Effect.Effect<ServerNpmRelease | null, ServerNpmReleaseError>;
   }
->()("t3/service/npmRelease") {}
+>()("z9/service/npmRelease") {}
 
 function toRelease(spec: string, json: string) {
   const decoded = Option.getOrUndefined(decodeManifest(json));
@@ -87,7 +87,7 @@ export const make = Effect.fn("NpmRelease.make")(function* () {
           runner.run({
             command: npmPath,
             // Named fields keep the output small; the full package document grows with every release.
-            args: ["view", "--global", "--json", `t3@${spec}`, "version", "t3code"],
+            args: ["view", "--global", "--json", `z9@${spec}`, "version", "z9code"],
             timeout: Duration.seconds(15),
             maxOutputBytes: 256 * 1024,
           }),

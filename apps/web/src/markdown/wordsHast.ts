@@ -7,18 +7,18 @@ import {
 import wordsWasm from "@pierre/words/wasm";
 import { decodeHTML, decodeHTMLAttribute } from "entities";
 import { find, html as htmlSchema, svg as svgSchema } from "property-information";
-import { resolveCodexArtifactTemplate } from "@t3tools/shared/codexArtifactTemplates";
-import { resolveCodexFileCitationLink } from "@t3tools/shared/codexFileCitations";
-import type { ReferenceAutolink } from "@t3tools/client-runtime/source-control-clients";
-import { expandGithubEmojiAliases } from "@t3tools/client-runtime/pull-request-markdown";
-import { resolveChangeRequestMediaUrl } from "@t3tools/client-runtime/pull-request-references";
-import { GITHUB_ALERT_MARKER } from "@t3tools/shared/markdownGithubAlerts";
-import { absoluteFilePathMatches } from "@t3tools/shared/markdownLinks";
+import { resolveCodexArtifactTemplate } from "@z9code/shared/codexArtifactTemplates";
+import { resolveCodexFileCitationLink } from "@z9code/shared/codexFileCitations";
+import type { ReferenceAutolink } from "@z9code/client-runtime/source-control-clients";
+import { expandGithubEmojiAliases } from "@z9code/client-runtime/pull-request-markdown";
+import { resolveChangeRequestMediaUrl } from "@z9code/client-runtime/pull-request-references";
+import { GITHUB_ALERT_MARKER } from "@z9code/shared/markdownGithubAlerts";
+import { absoluteFilePathMatches } from "@z9code/shared/markdownLinks";
 import {
   rehypeNormalizeLocalEditorLinks,
   rehypePreserveImageSourceMeta,
   sanitizeChatHast,
-} from "@t3tools/shared/markdownHast";
+} from "@z9code/shared/markdownHast";
 
 import { rehypeChipPunctuation } from "../components/chat/markdownChipPunctuation";
 import { rehypeHeadingIds } from "../components/chat/markdownFragments";
@@ -902,8 +902,8 @@ function insightSource(text: string, options: RenderOptions): InsightSource | nu
   };
   findCode(parse(text, options));
   const nonce = Math.random().toString(36).slice(2);
-  const marker = new RegExp(String.raw`^\[!T3-INSIGHT-${nonce}-(\d+)\](?:\r?\n)?`);
-  const anywhere = new RegExp(String.raw`\[!T3-INSIGHT-${nonce}-(\d+)\]`, "g");
+  const marker = new RegExp(String.raw`^\[!z9code-INSIGHT-${nonce}-(\d+)\](?:\r?\n)?`);
+  const anywhere = new RegExp(String.raw`\[!z9code-INSIGHT-${nonce}-(\d+)\]`, "g");
   const lines = text.split(/(?<=\n)/u);
   const skipped = new Set<number>();
   for (;;) {
@@ -924,7 +924,7 @@ function insightSource(text: string, options: RenderOptions): InsightSource | nu
           if (opening && !skipped.has(lineIndex)) {
             indent = opening[1] ?? "";
             opened++;
-            output = `> [!T3-INSIGHT-${nonce}-${lineIndex}]${ending}`;
+            output = `> [!z9code-INSIGHT-${nonce}-${lineIndex}]${ending}`;
           }
         } else {
           const closing = inCode ? null : INSIGHT_CLOSING.exec(value);

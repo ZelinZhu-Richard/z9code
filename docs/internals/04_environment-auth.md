@@ -14,7 +14,7 @@ model.
   carries: a pairing link, an MCP sign-in approval, a link code from a linked environment, and a
   guest link (which reads a thread). Revoking is not capped by the caller's scopes.
 - **Why the default grant includes management scopes.** `terminal:operate` and
-  `orchestration:operate` already grant OS-user execution (which can invoke `t3 auth session issue`),
+  `orchestration:operate` already grant OS-user execution (which can invoke `z9 auth session issue`),
   so withholding access management from the default grant would not be a real boundary.
   Narrower clients receive explicit scopes.
 - **No recoverable secrets in read models.** Only the creation response returns a raw pairing
@@ -62,7 +62,7 @@ model.
   client session holding `terminal:operate` approved its exact text for that project.
   [`TaskFolders`](../../apps/server/src/workspace/TaskFolders.ts) is the only place they run and
   checks the approval, managed policy, and who asked at every run. Recording an approval is a
-  client RPC only: `t3code/no-layout-command-approval-writes` keeps the write side out of every
+  client RPC only: `z9code/no-layout-command-approval-writes` keeps the write side out of every
   other module, MCP tools included. For an agent's own worktree request, a thread below Full access
   gets neither these commands nor the project's setup script, approved or not. The asking thread's
   modes are read when each is about to run, a thread recorded above the administrator's
@@ -71,14 +71,14 @@ model.
   approval, before it starts; one refused then ran nothing, so the project's `remove` does not run
   for it either.
 - **Peer-link client pairing.** Only a full-access peer link may mint a one-time client pairing on
-  the linked environment (since full-access agents can already run `t3 auth pairing create`). The
+  the linked environment (since full-access agents can already run `z9 auth pairing create`). The
   linked side enforces this itself, and the operation stays a human-triggered RPC/HTTP route rather
   than an MCP tool. The same route mints a code that links another environment at a chosen access
   level, and the linking side's RPC requires the caller to hold that level's scopes.
 
 ### Reusable dev credential
 
-Web development servers can accept a fixed `T3CODE_DEV_AUTH_TOKEN` across worktrees and ports on one
+Web development servers can accept a fixed `Z9CODE_DEV_AUTH_TOKEN` across worktrees and ports on one
 hostname (see the [development runbook](../operations/00_development.md#reusable-dev-credential)). It
 grants administrative access and is ignored by desktop and non-development servers.
 

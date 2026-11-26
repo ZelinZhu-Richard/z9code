@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@t3tools/contracts";
+import type { EnvironmentId } from "@z9code/contracts";
 import { msg } from "gt-i18n";
 import type { RemoteEnvironmentAuthError } from "../authorization/remote.ts";
 import { dpopFailureText } from "../dpop/presentation.ts";
@@ -47,7 +47,7 @@ export function environmentMismatchError(input: {
     reason: "configuration",
     ...translatableDetail(
       msg(
-        "This address now runs a different T3 Code install ({actual}, not {expected}). Remove this connection and add it again.",
+        "This address now runs a different z9code install ({actual}, not {expected}). Remove this connection and add it again.",
         { actual: input.actual, expected: input.expected },
       ),
     ),

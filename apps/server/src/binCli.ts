@@ -8,7 +8,7 @@ import * as Layer from "effect/Layer";
 import { Command } from "effect/cli";
 import * as CliError from "effect/cli/CliError";
 
-import * as NetService from "@t3tools/shared/Net";
+import * as NetService from "@z9code/shared/Net";
 import packageJson from "../package.json" with { type: "json" };
 import { acpMcpBridgeCommand, acpMcpCallCommand } from "./cli/acpMcpBridge.ts";
 import { authCommand } from "./cli/auth.ts";
@@ -45,16 +45,16 @@ import { statusCommand, upCommand } from "./cli/up.ts";
 const layerCliRuntime = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer);
 
 export const makeCli = () =>
-  Command.make("t3", { ...sharedServerCommandFlags }).pipe(
+  Command.make("z9", { ...sharedServerCommandFlags }).pipe(
     Command.withDescription(
-      "Run T3 Code in this terminal and open it in your browser. To use it from your other devices, run `t3 up`.",
+      "Run z9code in this terminal and open it in your browser. To use it from your other devices, run `z9 up`.",
     ),
     Command.withHandler(runDefaultServerCommand),
     Command.withSubcommands([
       Command.make("help").pipe(
         Command.withDescription("Show command help."),
         Command.withHandler(() =>
-          Effect.fail(new CliError.ShowHelp({ commandPath: ["t3"], errors: [] })),
+          Effect.fail(new CliError.ShowHelp({ commandPath: ["z9"], errors: [] })),
         ),
       ),
       acpMcpBridgeCommand,

@@ -11,14 +11,14 @@ import {
   UsageLimitSourceConfig,
   isSecretReference,
   secretSettingsFields,
-} from "@t3tools/contracts";
-import { acpRegistryClient } from "@t3tools/provider-acp-registry/client";
-import { cursorClient } from "@t3tools/provider-cursor/client";
-import { grokClient } from "@t3tools/provider-grok/client";
-import { kiroClient } from "@t3tools/provider-kiro/client";
-import { museClient } from "@t3tools/provider-muse/client";
-import { openCodeClient } from "@t3tools/provider-opencode/client";
-import { piClient } from "@t3tools/provider-pi/client";
+} from "@z9code/contracts";
+import { acpRegistryClient } from "@z9code/provider-acp-registry/client";
+import { cursorClient } from "@z9code/provider-cursor/client";
+import { grokClient } from "@z9code/provider-grok/client";
+import { kiroClient } from "@z9code/provider-kiro/client";
+import { museClient } from "@z9code/provider-muse/client";
+import { openCodeClient } from "@z9code/provider-opencode/client";
+import { piClient } from "@z9code/provider-pi/client";
 import {
   readSecretFieldValues,
   SOURCE_CONTROL_HOST_SECRET_FIELDS,

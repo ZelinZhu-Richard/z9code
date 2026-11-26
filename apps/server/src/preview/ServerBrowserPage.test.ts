@@ -1,4 +1,4 @@
-import { PreviewAutomationEvaluateInput } from "@t3tools/contracts";
+import { PreviewAutomationEvaluateInput } from "@z9code/contracts";
 import * as Schema from "effect/Schema";
 import {
   chromium,
@@ -811,7 +811,7 @@ describe("server browser drag", () => {
       void settled.then(() => (finished = true));
       // Two macrotask turns: Node reports a rejection nobody observed after the first.
       for (let turn = 0; turn < 2; turn++) {
-        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- Node emits unhandledRejection only between macrotasks; no promise can mark that point.
+        // oxlint-disable-next-line z9code/no-real-time-wait-in-tests -- Node emits unhandledRejection only between macrotasks; no promise can mark that point.
         await new Promise((resolve) => setImmediate(resolve));
       }
       expect(finished).toBe(false);

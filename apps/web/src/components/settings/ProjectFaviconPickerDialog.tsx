@@ -1,8 +1,8 @@
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
+import { thrownErrorMessage } from "@z9code/client-runtime/errors";
 import { m as resolveMessage } from "~/i18n/messages";
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentId } from "@t3tools/contracts";
-import { isWindowsAbsolutePath } from "@t3tools/shared/path";
+import type { EnvironmentId } from "@z9code/contracts";
+import { isWindowsAbsolutePath } from "@z9code/shared/path";
 import { msg, useGT, useMessages } from "gt-react";
 import { useState } from "react";
 

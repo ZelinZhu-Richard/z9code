@@ -1,6 +1,6 @@
-import { TextGenerationError } from "@t3tools/contracts";
+import { TextGenerationError } from "@z9code/contracts";
 import { FxSettings } from "../settings.ts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -9,37 +9,37 @@ import * as Schema from "effect/Schema";
 import * as HttpClient from "effect/http/HttpClient";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import type * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
-import * as ProviderLatestVersions from "@t3tools/provider-core/server/ProviderLatestVersions";
+import type * as ProviderHost from "@z9code/provider-core/server/ProviderHost";
+import * as ProviderLatestVersions from "@z9code/provider-core/server/ProviderLatestVersions";
 import { type FxAdapterV2DriverEnv, makeFxAdapterV2Driver } from "./adapter.ts";
-import { ProviderDriverError } from "@t3tools/provider-core/server/errors";
+import { ProviderDriverError } from "@z9code/provider-core/server/errors";
 import {
   buildInitialFxProviderSnapshot,
   checkFxProviderStatus,
   readFxDefaultChoice,
 } from "./status.ts";
-import { makeManagedServerProvider } from "@t3tools/provider-core/server/managedProvider";
+import { makeManagedServerProvider } from "@z9code/provider-core/server/managedProvider";
 import {
   defaultProviderContinuationIdentity,
   type ProviderDriver,
   type ProviderInstance,
-} from "@t3tools/provider-core/server/driver";
-import { withInstanceIdentity } from "@t3tools/provider-core/server/instanceIdentity";
-import { mergeProviderInstanceEnvironment } from "@t3tools/provider-core/server/instanceEnvironment";
-import { expandHomePath } from "@t3tools/provider-core/server/pathExpansion";
+} from "@z9code/provider-core/server/driver";
+import { withInstanceIdentity } from "@z9code/provider-core/server/instanceIdentity";
+import { mergeProviderInstanceEnvironment } from "@z9code/provider-core/server/instanceEnvironment";
+import { expandHomePath } from "@z9code/provider-core/server/pathExpansion";
 import { discoverFxSkills } from "./skills.ts";
 import {
   enrichProviderSnapshotWithVersionAdvisory,
   makeCachedProviderMaintenanceResolution,
   resolveProviderMaintenanceCapabilitiesEffect,
-} from "@t3tools/provider-core/server/maintenanceResolver";
+} from "@z9code/provider-core/server/maintenanceResolver";
 import { fetchLatestFxVersion, makeFxMaintenance } from "./maintenance.ts";
 import {
   haveProviderSnapshotSettingsChanged,
   makeProviderSnapshotSettingsSource,
   type ProviderSnapshotSettings,
-} from "@t3tools/provider-core/server/snapshotSettings";
-import type { ProviderTextGeneration } from "@t3tools/provider-core/server/textGeneration";
+} from "@z9code/provider-core/server/snapshotSettings";
+import type { ProviderTextGeneration } from "@z9code/provider-core/server/textGeneration";
 import { FX_DRIVER_KIND } from "./acpSupport.ts";
 
 const decodeFxSettings = Schema.decodeSync(FxSettings);

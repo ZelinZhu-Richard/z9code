@@ -39,14 +39,14 @@ describe("sanitizeLinkedPrompt", () => {
 describe("parseNewThreadLink", () => {
   it("reads a shared prompt with its optional repository and model", () => {
     const result = parseNewThreadLink(
-      "?prompt=Rate+me&repo=https://github.com/pingdotgg/t3code.git&provider=Codex&model=gpt-5",
+      "?prompt=Rate+me&repo=https://github.com/ZelinZhu-Richard/z9code.git&provider=Codex&model=gpt-5",
     );
     expect(result).toEqual({
       ok: true,
       value: {
         kind: "new",
         prompt: { text: "Rate me", hiddenCharacters: 0 },
-        repository: { owner: "pingdotgg", name: "t3code" },
+        repository: { owner: "pingdotgg", name: "z9code" },
         provider: "codex",
         model: "gpt-5",
       },
@@ -55,15 +55,15 @@ describe("parseNewThreadLink", () => {
 
   it("reads a pull request link, whose prompt is optional", () => {
     for (const pr of [
-      "pingdotgg/t3code/42",
-      "pingdotgg/t3code%2342",
+      "ZelinZhu-Richard/z9code/42",
+      "ZelinZhu-Richard/z9code%2342",
       "https://github.com/pingdotgg/t3code/pull/42/files",
     ]) {
       expect(parseNewThreadLink(`?pr=${pr}`)).toEqual({
         ok: true,
         value: {
           kind: "pull-request",
-          pullRequest: { owner: "pingdotgg", name: "t3code", number: 42 },
+          pullRequest: { owner: "pingdotgg", name: "z9code", number: 42 },
           prompt: null,
         },
       });
@@ -111,7 +111,7 @@ describe("link round trips", () => {
 
   it("builds an app link without a web app origin", () => {
     const link = buildNewThreadLink({ prompt: "hi" });
-    expect(link).toBe("t3code://new?prompt=hi");
+    expect(link).toBe("z9code://new?prompt=hi");
     expect(promptLinkAppPath(link)).toBe("/new?prompt=hi");
   });
 
@@ -119,13 +119,13 @@ describe("link round trips", () => {
     const path = promptLinkAppPath(`${WEB_APP}/threads/env-1/mcp%3A1`, WEB_APP);
     expect(path).toBe("/env-1/mcp%3A1");
     const deepLink = promptLinkDeepLink(path!);
-    expect(deepLink).toBe("t3code://threads/env-1/mcp%3A1");
+    expect(deepLink).toBe("z9code://threads/env-1/mcp%3A1");
     expect(promptLinkAppPath(deepLink)).toBe(path);
   });
 
   it("maps app scheme and web app links to in-app paths, and nothing else", () => {
-    expect(promptLinkAppPath("t3code://new?prompt=hi")).toBe("/new?prompt=hi");
-    expect(promptLinkAppPath("t3code-dev://threads/env-1/thread-1")).toBe("/env-1/thread-1");
+    expect(promptLinkAppPath("z9code://new?prompt=hi")).toBe("/new?prompt=hi");
+    expect(promptLinkAppPath("z9code-dev://threads/env-1/thread-1")).toBe("/env-1/thread-1");
     expect(promptLinkAppPath(`${WEB_APP}/env-1/thread-1?prompt=go`, WEB_APP)).toBe(
       "/env-1/thread-1?prompt=go",
     );
@@ -137,7 +137,7 @@ describe("link round trips", () => {
     expect(promptLinkAppPath(`${WEB_APP}/threads/env-1`, WEB_APP)).toBeNull();
     expect(promptLinkAppPath(`${WEB_APP}/settings/general`, WEB_APP)).toBeNull();
     expect(promptLinkAppPath("https://evil.test/new?prompt=hi", WEB_APP)).toBeNull();
-    expect(promptLinkAppPath("t3code://app/index.html")).toBeNull();
+    expect(promptLinkAppPath("z9code://app/index.html")).toBeNull();
   });
 
   it("maps links in browsers without URL.canParse, such as Safari before 17", () => {

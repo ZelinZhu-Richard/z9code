@@ -1,11 +1,11 @@
-import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
-import { availableScratchWorkspaceRoot } from "@t3tools/client-runtime/operations/projects";
+import type { EnvironmentConnectionPhase } from "@z9code/client-runtime/connection";
+import { availableScratchWorkspaceRoot } from "@z9code/client-runtime/operations/projects";
 import {
   isPickableProjectMember,
   isRepositoryRootProject,
-} from "@t3tools/client-runtime/state/project-grouping";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
-import { repositoryGroupingKeyOf, type EnvironmentId, type ServerConfig } from "@t3tools/contracts";
+} from "@z9code/client-runtime/state/project-grouping";
+import type { EnvironmentProject } from "@z9code/client-runtime/state/shell";
+import { repositoryGroupingKeyOf, type EnvironmentId, type ServerConfig } from "@z9code/contracts";
 
 import { scopedProjectKey } from "../../lib/scopedEntities";
 import type { HomeProjectScope } from "../home/homeThreadList";

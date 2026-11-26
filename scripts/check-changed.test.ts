@@ -361,7 +361,7 @@ it("lists the ignored inputs that main's pathspecs list, without entering node_m
 
 function launcherFixture() {
   const root = NodeFS.realpathSync(
-    NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "t3 checks & (fixture) ")),
+    NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "z9 checks & (fixture) ")),
   );
   const write = (file: string, content: string) => {
     const path = NodePath.join(root, file);
@@ -414,7 +414,7 @@ function launcherFixture() {
       'vitePlusCommand(args, "win32")',
     ),
   );
-  for (const name of ["effect", "@effect/platform-node", "@t3tools/shared"]) {
+  for (const name of ["effect", "@effect/platform-node", "@z9code/shared"]) {
     const dest = NodePath.join(root, "node_modules", name);
     NodeFS.mkdirSync(NodePath.dirname(dest), { recursive: true });
     NodeFS.symlinkSync(

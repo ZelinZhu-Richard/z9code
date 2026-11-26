@@ -1,4 +1,4 @@
-import { filePreviewKind } from "@t3tools/shared/filePreview";
+import { filePreviewKind } from "@z9code/shared/filePreview";
 
 export function inlineFilePreviewKind(file: { readonly name: string; readonly mimeType?: string }) {
   return filePreviewKind(file) === "audio" ? "audio" : null;

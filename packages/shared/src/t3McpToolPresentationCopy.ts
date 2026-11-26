@@ -1,7 +1,7 @@
 import { mFallback, msg } from "gt-i18n";
 import type { MFunctionType } from "gt-i18n/types";
 
-import { resolveT3McpToolDefinition, type T3McpToolPresentation } from "./t3McpToolPresentation.ts";
+import { resolveT3McpToolDefinition, type Z9McpToolPresentation } from "./t3McpToolPresentation.ts";
 
 // Same English as each tool's displayName; a name missing here shows as authored.
 const DISPLAY_NAMES: ReadonlyMap<string, string> = new Map([
@@ -40,15 +40,15 @@ const DISPLAY_NAMES: ReadonlyMap<string, string> = new Map([
   ["Update a scheduled task", msg("Update a scheduled task")],
   ["Delete a scheduled task", msg("Delete a scheduled task")],
   ["Ask for a secret", msg("Ask for a secret")],
-  ["Create T3 threads", msg("Create T3 threads")],
-  ["Start a T3 thread", msg("Start a T3 thread")],
-  ["List T3 threads", msg("List T3 threads")],
-  ["Read a T3 thread", msg("Read a T3 thread")],
-  ["Send to a T3 thread", msg("Send to a T3 thread")],
-  ["Wait for a T3 thread", msg("Wait for a T3 thread")],
+  ["Create z9code threads", msg("Create z9code threads")],
+  ["Start a z9code thread", msg("Start a z9code thread")],
+  ["List z9code threads", msg("List z9code threads")],
+  ["Read a z9code thread", msg("Read a z9code thread")],
+  ["Send to a z9code thread", msg("Send to a z9code thread")],
+  ["Wait for a z9code thread", msg("Wait for a z9code thread")],
   ["Stop a workflow", msg("Stop a workflow")],
   ["Update background waits", msg("Update background waits")],
-  ["Interrupt a T3 thread", msg("Interrupt a T3 thread")],
+  ["Interrupt a z9code thread", msg("Interrupt a z9code thread")],
   ["Hand off thread to a git worktree", msg("Hand off thread to a git worktree")],
   ["Get thread worktree status", msg("Get thread worktree status")],
   ["Get preview browser status", msg("Get preview browser status")],
@@ -95,7 +95,7 @@ const DISPLAY_NAMES: ReadonlyMap<string, string> = new Map([
   ["Search thread content", msg("Search thread content")],
   ["Read thread transfers", msg("Read thread transfers")],
   ["Organize a thread", msg("Organize a thread")],
-  ["Update T3 thread metadata", msg("Update T3 thread metadata")],
+  ["Update z9code thread metadata", msg("Update z9code thread metadata")],
   ["List workspace branches", msg("List workspace branches")],
   ["List preview tabs", msg("List preview tabs")],
   ["Close a preview tab", msg("Close a preview tab")],
@@ -126,12 +126,12 @@ export function resolveT3McpToolPresentation(
   toolName: string | null | undefined,
   input?: unknown,
   resolve: MFunctionType = mFallback,
-): T3McpToolPresentation | null {
+): Z9McpToolPresentation | null {
   const definition = resolveT3McpToolDefinition(toolName, input);
   if (definition === null) return null;
   const displayName = DISPLAY_NAMES.get(definition.displayName);
   return {
     displayName: displayName === undefined ? definition.displayName : resolve(displayName),
-    logo: "t3-code",
+    logo: "z9code",
   };
 }

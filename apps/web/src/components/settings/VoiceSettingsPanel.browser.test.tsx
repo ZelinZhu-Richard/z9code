@@ -2,13 +2,13 @@ import {
   BearerConnectionTarget,
   PrimaryConnectionTarget,
   type PreparedConnection,
-} from "@t3tools/client-runtime/connection";
+} from "@z9code/client-runtime/connection";
 import type * as Effect from "effect/Effect";
 import {
   EnvironmentId,
   type EnvironmentSpeechModel,
   type EnvironmentSpeechStatus,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
 import { act, render } from "../../../test/render";
@@ -33,14 +33,14 @@ vi.mock(import("../../state/session"), { spy: true });
 // The real connection runtime renews a paired route's DPoP token with the host.
 vi.mock("../../connection/runtime", async () => {
   const [DpopSigner, rpc, { Atom }, Context, Effect, Layer] = await Promise.all([
-    import("@t3tools/client-runtime/dpop"),
-    import("@t3tools/client-runtime/rpc"),
+    import("@z9code/client-runtime/dpop"),
+    import("@z9code/client-runtime/rpc"),
     import("effect/reactivity"),
     import("effect/Context"),
     import("effect/Effect"),
     import("effect/Layer"),
   ]);
-  type DirectConnection = import("@t3tools/client-runtime/connection").DirectDpopConnection;
+  type DirectConnection = import("@z9code/client-runtime/connection").DirectDpopConnection;
   // Services resolve by key, and client-runtime does not export this one.
   class RemoteEnvironmentAuthorization extends Context.Service<
     RemoteEnvironmentAuthorization,
@@ -53,7 +53,7 @@ vi.mock("../../connection/runtime", async () => {
       }>;
     }
     // @effect-diagnostics-next-line deterministicKeys:off
-  >()("@t3tools/client-runtime/authorization/service/RemoteEnvironmentAuthorization") {}
+  >()("@z9code/client-runtime/authorization/service/RemoteEnvironmentAuthorization") {}
   return {
     connectionAtomRuntime: Atom.runtime(
       Layer.mergeAll(

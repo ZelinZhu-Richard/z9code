@@ -1,4 +1,4 @@
-import { errorDisplayMessage, type MarkedText } from "@t3tools/client-runtime/errors";
+import { errorDisplayMessage, type MarkedText } from "@z9code/client-runtime/errors";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useSelectWorkspaceDetail } from "../layout/workspace/useSelectWorkspaceDetail";
 import * as Dialog from "../../components/ui/Dialog";
@@ -33,24 +33,24 @@ import {
   sortAddProjectProviderSources,
   type OfferedSourceControlProviders,
   type AddProjectRemoteSource,
-} from "@t3tools/client-runtime/operations/projects";
+} from "@z9code/client-runtime/operations/projects";
 import {
   connectionStatusText,
   type EnvironmentConnectionPhase,
-} from "@t3tools/client-runtime/connection";
+} from "@z9code/client-runtime/connection";
 import {
   canPreloadBrowsePath,
   createBrowseNavigationCoordinator,
   filterFilesystemBrowseEntries,
   getFilesystemBrowsePath,
   resolveFilesystemReadAccess,
-} from "@t3tools/client-runtime/state/filesystem";
+} from "@z9code/client-runtime/state/filesystem";
 import {
   appendBrowsePathSegment,
   inferProjectTitleFromPath,
   isWindowsPlatform,
-} from "@t3tools/client-runtime/state/projects";
-import { resolvePastedPath } from "@t3tools/shared/path";
+} from "@z9code/client-runtime/state/projects";
+import { resolvePastedPath } from "@z9code/shared/path";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
@@ -61,7 +61,7 @@ import {
   ProjectId,
   resolveEnvironmentMachineKind,
   SourceControlProviderKind,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   StackActions,
   useNavigation,
@@ -90,7 +90,7 @@ import { AppText as Text, AppTextInput as TextInput } from "../../components/ui/
 import { EnvironmentMachineSymbol } from "../../components/EnvironmentMachineSymbol";
 import { ErrorBanner } from "../../components/ui/ErrorBanner";
 import { SourceControlIcon } from "./SourceControlIcon";
-import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import { sourceControlClients } from "@z9code/client-runtime/source-control-clients";
 import { ThemedSwitch } from "../../components/ui/ThemedSwitch";
 import { uuidv4 } from "../../lib/uuid";
 import { useAtomCommand } from "../../state/use-atom-command";
@@ -412,7 +412,7 @@ function useBrowsePathInput(
     return committed;
   };
 
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- invalidates the browse navigation coordinator on unmount so in-flight browses do not commit
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- invalidates the browse navigation coordinator on unmount so in-flight browses do not commit
   useEffect(
     () => () => {
       browseNavigation.invalidate();

@@ -22,7 +22,7 @@ import {
   RuntimeRequestId,
   ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -50,7 +50,7 @@ import * as Orchestrator from "./Orchestrator.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
 import * as ProviderAdapterRegistry from "./ProviderAdapterRegistry.ts";
 import * as ProviderReplayHarness from "./testkit/ProviderReplayHarness.ts";
-import type * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
 
 declare module "node:sqlite" {
   interface StatementSync {
@@ -1218,7 +1218,7 @@ it.effect("keeps delegated child pull-request links independent of the parent", 
     const projectId = ProjectId.make("project:parent-pr");
     const parentPullRequest = {
       projectId,
-      repository: "pingdotgg/t3code",
+      repository: "ZelinZhu-Richard/z9code",
       number: 123,
       url: "https://github.com/pingdotgg/t3code/pull/123",
     };

@@ -10,8 +10,8 @@ import { msg } from "gt-react-native";
 
 import { m } from "../../i18n/messages";
 import * as SecureStore from "expo-secure-store";
-import * as DpopProof from "@t3tools/client-runtime/dpop";
-import { DpopPublicJwk } from "@t3tools/shared/dpopCommon";
+import * as DpopProof from "@z9code/client-runtime/dpop";
+import { DpopPublicJwk } from "@z9code/shared/dpopCommon";
 import * as Layer from "effect/Layer";
 
 export class DpopKeyStoreError extends Schema.TaggedError<DpopKeyStoreError>()(
@@ -79,7 +79,7 @@ export interface DpopProofKeyPair {
 }
 
 // The key name predates the move out of cloud; renaming it would orphan paired devices.
-const DPOP_PROOF_KEY_STORAGE_KEY = "t3code.cloud.dpop-proof-key";
+const DPOP_PROOF_KEY_STORAGE_KEY = "z9code.cloud.dpop-proof-key";
 
 interface NativeDpopKeys {
   /** A 32-byte private scalar followed by its 65-byte uncompressed public point. */

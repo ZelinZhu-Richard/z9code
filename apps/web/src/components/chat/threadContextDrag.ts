@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@t3tools/contracts";
+import type { EnvironmentId } from "@z9code/contracts";
 import { type RefObject, useEffect, useEffectEvent, useSyncExternalStore } from "react";
 
 import type { ThreadContextDropRef } from "./threadContextDrop.logic";
@@ -12,7 +12,7 @@ export function useThreadContextDrop(
   onDrop: (refs: ReadonlyArray<ThreadContextDropRef>, isActive: () => boolean) => void,
 ) {
   const handleDrop = useEffectEvent(onDrop);
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- subscribes the target element to thread-context drop events and marks old drops inactive
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- subscribes the target element to thread-context drop events and marks old drops inactive
   useEffect(() => {
     const target = targetRef.current;
     if (!target) return;

@@ -16,7 +16,12 @@ const FORBIDDEN: ReadonlyArray<readonly [RegExp, string]> = [
   [/cloudcode-pa\.googleapis\.com|v1internal:/i, "private Google Cloud Code endpoint"],
   [/antigravity\/hub\/|aidev_client/i, "spoofed Antigravity client identity"],
   [/["'`]claude-code\/\d/i, "spoofed Claude Code user agent"],
-  [/raw\.githubusercontent\.com\/pingdotgg|github\.com\/pingdotgg/i, "upstream T3 repository"],
+  [/\b(?:[a-z0-9-]+\.)?t3\.codes\b/i, "upstream T3 site"],
+  // Links to upstream issues are history; fetching from upstream is not.
+  [
+    /raw\.githubusercontent\.com\/pingdotgg|api\.github\.com\/repos\/pingdotgg|github\.com\/pingdotgg\/t3code\/releases/i,
+    "upstream T3 repository",
+  ],
 ];
 
 const SHIPPED = /^(?:apps|packages)\/[^/]+\/(?:src|app\.config\.ts)/;

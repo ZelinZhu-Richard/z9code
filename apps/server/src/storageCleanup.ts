@@ -6,7 +6,7 @@ import {
   OrchestrationV2AppThreadJson,
   OrchestrationV2ProviderSessionJson,
   StorageCleanupReportEntry,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -19,11 +19,11 @@ import type {
   WorktreeCleanupRules,
   StorageCleanupReport,
   ThreadId,
-} from "@t3tools/contracts";
-import { writeFileStringAtomically } from "@t3tools/shared/atomicWrite";
-import { resolveWorktreeCleanup } from "@t3tools/shared/projectSettings";
-import { resolveWorktreeT3Home } from "@t3tools/shared/devHome";
-import { makeDrainableWorker } from "@t3tools/shared/DrainableWorker";
+} from "@z9code/contracts";
+import { writeFileStringAtomically } from "@z9code/shared/atomicWrite";
+import { resolveWorktreeCleanup } from "@z9code/shared/projectSettings";
+import { resolveWorktreeT3Home } from "@z9code/shared/devHome";
+import { makeDrainableWorker } from "@z9code/shared/DrainableWorker";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Layer from "effect/Layer";
@@ -63,9 +63,9 @@ import { isNonRepositoryGitStderr } from "./vcs/GitVcsDriverCore.ts";
 import { isLinkedWorktree, removeLinkedWorktree } from "./vcs/worktreeRemoval.ts";
 import * as TaskFolders from "./workspace/TaskFolders.ts";
 import { withWorkspaceLease } from "./workspace/workspaceLease.ts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
-import { isNetworkPath } from "@t3tools/shared/path";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
+import { isNetworkPath } from "@z9code/shared/path";
 
 const decodeCleanupThread = Schema.decodeUnknownEffect(
   Schema.fromJsonString(OrchestrationV2AppThreadJson),
@@ -322,7 +322,7 @@ export class StorageCleanup extends Context.Service<
     readonly reports: Stream.Stream<StorageCleanupReport | null>;
     readonly drain: Effect.Effect<void>;
   }
->()("t3/storageCleanup") {}
+>()("z9/storageCleanup") {}
 
 const make = Effect.gen(function* () {
   const config = yield* ServerConfig.ServerConfig;
@@ -1969,7 +1969,7 @@ const make = Effect.gen(function* () {
     removed: { files: number; bytes: number },
   ) {
     if (days === null || !(yield* fs.exists(root))) return removed;
-    // A symlinked parent (a linked T3 home) is fine; a symlinked folder is not.
+    // A symlinked parent (a linked z9code home) is fine; a symlinked folder is not.
     const realRoot = yield* fs.realPath(root);
     const realParent = yield* fs.realPath(path.dirname(root));
     if (realRoot !== path.join(realParent, path.basename(root))) return removed;
@@ -2037,7 +2037,7 @@ const make = Effect.gen(function* () {
     const targets = new Map<string, Set<string>>();
     for (const row of rows) {
       // Derive ownership from tombstones, never from absence in this database:
-      // another T3 home can own refs in the same Git repository.
+      // another z9code home can own refs in the same Git repository.
       const prefixes = [`refs/t3/checkpoints/${Base64Url.encode(row.threadId)}/turn/`];
       if (row.scopeId !== null) {
         prefixes.push(

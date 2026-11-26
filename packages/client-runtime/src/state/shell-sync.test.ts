@@ -6,7 +6,7 @@ import {
   type OrchestrationV2ShellStreamItem,
   ThreadId,
   type ThreadPullRequestLink,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
@@ -954,7 +954,7 @@ describe("environment shell synchronization", () => {
     Effect.gen(function* () {
       const link = (number: number): ThreadPullRequestLink => ({
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "ZelinZhu-Richard/z9code",
         number,
         url: `https://github.com/pingdotgg/t3code/pull/${number}`,
         source: "agent",
@@ -1049,7 +1049,7 @@ describe("environment shell synchronization", () => {
     Effect.gen(function* () {
       const link = (number: number): ThreadPullRequestLink => ({
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "ZelinZhu-Richard/z9code",
         number,
         url: `https://github.com/pingdotgg/t3code/pull/${number}`,
         source: "agent",
