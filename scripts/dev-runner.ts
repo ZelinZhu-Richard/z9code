@@ -330,7 +330,7 @@ export const createDevRunnerEnv = Effect.fn("dev-runner.createDevRunnerEnv")(fun
   };
 
   const path = yield* Path.Path;
-  // The server stores an explicit home's state in userdata, which for ~/.t3 is the live
+  // The server stores an explicit home's state in userdata, which for ~/.z9code is the live
   // install. Left implicit, dev state goes to ~/.z9code/dev.
   const isLiveHome = resolvedBaseDir === path.join(yield* HostProcess.HomeDirectory, ".z9code");
   if (configuredBaseDir !== undefined && !isLiveHome) {
@@ -780,7 +780,7 @@ export const runDevRunnerWithInput = Effect.fn("dev-runner.runDevRunnerWithInput
 
   const hostEnvironment = yield* HostProcess.Environment;
   // A dev server started inside a worktree defaults to that worktree's own
-  // (gitignored) `.t3` — see @z9code/shared/devHome for why this must
+  // (gitignored) `.z9code` — see @z9code/shared/devHome for why this must
   // outrank an ambient Z9CODE_HOME. `--home-dir` still wins.
   const worktreeHome = yield* resolveWorktreeT3Home(yield* HostProcess.WorkingDirectory);
   // Trim before choosing: `--home-dir ""` is not a selection, and treating it
@@ -977,7 +977,7 @@ const devRunnerCli = Command.make("dev-runner", {
   ),
   t3Home: Flag.String("home-dir").pipe(
     Flag.withDescription(
-      "Explicit z9code data directory; runtime state is stored under userdata (equivalent to Z9CODE_HOME). Inside a git worktree this defaults to that worktree's own .t3 so dev state stays off the shared home.",
+      "Explicit z9code data directory; runtime state is stored under userdata (equivalent to Z9CODE_HOME). Inside a git worktree this defaults to that worktree's own .z9code so dev state stays off the shared home.",
     ),
     Flag.optional,
     Flag.map(Option.getOrUndefined),
@@ -1032,7 +1032,7 @@ const devRunnerCli = Command.make("dev-runner", {
   ),
   seed: Flag.Boolean("seed").pipe(
     Flag.withDescription(
-      "Seed an empty worktree database from ~/.t3 on first start (read-only, via migrate-dev-db) if the source is at most 500 MiB. On by default; --no-seed or Z9CODE_DEV_SEED=0 skips it.",
+      "Seed an empty worktree database from ~/.z9code on first start (read-only, via migrate-dev-db) if the source is at most 500 MiB. On by default; --no-seed or Z9CODE_DEV_SEED=0 skips it.",
     ),
     Flag.withFallbackConfig(optionalBooleanConfig("Z9CODE_DEV_SEED")),
   ),

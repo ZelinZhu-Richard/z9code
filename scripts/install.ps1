@@ -7,7 +7,7 @@
 #   Z9CODE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
 #   Z9CODE_VERSION           exact version to install (overrides Z9CODE_CHANNEL)
-#   Z9CODE_HOME              z9code home directory (default: ~\.t3)
+#   Z9CODE_HOME              z9code home directory (default: ~\.z9code)
 #   Z9CODE_INSTALL_BIN_DIR   where z9.exe is linked (default: ~\.local\bin)
 #   Z9CODE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
@@ -156,12 +156,12 @@ if (-not $version) {
   if ($channel -eq "stable") {
     # release.yml marks only plain stable releases latest. This is a github.com
     # page, so it is not cut off by a page of newer nightlies or the API quota.
-    $release = Invoke-Retrying { Invoke-RestMethod -Uri "https://github.com/$repo/releases/latest" -Headers @{ "User-Agent" = "t3-install"; "Accept" = "application/json" } }
+    $release = Invoke-Retrying { Invoke-RestMethod -Uri "https://github.com/$repo/releases/latest" -Headers @{ "User-Agent" = "z9-install"; "Accept" = "application/json" } }
     $tag = ($release | Where-Object { $_.tag_name -match $tagPattern }).tag_name
   } else {
     $tag = $null
     for ($page = 1; -not $tag -and $page -le 10; $page++) {
-      $releases = Invoke-Retrying { Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100&page=$page" -Headers @{ "User-Agent" = "t3-install" } }
+      $releases = Invoke-Retrying { Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases?per_page=100&page=$page" -Headers @{ "User-Agent" = "z9-install" } }
       $tag = ($releases | Where-Object { -not $_.draft -and $_.tag_name -match $tagPattern } | Select-Object -First 1).tag_name
       if (-not $releases) { break }
     }
@@ -170,7 +170,7 @@ if (-not $version) {
   $version = $tag.Substring(1)
 }
 if ($version -match '-preview\.') {
-  Write-Warning "t3 $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set Z9CODE_CHANNEL=stable (the default) for a supported build."
+  Write-Warning "z9 $version is a preview build. Preview builds are cut by maintainers from unreleased branches to exercise the release pipeline. They can be broken, receive no fixes, and are never offered as updates. Set Z9CODE_CHANNEL=stable (the default) for a supported build."
   if ($channel -ne "preview" -and -not $env:Z9CODE_VERSION) {
     Fail "refusing a preview build that was not explicitly requested"
   }
@@ -197,7 +197,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
     } catch {
       $status = $_.Exception.Response.StatusCode.value__
       if ($status -eq 404) {
-        Fail "t3 $version has no release archive for win32-$arch; releases before the self-contained CLI can only be installed with 'npm install -g z9@$version'"
+        Fail "z9 $version has no release archive for win32-$arch; releases before the self-contained CLI can only be installed with 'npm install -g z9@$version'"
       }
       throw
     }
@@ -236,7 +236,7 @@ if ((Test-Path $marker) -and ((Get-Content $marker -Raw).Trim() -eq $version)) {
 Step "Setting up the z9 command..."
 New-Item -ItemType Directory -Force -Path $binDir | Out-Null
 $shim = Join-Path $binDir "z9.cmd"
-# Replace only a shim that runs a version in this home; never the desktop app's or another t3.
+# Replace only a shim that runs a version in this home; never the desktop app's or another z9.
 if (Test-Path -LiteralPath $shim) {
   $existingTarget = ""
   # The shim is UTF-8 without a BOM; Windows PowerShell 5.1 reads files as ANSI by default.
@@ -248,7 +248,7 @@ if (Test-Path -LiteralPath $shim) {
   if ($existingTarget) { $existingTarget = [System.IO.Path]::GetFullPath($existingTarget) }
   # Exactly <version>\z9.exe, never another program inside a version.
   $owned = $existingTarget.StartsWith($ownedPrefix, [System.StringComparison]::OrdinalIgnoreCase) -and
-    ($existingTarget.Substring($ownedPrefix.Length) -match '^[^\\/]+\\t3\.exe$')
+    ($existingTarget.Substring($ownedPrefix.Length) -match '^[^\\/]+\\z9\.exe$')
   if (-not $owned) {
     Fail "another z9 is already at $shim. Remove it and run this again, or run $(Join-Path $targetDir 'z9.exe') directly."
   }
@@ -271,15 +271,15 @@ if ($binDir.Contains(";")) {
   # Either side may end in a separator. Trim only here: a drive root keeps its `\` for Join-Path.
   $added = ($env:PATH -split ";" | ForEach-Object { $_.TrimEnd('\', '/') }) -notcontains $binDir.TrimEnd('\', '/')
   # `irm | iex` runs in the user's own session, so z9 works in this window right away.
-  # Last, so it never shadows another t3.
+  # Last, so it never shadows another z9.
   if ($added) { $env:Path = "$env:Path;$binDir" }
   # A z9 earlier on PATH runs instead, so name this one in full.
   $first = Get-Command z9 -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
   if ($first -and [System.IO.Path]::GetFullPath($first.Source) -ne [System.IO.Path]::GetFullPath($shimPath)) {
     Write-Host "  Another z9 at $($first.Source) runs first, so run ${bold}& '$($shim.Replace("'", "''"))'$reset to use this one.`n"
   } elseif ($added) {
-    Write-Host "  Run ${bold}t3$reset to get started. For new windows, add $binDir to your PATH.`n"
+    Write-Host "  Run ${bold}z9$reset to get started. For new windows, add $binDir to your PATH.`n"
   } else {
-    Write-Host "  Run ${bold}t3$reset to use z9code here, or ${bold}z9 up$reset to use it from your other devices.`n"
+    Write-Host "  Run ${bold}z9$reset to use z9code here, or ${bold}z9 up$reset to use it from your other devices.`n"
   }
 }
