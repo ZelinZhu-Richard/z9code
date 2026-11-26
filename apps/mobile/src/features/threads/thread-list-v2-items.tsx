@@ -1246,7 +1246,6 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         const target = threadChipCopyTarget(
           { environmentId: thread.environmentId, threadId: thread.id },
           thread.title,
-          undefined,
           m,
         );
         void copyThreadReference(target).then((didCopy) => {

@@ -79,7 +79,6 @@ import {
 } from "./webhookDedupe.ts";
 import { describeFailedWebhookFilter, findFailedWebhookFilter } from "./webhookFilter.ts";
 import { constantTimeEquals, verifyWebhookSignature } from "./webhookVerification.ts";
-import { withLocalTracing } from "@t3tools/shared/relayTracing";
 
 export const WEBHOOK_ROUTE_PREFIX = "/api/hooks";
 
@@ -104,7 +103,7 @@ const loggedWebhookPrompt = (prompt: string) =>
       : WEBHOOK_DELIVERY_LOG_PROMPT_LIMIT,
   );
 const WEBHOOK_MAX_QUEUED_PER_TASK = 20;
-// Enforce the relay's per-task/minute limit here too; tunnel hostnames are public.
+// A per-task/minute limit, since anyone who can reach the address can call the URL.
 const WEBHOOK_RATE_LIMIT_PER_MINUTE = 60;
 const LEGACY_DELIVERY_OUTCOMES: ReadonlySet<string> = new Set([
   "accepted",
@@ -114,31 +113,6 @@ const LEGACY_DELIVERY_OUTCOMES: ReadonlySet<string> = new Set([
   "rate_limited",
   "expired",
 ]);
-
-interface WebhookOrigin {
-  readonly relayHookBaseUrl: string | null;
-}
-
-const ENDPOINT_KEY = /^[0-9a-f]{16}$/;
-
-export function relayHookBaseUrl(input: {
-  readonly relayUrl: string;
-  readonly tunnelName: string | undefined;
-}): string | null {
-  const endpointKey = input.tunnelName?.split("-").at(-1);
-  const relayUrl = input.relayUrl.replace(/\/+$/, "");
-  if (relayUrl === "" || endpointKey === undefined || !ENDPOINT_KEY.test(endpointKey)) {
-    return null;
-  }
-  return `${relayUrl}/v1/hooks/${endpointKey}`;
-}
-
-export class ScheduledTaskWebhookOrigin extends Context.Reference<Effect.Effect<WebhookOrigin>>(
-  "t3/scheduledTasks/ScheduledTaskWebhookOrigin",
-  {
-    defaultValue: () => Effect.succeed({ relayHookBaseUrl: null }),
-  },
-) {}
 
 class WebhookDeliverySkipped extends Schema.TaggedError<WebhookDeliverySkipped>()(
   "WebhookDeliverySkipped",
@@ -394,24 +368,23 @@ function webhookPath(taskId: string, token: string): string {
   return `${WEBHOOK_ROUTE_PREFIX}/${encodeURIComponent(taskId)}/${token}`;
 }
 
+/** Only the path: clients turn it into a URL with the address they reach this server at. */
 function webhookEndpoint(
   row: Pick<ScheduledTaskRow, "task_id" | "webhook_token" | "webhook_secret">,
-  origin: WebhookOrigin | null,
 ): ScheduledTask["webhook"] {
   if (row.webhook_token === null) return undefined;
-  const base = origin?.relayHookBaseUrl ?? null;
   return {
     path: webhookPath(row.task_id, row.webhook_token),
-    url: base === null ? null : `${base}/${encodeURIComponent(row.task_id)}/${row.webhook_token}`,
+    url: null,
     hasSecret: row.webhook_secret !== null,
   };
 }
 
 // Runs per task row; list and lookup operations already own the span.
 const decodeRow = Effect.fnUntraced(
-  function* (row: ScheduledTaskRow, origin: WebhookOrigin | null = null) {
+  function* (row: ScheduledTaskRow) {
     const schedule = yield* decodeScheduleJson(row.schedule_json);
-    const webhook = schedule.type === "webhook" ? webhookEndpoint(row, origin) : undefined;
+    const webhook = schedule.type === "webhook" ? webhookEndpoint(row) : undefined;
     const workspaceStrategy = yield* decodeWorkspaceStrategyJson(row.workspace_strategy_json);
     const modelSelection = yield* decodeModelSelectionJson(row.model_selection_json);
     return yield* decodeTask({
@@ -497,7 +470,6 @@ export const layer = Layer.effect(
     const managedFolders = yield* ManagedProjectFolders.ManagedProjectFolders;
     const secretRequests = yield* SecretRequests.SecretRequests;
     const scheduler = yield* Scheduler.Scheduler;
-    const readWebhookOrigin = yield* ScheduledTaskWebhookOrigin;
     const managedPolicy = yield* ManagedPolicy.ManagedPolicy;
     const webhookPolicyOrganization = ManagedPolicy.deniedBy(managedPolicy, "webhookTasks");
     // Existing webhook tasks stay stored but report why they do not run.
@@ -570,12 +542,9 @@ export const layer = Layer.effect(
 
     const listRows = Effect.fn("ScheduledTaskService.listRows")(function* () {
       const rows = yield* selectAllRows();
-      const origin = yield* readWebhookOrigin;
-      return yield* Effect.forEach(
-        rows,
-        (row) => decodeRow(row, origin).pipe(Effect.map(withPolicy)),
-        { concurrency: 1 },
-      );
+      return yield* Effect.forEach(rows, (row) => decodeRow(row).pipe(Effect.map(withPolicy)), {
+        concurrency: 1,
+      });
     });
 
     const getRows = (id: ScheduledTaskId) =>
@@ -616,7 +585,7 @@ export const layer = Layer.effect(
       );
       const row = rows[0];
       if (row === undefined) return null;
-      return withPolicy(yield* decodeRow(row, yield* readWebhookOrigin));
+      return withPolicy(yield* decodeRow(row));
     });
 
     const findWebhookCredentials = (id: ScheduledTaskId) =>
@@ -1166,10 +1135,9 @@ export const layer = Layer.effect(
         // One transaction, so an edit cannot land between reading the schedule and
         // writing the next run computed from it. The origin is read first: it reads
         // files, and the transaction holds SQLite's writer lock.
-        const origin = yield* readWebhookOrigin;
         const record = Effect.gen(function* () {
           const [row] = yield* getRows(task.id);
-          const current = row === undefined ? null : yield* decodeRow(row, origin);
+          const current = row === undefined ? null : yield* decodeRow(row);
           const scheduleSource = current ?? task;
           const completed: ScheduledTask = {
             ...scheduleSource,
@@ -2554,9 +2522,6 @@ export const layer = Layer.effect(
           yield* runWebhookDelivery(task, deliveryId, rendered.prompt).pipe(
             permit.withPermits(1),
             Effect.ensuring(release),
-            // A relay-delivered webhook is traced to the relay; the run it starts is local work
-            // whose spans carry workspace paths.
-            withLocalTracing,
             Effect.forkIn(serviceScope),
           );
           // Dispatch owns the accepted delivery now; retries must keep its claim.

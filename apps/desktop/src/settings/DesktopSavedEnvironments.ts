@@ -20,6 +20,8 @@ interface PersistedSavedEnvironmentStorageRecord extends Omit<
   "desktopSsh"
 > {
   readonly desktopSsh?: PersistedSavedEnvironmentDesktopSsh;
+  /** T3 Connect records from older builds, which are dropped on read. */
+  readonly relayManaged?: { readonly relayUrl: string };
   readonly encryptedBearerToken?: string;
 }
 
@@ -158,7 +160,6 @@ function toPersistedSavedEnvironmentRecord(
   return {
     ...nextRecord,
     ...(record.desktopSsh ? { desktopSsh: record.desktopSsh } : {}),
-    ...(record.relayManaged ? { relayManaged: record.relayManaged } : {}),
   };
 }
 
@@ -167,7 +168,7 @@ function normalizeSavedEnvironmentRegistryDocument(
 ): SavedEnvironmentRegistryDocument {
   return {
     version: document.version ?? 1,
-    records: document.records ?? [],
+    records: (document.records ?? []).filter((record) => record.relayManaged === undefined),
   };
 }
 

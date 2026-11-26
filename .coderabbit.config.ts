@@ -13,7 +13,7 @@ const DOC_RULES = [
   },
   {
     files: "docs/internals/02_effect-services.md",
-    applyTo: "{apps,packages,infra}/**/*.ts",
+    applyTo: "{apps,packages}/**/*.ts",
     instructions: "Hold changed code to the rules in docs/internals/02_effect-services.md.",
   },
   {
@@ -38,21 +38,16 @@ const DOC_RULES = [
       "Hold remote route, peer link, SSH, and preview tunnel changes to docs/internals/05_remote.md.",
   },
   {
-    files: "docs/internals/06_t3-connect.md",
-    applyTo: "{infra/relay/src,apps/server/src/cloud}/**/*.ts",
-    instructions: "Hold relay and T3 Connect changes to docs/internals/06_t3-connect.md.",
-  },
-  {
     files: "SECURITY.md",
     applyTo:
-      "{apps/server/src/auth,apps/server/src/mcp,apps/server/src/guest,apps/server/src/assets,apps/server/src/peer,apps/server/src/cloud,apps/server/src/policy,infra/relay/src}/**/*.ts",
+      "{apps/server/src/auth,apps/server/src/mcp,apps/server/src/guest,apps/server/src/assets,apps/server/src/peer,apps/server/src/policy}/**/*.ts",
     instructions:
       "Check security boundary changes against the trust model and real-finding criteria in SECURITY.md.",
   },
   {
     files: "docs/internals/07_server-updates.md",
     applyTo:
-      "apps/server/src/{serviceLauncher.ts,desktopUpdate/**,cloud/serviceSelectionLock.ts,orchestration-v2/ProviderRuntimeRecoveryService.ts,orchestration-v2/RestartContinuation.ts}",
+      "apps/server/src/{serviceLauncher.ts,desktopUpdate/**,service/serviceSelectionLock.ts,orchestration-v2/ProviderRuntimeRecoveryService.ts,orchestration-v2/RestartContinuation.ts}",
     instructions:
       "Hold update, rollback, and restart-recovery changes to docs/internals/07_server-updates.md.",
   },
@@ -99,7 +94,7 @@ const DOC_RULES = [
   },
   {
     files: "docs/internals/15_testing.md",
-    applyTo: "{apps,packages,infra}/**/*.{ts,tsx}",
+    applyTo: "{apps,packages}/**/*.{ts,tsx}",
     path: "**/*.test.*",
     instructions:
       "Hold changed tests to the rules in docs/internals/15_testing.md. Request tests only as those rules allow.",
@@ -113,7 +108,7 @@ const DOC_RULES = [
   },
   {
     files: "docs/internals/17_scripts.md",
-    applyTo: "{scripts,apps/*/scripts,packages/*/scripts,infra/*/scripts}/**/*.{ts,mts}",
+    applyTo: "{scripts,apps/*/scripts,packages/*/scripts}/**/*.{ts,mts}",
     instructions:
       "Hold repository and package scripts to docs/internals/17_scripts.md: use Effect, effect/cli, NodeServices, and NodeRuntime.runMain rather than raw node:fs, node:child_process, or hand-rolled process.argv parsing.",
   },

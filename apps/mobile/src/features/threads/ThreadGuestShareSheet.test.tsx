@@ -45,6 +45,12 @@ vi.mock("../../state/threads", () => ({
   },
 }));
 vi.mock("../../state/use-atom-command", () => ({ useAtomCommand: () => created.command }));
+vi.mock("../../state/session", async () => {
+  const Option = await import("effect/Option");
+  return {
+    usePreparedConnection: () => Option.some({ httpBaseUrl: "https://host.tailnet.ts.net" }),
+  };
+});
 vi.mock("./ThreadGuestShareBar", () => ({
   useThreadGuestShare: () =>
     created.share !== undefined

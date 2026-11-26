@@ -6,7 +6,6 @@ node_modules
 *.tsbuildinfo
 apps/*/dist
 apps/*/dist-exe
-infra/*/dist
 .astro
 packages/*/dist
 .env
@@ -45,7 +44,6 @@ node_modules/
 .alchemy/
 *.log
 .env*
-!.env.example
 
 # pnpm content-addressable store; never belongs in the repo.
 .pnpm-store/

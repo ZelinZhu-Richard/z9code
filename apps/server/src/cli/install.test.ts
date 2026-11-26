@@ -9,7 +9,7 @@ import * as Path from "effect/Path";
 import * as TestClock from "effect/testing/TestClock";
 
 import packageJson from "../../package.json" with { type: "json" };
-import { posixLauncherScript } from "../cloud/pinnedRuntime.ts";
+import { posixLauncherScript } from "../service/pinnedRuntime.ts";
 import { installCli, isForegroundProcStat, isForegroundPs, offerCliInstall } from "./install.ts";
 
 const VERSION = packageJson.version;

@@ -12,6 +12,6 @@ export function canShareWithGuest(
   return (
     permitted &&
     config?.settings.guestSharingEnabled === true &&
-    managedCapabilityDenial(config.managedPolicy, "connect") === undefined
+    managedCapabilityDenial(config.managedPolicy, "remoteClients") === undefined
   );
 }
