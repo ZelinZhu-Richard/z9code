@@ -21,24 +21,36 @@ const EVENTS_TABLE = "orchestration_events";
 const KEPT_TABLES: ReadonlySet<string> = new Set([EVENTS_TABLE, "orchestration_v2_legacy_imports"]);
 /** Outbox rows are only removed once settled; a running effect still owns its row. */
 const OUTBOX_PREFIX = "orchestration_v2_effect_outbox";
-/** Free-text and link fields dropped from the tombstone; the rest is structural. */
-const SCRUBBED_THREAD_FIELDS = [
-  "$.branch",
-  "$.worktreePath",
-  "$.linkedPullRequest",
-  "$.pullRequests",
-  "$.branchPullRequest",
-  "$.issues",
-  "$.tags",
-  "$.opens",
-  "$.guestShare",
-  "$.delegatedFrom",
-  "$.workflowRun",
-  "$.limitRecovery",
-  "$.titleRegeneration",
-  "$.historyOrigin",
-  "$.linkOrigin",
+/**
+ * The tombstone keeps only these structural fields, so a free-text field added to threads later is
+ * dropped without anyone updating a list. Optional thread fields are omitted entirely.
+ */
+const TOMBSTONE_THREAD_FIELDS = [
+  "id",
+  "projectId",
+  "providerInstanceId",
+  "modelSelection",
+  "runtimeMode",
+  "interactionMode",
+  "lineage",
+  "forkedFrom",
+  "createdBy",
+  "creationSource",
+  "createdAt",
+  "updatedAt",
+  "archivedAt",
+  "settledOverride",
+  "settledAt",
+  "lastVisitedAt",
+  "deletedAt",
 ] as const;
+const TOMBSTONE_PAYLOAD_SQL = `json_object(${[
+  ...TOMBSTONE_THREAD_FIELDS.map((field) => `'${field}', payload_json -> '$.${field}'`),
+  "'title', 'Deleted thread'",
+  "'branch', NULL",
+  "'worktreePath', NULL",
+  "'activeProviderThreadId', NULL",
+].join(", ")})`;
 
 const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
 const placeholders = (count: number) => Array.from({ length: count }, () => "?").join(", ");
@@ -145,10 +157,7 @@ export const make = Effect.gen(function* () {
             `;
             yield* sql.unsafe(
               `UPDATE ${EVENTS_TABLE}
-               SET payload_json = json_set(
-                 json_remove(payload_json, ${SCRUBBED_THREAD_FIELDS.map((field) => `'${field}'`).join(", ")}),
-                 '$.title', 'Deleted thread', '$.branch', NULL, '$.worktreePath', NULL
-               ),
+               SET payload_json = ${TOMBSTONE_PAYLOAD_SQL},
                command_id = NULL, correlation_id = NULL
                WHERE sequence = ?`,
               [keep],

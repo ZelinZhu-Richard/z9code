@@ -1,8 +1,10 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import {
+  CommandId,
   EventId,
   MessageId,
+  OrchestrationV2AppThreadJson,
   type OrchestrationV2AppThread,
   type OrchestrationV2DomainEvent,
   ProjectId,
@@ -16,6 +18,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 
 import { ServerConfig, layerTest as layerServerConfig } from "../config.ts";
@@ -39,6 +42,9 @@ const layerTest = Layer.mergeAll(stores, EventSink.layer.pipe(Layer.provide(stor
 
 const providerInstanceId = ProviderInstanceId.make("codex");
 const SECRET = "SECRET-DO-NOT-KEEP-7f3a";
+const decodeThreadJson = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(OrchestrationV2AppThreadJson),
+);
 
 function makeThread(
   threadId: ThreadId,
@@ -271,6 +277,48 @@ it.effect("keeps every ancestor of a live fork, through deleted intermediate for
     yield* deleteThread(leaf, now);
     assert.equal(yield* purge.sweep(), 3);
     assert.deepEqual(yield* rowsContaining(SECRET), []);
+  }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect("keeps only structural fields in the tombstone, which still decodes as a thread", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const sink = yield* EventSink.EventSinkV2;
+    const now = yield* DateTime.now;
+    const thread = makeThread(ThreadId.make("thread:rewound"), now);
+    yield* writeThread(thread, now);
+    yield* sink.write({
+      events: [
+        {
+          id: EventId.make(`event:${thread.id}:deleted`),
+          type: "thread.deleted",
+          threadId: thread.id,
+          providerInstanceId,
+          occurredAt: now,
+          payload: {
+            ...thread,
+            rollbackUnrestored: {
+              requestId: CommandId.make("command:rewind"),
+              repositories: [`${SECRET}-repo`],
+            },
+            pinOrderKey: `${SECRET}-key`,
+            deletedAt: now,
+            updatedAt: now,
+          },
+        },
+      ],
+    });
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+    assert.deepEqual(yield* rowsContaining(SECRET), []);
+    const [tombstone] = yield* sql<{ readonly payload_json: string }>`
+      SELECT payload_json FROM orchestration_events WHERE stream_id = ${thread.id}
+    `;
+    const decoded = yield* decodeThreadJson(tombstone!.payload_json);
+    assert.equal(decoded.id, thread.id);
+    assert.equal(decoded.title, "Deleted thread");
+    assert.isNotNull(decoded.deletedAt);
   }).pipe(Effect.provide(layerTest)),
 );
 
