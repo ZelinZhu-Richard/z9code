@@ -2,7 +2,7 @@ import type { DesktopBridge, DesktopUpdateState } from "@z9code/contracts";
 
 const FALLBACK_TRIAGE_COMMAND = "npx z9 triage";
 const DOWNLOAD_URL = "https://github.com/ZelinZhu-Richard/z9code/releases";
-const ISSUE_URL = "https://github.com/pingdotgg/t3code/issues/new";
+const ISSUE_URL = "https://github.com/ZelinZhu-Richard/z9code/issues/new";
 const LAST_FAILURE_KEY = "z9code:boot-failed-at";
 const REPEAT_FAILURE_MS = 5 * 60_000;
 const MAX_CAUSES = 3;
