@@ -172,17 +172,17 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const command = yield* commandIn({ home, env });
       const theirs = path.join(home, ".local", "bin", "z9");
       yield* fs.makeDirectory(path.dirname(theirs), { recursive: true });
-      yield* fs.writeFileString(theirs, "npm's t3\n");
+      yield* fs.writeFileString(theirs, "npm's z9\n");
       yield* fs.makeDirectory(path.join(home, "bin"), { recursive: true });
       yield* fs.symlink(path.join(home, "gone"), path.join(home, "bin", "z9"));
 
       const error = yield* Effect.flip(command.install);
       expect(error.message).toContain("Another z9 command is already in");
       yield* command.uninstall;
-      expect(yield* fs.readFileString(theirs)).toBe("npm's t3\n");
+      expect(yield* fs.readFileString(theirs)).toBe("npm's z9\n");
       expect(yield* fs.readLink(path.join(home, "bin", "z9"))).toBe(path.join(home, "gone"));
 
-      // A fresh install beside someone else's t3 (even off PATH or a dangling link) adds no second
+      // A fresh install beside someone else's z9 (even off PATH or a dangling link) adds no second
       // z9 in ~/bin.
       for (const dangling of [false, true]) {
         const besideHome = yield* fs.makeTempDirectoryScoped();
@@ -190,18 +190,18 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
         yield* fs.makeDirectory(path.dirname(other), { recursive: true });
         yield* dangling
           ? fs.symlink(path.join(besideHome, "gone"), other)
-          : fs.writeFileString(other, "npm's t3\n");
+          : fs.writeFileString(other, "npm's z9\n");
         yield* (yield* commandIn({ home: besideHome })).installOnFirstLaunch;
         expect(yield* fs.exists(path.join(besideHome, "bin", "z9"))).toBe(false);
       }
 
       const launcher = path.join(home, ".z9code", "bin", "z9");
-      yield* fs.writeFileString(launcher, "npm's t3\n");
+      yield* fs.writeFileString(launcher, "npm's z9\n");
       env.PATH = path.dirname(launcher);
       expect(yield* command.state).toMatchObject({ onPath: false, shadowedBy: launcher });
       expect((yield* Effect.flip(command.install)).message).toContain("Could not set up");
       yield* command.uninstall;
-      expect(yield* fs.readFileString(launcher)).toBe("npm's t3\n");
+      expect(yield* fs.readFileString(launcher)).toBe("npm's z9\n");
     }),
   );
 
@@ -211,13 +211,13 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const home = yield* fs.makeTempDirectoryScoped();
-      const before = yield* commandIn({ home, baseDir: path.join(home, "old-t3"), env });
+      const before = yield* commandIn({ home, baseDir: path.join(home, "old-z9"), env });
       const link = (yield* before.install).installedPath;
 
-      const after = yield* commandIn({ home, baseDir: path.join(home, "new-t3"), env });
+      const after = yield* commandIn({ home, baseDir: path.join(home, "new-z9"), env });
       // A first launch leaves another home's command alone; only Install takes it over.
       yield* after.installOnFirstLaunch;
-      expect(yield* fs.readLink(link!)).toBe(path.join(home, "old-t3", "bin", "z9"));
+      expect(yield* fs.readLink(link!)).toBe(path.join(home, "old-z9", "bin", "z9"));
       // On PATH, it runs the other home's launcher. Settings offers Install (not Remove, and not
       // "another z9 runs first"), which updates that link in place.
       env.PATH = path.dirname(link!);
@@ -234,11 +234,11 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       yield* fs.writeFileString(path.join(shadow, "z9"), "#!/bin/sh\n", { mode: 0o755 });
       env.PATH = shadow;
       yield* Effect.flip(after.install);
-      expect(yield* fs.readLink(link!)).toBe(path.join(home, "old-t3", "bin", "z9"));
+      expect(yield* fs.readLink(link!)).toBe(path.join(home, "old-z9", "bin", "z9"));
       // Install takes it over, also with its folder first on PATH.
       env.PATH = path.dirname(link!);
       expect((yield* after.install).installedPath).toBe(link);
-      expect(yield* fs.readLink(link!)).toBe(path.join(home, "new-t3", "bin", "z9"));
+      expect(yield* fs.readLink(link!)).toBe(path.join(home, "new-z9", "bin", "z9"));
       env.PATH = "";
       yield* after.uninstall;
       expect(yield* fs.exists(path.join(home, ".local", "bin", "z9"))).toBe(false);
@@ -249,16 +249,16 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       expect((yield* after.install).installedPath).toBe(path.join(home, "bin", "z9"));
 
       // An old link of ours is updated where it is, not moved to a folder that may be off PATH.
-      yield* fs.writeFileString(path.join(home, "bin", "t3.staging"), "mine");
+      yield* fs.writeFileString(path.join(home, "bin", "z9.staging"), "mine");
       yield* fs.remove(path.join(home, "bin", "z9"));
-      yield* fs.symlink(path.join(home, "old-t3", "bin", "z9"), path.join(home, "bin", "z9"));
+      yield* fs.symlink(path.join(home, "old-z9", "bin", "z9"), path.join(home, "bin", "z9"));
       env.PATH = "";
       expect((yield* after.install).installedPath).toBe(path.join(home, "bin", "z9"));
       expect(yield* fs.readLink(path.join(home, "bin", "z9"))).toBe(
-        path.join(home, "new-t3", "bin", "z9"),
+        path.join(home, "new-z9", "bin", "z9"),
       );
       expect(yield* fs.exists(path.join(home, ".local", "bin", "z9"))).toBe(false);
-      expect(yield* fs.readFileString(path.join(home, "bin", "t3.staging"))).toBe("mine");
+      expect(yield* fs.readFileString(path.join(home, "bin", "z9.staging"))).toBe("mine");
     }),
   );
 
@@ -390,8 +390,8 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
 
       registry.failReads = false;
       const launcherDir = DesktopCliShim.launcherPath(
-        environmentFor(yield* Path.Path, { home, baseDir: `${home}/.t3`, platform: "win32" }),
-      ).replace(/[\\/]t3\.cmd$/, "");
+        environmentFor(yield* Path.Path, { home, baseDir: `${home}/.z9code`, platform: "win32" }),
+      ).replace(/[\\/]z9\.cmd$/, "");
       yield* command.install;
       expect(registry.path).toBe(`${userPath};${launcherDir}`);
       yield* command.uninstall;

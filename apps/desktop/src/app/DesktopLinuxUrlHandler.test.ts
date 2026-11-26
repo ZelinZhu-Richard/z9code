@@ -289,10 +289,10 @@ describe("DesktopLinuxUrlHandler", () => {
 
     return Effect.gen(function* () {
       yield* runRegister(recorded, {
-        environment: { desktopLauncherPath: Option.some("/opt/z9code/z9code") },
+        environment: { desktopLauncherPath: Option.some("/opt/z9code Alpha/z9code") },
       });
 
-      assert.include(recorded.files[0]?.content, 'Exec="/opt/z9code/z9code" %U');
+      assert.include(recorded.files[0]?.content, 'Exec="/opt/z9code Alpha/z9code" %U');
     });
   });
 

@@ -254,7 +254,7 @@ export const make = Effect.gen(function* () {
       ? Option.isSome(installed)
       : Option.isSome(first) && (yield* runsOurLauncher(first.value));
     // Only a folder missing from PATH, with no other z9 first: with one, the added folder (last
-    // on PATH) would still not run this t3.
+    // on PATH) would still not run this z9.
     const setup =
       onPath ||
       Option.isSome(shadowedBy) ||
@@ -442,7 +442,7 @@ export const make = Effect.gen(function* () {
           const present =
             (yield* exists(other)) || Option.isSome(yield* fs.readLink(other).pipe(Effect.option));
           if (present && (windows || !(yield* isOurLink(other)))) {
-            return yield* logInfo("left the z9 command to Settings beside another t3", { other });
+            return yield* logInfo("left the z9 command to Settings beside another z9", { other });
           }
         }
       }

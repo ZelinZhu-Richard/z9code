@@ -21,7 +21,7 @@ describe("promptLinkSearchFromParams", () => {
       value: {
         kind: "new",
         prompt: { text: "Fix the bug & add tests = done?", hiddenCharacters: 0 },
-        repository: { owner: "pingdotgg", name: "z9code" },
+        repository: { owner: "ZelinZhu-Richard", name: "z9code" },
         provider: "codex",
         model: null,
       },

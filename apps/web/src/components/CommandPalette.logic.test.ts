@@ -827,8 +827,8 @@ describe("filterPinnedBrowseEntries", () => {
 it.each([
   "#10839",
   "10839",
-  "pingdotgg/t3code#10839",
-  "https://github.com/pingdotgg/t3code/pull/10839",
+  "ZelinZhu-Richard/z9code#10839",
+  "https://github.com/ZelinZhu-Richard/z9code/pull/10839",
 ])("finds linked threads from PR query %s", (query) => {
   const items = buildThreadActionItems({
     threads: [
@@ -839,7 +839,7 @@ it.each([
             host: "github.com",
             repository: "ZelinZhu-Richard/z9code",
             number: 10839,
-            url: "https://github.com/pingdotgg/t3code/pull/10839",
+            url: "https://github.com/ZelinZhu-Richard/z9code/pull/10839",
             source: "manual",
             linkedAt: "2026-09-08T00:00:00Z",
             snapshot: null,

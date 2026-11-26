@@ -239,7 +239,7 @@ describe("DesktopPreReadyPlatform", () => {
               DesktopConfig.layerTest({
                 XDG_DATA_HOME: "/xdg",
                 APPIMAGE: "/Applications/current.AppImage",
-                Z9CODE_DESKTOP_LAUNCHER_PATH: " /opt/z9code/z9code ",
+                Z9CODE_DESKTOP_LAUNCHER_PATH: " /opt/z9code Alpha/z9code ",
               }),
             ),
           ),
@@ -247,7 +247,7 @@ describe("DesktopPreReadyPlatform", () => {
         const entry = writeFileSyncMock.mock.calls.find(
           ([path]) => path === "/xdg/applications/com.z9code.Z9Code.desktop",
         )?.[1];
-        assert.include(entry, 'Exec="/opt/z9code/z9code" %U');
+        assert.include(entry, 'Exec="/opt/z9code Alpha/z9code" %U');
       }),
     ).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())));
   });
