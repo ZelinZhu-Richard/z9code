@@ -833,7 +833,7 @@ it.layer(NodeServices.layer)("cli config resolution", (it) => {
             ConfigProvider.layer(
               ConfigProvider.fromEnv({
                 env: {
-                  Z9CODE_OTLP_HEADERS: "authorization=Bearer abc==, x-tenant=t3",
+                  Z9CODE_OTLP_HEADERS: "authorization=Bearer abc==, x-tenant=z9",
                   Z9CODE_OTLP_TRACES_URL: "http://collector.internal:4318",
                 },
               }),

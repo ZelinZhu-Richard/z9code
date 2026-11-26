@@ -6796,30 +6796,28 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       }),
     );
 
-    it.effect.each(["z9", "z9code"])(
-      "flattens a generated name when parent %s blocks it",
-      (parent) =>
-        Effect.gen(function* () {
-          const cwd = yield* makeTmpDir();
-          yield* initRepoWithCommit(cwd);
-          const driver = yield* GitVcsDriver.GitVcsDriver;
-          // A local `z9` branch is why launches start on the flat `t3-<hex>` temporary branch.
-          yield* git(cwd, ["branch", parent]);
-          yield* git(cwd, ["checkout", "-b", "t3-abcd1234"]);
-          yield* git(cwd, ["branch", "t3-fix-login"]);
+    it.effect.each(["z9", "Z9"])("flattens a generated name when parent %s blocks it", (parent) =>
+      Effect.gen(function* () {
+        const cwd = yield* makeTmpDir();
+        yield* initRepoWithCommit(cwd);
+        const driver = yield* GitVcsDriver.GitVcsDriver;
+        // A local `z9` branch is why launches start on the flat `z9-<hex>` temporary branch.
+        yield* git(cwd, ["branch", parent]);
+        yield* git(cwd, ["checkout", "-b", "z9-abcd1234"]);
+        yield* git(cwd, ["branch", "z9-fix-login"]);
 
-          const renamed = yield* driver.renameBranch({
-            cwd,
-            oldBranch: "t3-abcd1234",
-            newBranch: "z9/fix-login",
-          });
+        const renamed = yield* driver.renameBranch({
+          cwd,
+          oldBranch: "z9-abcd1234",
+          newBranch: "z9/fix-login",
+        });
 
-          assert.equal(renamed.branch, "t3-fix-login-1");
-          assert.equal(yield* git(cwd, ["branch", "--show-current"]), "t3-fix-login-1");
-        }),
+        assert.equal(renamed.branch, "z9-fix-login-1");
+        assert.equal(yield* git(cwd, ["branch", "--show-current"]), "z9-fix-login-1");
+      }),
     );
 
-    it.effect.each(["t3-fix-login/child", "z9code-Fix-Login/child", "z9code-FIX-LOGIN"])(
+    it.effect.each(["z9-fix-login/child", "Z9-Fix-Login/child", "Z9-FIX-LOGIN"])(
       "skips a flattened name blocked by %s",
       (occupied) =>
         Effect.gen(function* () {
@@ -6827,17 +6825,17 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           yield* initRepoWithCommit(cwd);
           const driver = yield* GitVcsDriver.GitVcsDriver;
           yield* git(cwd, ["branch", "z9"]);
-          yield* git(cwd, ["checkout", "-b", "t3-abcd1234"]);
+          yield* git(cwd, ["checkout", "-b", "z9-abcd1234"]);
           yield* git(cwd, ["branch", occupied]);
 
           const renamed = yield* driver.renameBranch({
             cwd,
-            oldBranch: "t3-abcd1234",
+            oldBranch: "z9-abcd1234",
             newBranch: "z9/fix-login",
           });
 
-          assert.equal(renamed.branch, "t3-fix-login-1");
-          assert.equal(yield* git(cwd, ["branch", "--show-current"]), "t3-fix-login-1");
+          assert.equal(renamed.branch, "z9-fix-login-1");
+          assert.equal(yield* git(cwd, ["branch", "--show-current"]), "z9-fix-login-1");
         }),
     );
 

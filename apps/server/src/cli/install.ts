@@ -30,7 +30,7 @@ export class CliInstallError extends Schema.TaggedError<CliInstallError>()("CliI
   }
 }
 
-/** `<z9code home>/runtime/versions/<version>/t3`: the layout the install scripts and npm launcher share. */
+/** `<z9code home>/runtime/versions/<version>/z9`: the layout the install scripts and npm launcher share. */
 const standaloneRuntime = Effect.gen(function* () {
   const path = yield* Path.Path;
   if (!(yield* HostProcess.IsExecutable)) return Option.none();
@@ -199,7 +199,7 @@ export const installCli = Effect.fn("cli.install.install")(function* () {
 const reportInstalled = Effect.fn("cli.install.report")(function* (
   installed: Effect.Success<ReturnType<typeof installCli>>,
 ) {
-  yield* Console.log(`Installed t3 ${packageJson.version} at ${installed.link}.`);
+  yield* Console.log(`Installed z9 ${packageJson.version} at ${installed.link}.`);
   if (installed.shadowedBy !== undefined) {
     return yield* Console.log(
       `Another z9 at ${installed.shadowedBy} runs first, so run ${installed.link} to use this one.`,
@@ -207,7 +207,7 @@ const reportInstalled = Effect.fn("cli.install.report")(function* (
   }
   if (installed.onPath) return yield* Console.log("Run `z9` to get started.");
   if (installed.pathCommand === undefined) {
-    return yield* Console.log(`Add ${installed.binDir} to your PATH, then run \`t3\`.`);
+    return yield* Console.log(`Add ${installed.binDir} to your PATH, then run \`z9\`.`);
   }
   if ((yield* HostProcess.Platform) === "win32") {
     yield* Console.log(
@@ -367,7 +367,7 @@ export const offerCliInstall = Effect.fn("cli.install.offer")(function* <E, R, E
   yield* installCli().pipe(
     Effect.flatMap(reportInstalled),
     Effect.catch((error) =>
-      Effect.andThen(saveDecline, Console.error(`Could not install t3: ${error.message}`)),
+      Effect.andThen(saveDecline, Console.error(`Could not install z9: ${error.message}`)),
     ),
   );
   yield* Console.log("");

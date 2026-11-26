@@ -23,7 +23,7 @@ const setup = Effect.gen(function* () {
   const executable = path.join(runtimeDir, "versions", VERSION, "z9");
   yield* fs.makeDirectory(path.dirname(executable), { recursive: true });
   yield* fs.writeFileString(executable, "");
-  const npmPackage = path.join(root, ".npm/_npx/abc/node_modules/t3");
+  const npmPackage = path.join(root, ".npm/_npx/abc/node_modules/z9");
   yield* fs.makeDirectory(path.join(npmPackage, "bin"), { recursive: true });
   yield* fs.writeFileString(
     path.join(npmPackage, "package.json"),
@@ -48,13 +48,13 @@ const setup = Effect.gen(function* () {
 });
 
 it.layer(NodeServices.layer)("z9 install", (it) => {
-  it.effect("installs the running runtime, records it, and never replaces another t3", () =>
+  it.effect("installs the running runtime, records it, and never replaces another z9", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const { root, runtimeDir, executable, link, provide } = yield* setup;
 
-      const older = path.join(runtimeDir, "versions/0.0.1/t3");
+      const older = path.join(runtimeDir, "versions/0.0.1/z9");
       yield* fs.makeDirectory(path.dirname(link), { recursive: true });
       yield* fs.symlink(older, link);
       const installed = yield* provide(installCli());
@@ -108,7 +108,7 @@ it.layer(NodeServices.layer)("z9 install", (it) => {
       assert.isTrue(directory.onPath);
       assert.isUndefined(directory.shadowedBy);
       const recorded = yield* fs.readFileString(path.join(runtimeDir, "launchers"));
-      assert.equal(recorded, `\n${yield* fs.realPath(path.join(root, "bin"))}/t3\n`);
+      assert.equal(recorded, `\n${yield* fs.realPath(path.join(root, "bin"))}/z9\n`);
 
       yield* fs.remove(link);
       yield* fs.writeFileString(link, "#!/bin/sh\n");
@@ -116,7 +116,7 @@ it.layer(NodeServices.layer)("z9 install", (it) => {
       assert.include(error.message, "Another z9 is already at");
       assert.equal(yield* fs.readFileString(link), "#!/bin/sh\n");
 
-      // Only `<version>/t3` is ours, not another program inside a version.
+      // Only `<version>/z9` is ours, not another program inside a version.
       yield* fs.remove(link);
       yield* fs.symlink(path.join(runtimeDir, "versions/0.0.1/node"), link);
       const sibling = yield* provide(installCli()).pipe(Effect.flip);
@@ -181,7 +181,7 @@ it.layer(NodeServices.layer)("z9 install", (it) => {
         installCli().pipe(
           Effect.provideService(
             HostProcess.ExecutablePath,
-            path.join(runtimeDir, "versions/100%/t3"),
+            path.join(runtimeDir, "versions/100%/z9"),
           ),
         ),
       ).pipe(Effect.flip);
@@ -238,7 +238,7 @@ it.layer(NodeServices.layer)("z9 install", (it) => {
       assert.equal(asked, 0);
       assert.isFalse(yield* fs.exists(link));
 
-      // A directory or non-executable file named `z9` on PATH is not an installed t3.
+      // A directory or non-executable file named `z9` on PATH is not an installed z9.
       const dirBin = path.join(root, "dir-bin");
       yield* fs.makeDirectory(path.join(dirBin, "z9"), { recursive: true });
       const nonExecBin = path.join(root, "non-exec-bin");
@@ -250,7 +250,7 @@ it.layer(NodeServices.layer)("z9 install", (it) => {
       assert.equal(asked, 2);
       asked = 0;
 
-      // A runner's own .bin on PATH, even found through a bare launcher record, is not an installed t3.
+      // A runner's own .bin on PATH, even found through a bare launcher record, is not an installed z9.
       const npxBin = path.join(npmPackage, "../.bin");
       const pnpmBin = path.join(root, ".cache/pnpm/dlx/abc/node_modules/.bin");
       for (const bin of [npxBin, pnpmBin]) {
@@ -258,7 +258,7 @@ it.layer(NodeServices.layer)("z9 install", (it) => {
         yield* fs.writeFileString(path.join(bin, "z9"), "");
         yield* fs.chmod(path.join(bin, "z9"), 0o755);
       }
-      yield* fs.writeFileString(path.join(runtimeDir, "launchers"), "t3\n");
+      yield* fs.writeFileString(path.join(runtimeDir, "launchers"), "z9\n");
       assert.isFalse(yield* offer(undefined, { env: { PATH: `${npxBin}:${pnpmBin}` } }));
       assert.equal(asked, 1);
       assert.isFalse(yield* fs.exists(path.join(runtimeDir, "install-prompt-declined")));

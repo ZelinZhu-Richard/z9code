@@ -27,8 +27,8 @@ the server process is currently running, and the exact paths for state, logs, an
 the database.
 
 Its triage CLI version (called "Installed version" in older context files) is only
-the version of the \`t3\` that ran \`z9 triage\`. It is often not the build the bug
-happened on: \`npx z9 triage\` runs whatever \`t3\` npm resolves, while the user may
+the version of the \`z9\` that ran \`z9 triage\`. It is often not the build the bug
+happened on: \`npx z9 triage\` runs whatever \`z9\` npm resolves, while the user may
 run the desktop app, the background service, or a nightly. The server process line
 gives the local server's version when the server recorded one.
 
@@ -240,7 +240,7 @@ const entryLines = (entry: TriageEntry) =>
   entry.kind === "cli"
     ? {
         generatedBy: "`z9 triage`",
-        before: `- Triage CLI version: ${entry.cliVersion} (the \`t3\` that ran this command; the bug may have happened on another build)`,
+        before: `- Triage CLI version: ${entry.cliVersion} (the \`z9\` that ran this command; the bug may have happened on another build)`,
         after: `- CLI launched as: ${entry.launchedAs}`,
       }
     : {

@@ -3149,7 +3149,7 @@ describe("orchestration v2 provider switching", () => {
           holdFirstTurn: started,
           heldRunningToolCall: {
             id: toolCallId,
-            toolName: "mcp__z9code__t3_worktree_handoff",
+            toolName: "mcp__z9code__z9_worktree_handoff",
           },
           backgroundTasksEndWithProcess: true,
         }),

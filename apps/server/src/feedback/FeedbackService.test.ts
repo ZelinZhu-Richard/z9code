@@ -77,7 +77,7 @@ const turnItems = [
   item(5, { type: "assistant_message", text: "Done in /srv/checkouts/acme-app-7." }),
   item(6, {
     type: "dynamic_tool",
-    toolName: "mcp__z9code__t3_thread_read",
+    toolName: "mcp__z9code__z9_thread_read",
     status: "failed",
     startedAt: at(0),
     completedAt: at(1_500),
@@ -100,11 +100,11 @@ const turnItems = [
     ),
   ),
   item(6, { type: "dynamic_tool", toolName: "z9code.z9_thread_read", status: "running" }),
-  item(5, { type: "dynamic_tool", toolName: "mcp__z9code__t3_feedback", status: "running" }),
-  item(6, { type: "dynamic_tool", toolName: "mcp__z9code__t3_feedback", status: "failed" }),
+  item(5, { type: "dynamic_tool", toolName: "mcp__z9code__z9_feedback", status: "running" }),
+  item(6, { type: "dynamic_tool", toolName: "mcp__z9code__z9_feedback", status: "failed" }),
   // The call making the card in the active run, as Claude names it and as OpenCode 2 does.
-  item(6, { type: "dynamic_tool", toolName: "mcp__z9code__t3_feedback", status: "running" }),
-  item(6, { type: "dynamic_tool", toolName: "z9code-thread_1_t3_feedback", status: "running" }),
+  item(6, { type: "dynamic_tool", toolName: "mcp__z9code__z9_feedback", status: "running" }),
+  item(6, { type: "dynamic_tool", toolName: "z9code-thread_1_z9_feedback", status: "running" }),
 ];
 
 it("says so when the report asks for more turns than a trace can hold", () => {
@@ -407,7 +407,7 @@ it.effect("scrubs the caller's private values and keeps every report on this mac
         cards,
         {
           kind: "other",
-          subject: "mcp__z9code__t3_thread_read",
+          subject: "mcp__z9code__z9_thread_read",
           expected: `Reading /srv/checkouts/acme-app-7 on acme/secret-launch as ${NodeOS.userInfo().username}`,
           actual:
             "git@github.com:acme/payments.git in Acme Payments with sk-proj-abcdefghij1234567890",
@@ -439,9 +439,9 @@ it.effect("scrubs the caller's private values and keeps every report on this mac
       );
       expect(unprompted).toMatchObject({ subject: "z9 thread show", trace: null, sent: false });
       yield* feedback.submit({ ...input, subject: " general " }, { source: "cli" });
-      yield* feedback.submit({ ...input, subject: "mcp__z9_code__t3_thread_read" }, fromThread);
+      yield* feedback.submit({ ...input, subject: "mcp__z9_code__z9_thread_read" }, fromThread);
       // Codex's second server, for z9code tools kept out of Code Mode, in both of its forms.
-      for (const subject of ["z9code-direct.z9_thread_read", "mcp__z9code-direct__t3_thread_read"])
+      for (const subject of ["z9code-direct.z9_thread_read", "mcp__z9code-direct__z9_thread_read"])
         yield* feedback.submit({ ...input, subject }, { source: "cli" });
       expect(
         (yield* listFeedbackReports).map(({ subject, userRequested, sent, threadId, source }) => ({
@@ -485,7 +485,7 @@ it.effect(
         const limited = Effect.flip(feedback.submit(input, fromThread)).pipe(
           Effect.map((error) => error._tag),
         );
-        for (const subject of ["", "acme payments roadmap", "mcp__other__t3_thread_read"]) {
+        for (const subject of ["", "acme payments roadmap", "mcp__other__z9_thread_read"]) {
           const error = yield* Effect.flip(feedback.submit({ ...input, subject }, fromThread));
           expect(error.message).toBe(
             "Set subject to the exact z9code tool name, the z9 command, or `general`.",

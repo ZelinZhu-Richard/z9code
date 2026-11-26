@@ -1715,7 +1715,7 @@ it.effect("SQL shells flag only an active turn blocked solely on z9code thread w
       id: TurnItemId.make("item:thread-wait:active"),
       runId: run.id,
       type: "dynamic_tool" as const,
-      toolName: "mcp__z9_code__t3_thread_wait",
+      toolName: "mcp__z9_code__z9_thread_wait",
       input: { threadId: "child-thread" },
       status: "running" as const,
     };
@@ -11973,9 +11973,9 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
       });
       const link = {
         host: "github.com",
-        repository: "ZelinZhu-Richard/z9code",
+        repository: "zelinzhu-richard/z9code",
         number: 7,
-        url: "https://github.com/pingdotgg/t3code/pull/7",
+        url: "https://github.com/zelinzhu-richard/z9code/pull/7",
         source: "agent" as const,
         linkedAt: DateTime.formatIso(at),
         snapshot: null,
@@ -12019,7 +12019,7 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
       ]);
       assert.deepEqual((yield* store.getThreadShell(threadId))?.pendingBackgroundTasks, [
         {
-          taskId: "pull-request-watch:github.com/pingdotgg/t3code#7",
+          taskId: "pull-request-watch:github.com/zelinzhu-richard/z9code#7",
           description: "Watching pull request #7",
           kind: "monitor",
           awaited: true,

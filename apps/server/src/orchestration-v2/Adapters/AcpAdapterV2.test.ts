@@ -5209,7 +5209,7 @@ describe("AcpAdapterV2", () => {
         patterns: ["z9 code"],
         results: [
           { url: "https://github.com/ZelinZhu-Richard/z9code" },
-          { url: "https://github.com/ZelinZhu-Richard/z9code" },
+          { url: "https://github.com/ZelinZhu-Richard/z9code/releases" },
         ],
       });
       assert.deepEqual(webItem("structured-web-search", "completed"), {

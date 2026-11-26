@@ -109,7 +109,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("z9 uninstall com
       label: "names another home's service it leaves installed",
       otherFromRead: 1,
       removed: [],
-      output: "--base-dir '/home/me/.t3'",
+      output: "--base-dir '/home/me/.z9code'",
     },
     {
       label: "leaves a service that serves another home by the time it is removed",
@@ -131,8 +131,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NetService.layer))("z9 uninstall com
               supported: true,
               installed: true,
               current: true,
-              installedBaseDir: "/home/me/.t3",
-              ...(++reads >= input.otherFromRead ? { otherBaseDir: "/home/me/.t3" } : {}),
+              installedBaseDir: "/home/me/.z9code",
+              ...(++reads >= input.otherFromRead ? { otherBaseDir: "/home/me/.z9code" } : {}),
               unitPath: "/home/me/.config/systemd/user/z9code.service",
               logPath: "/home/me/.z9code/userdata/logs/boot-service.log",
             })),
@@ -179,9 +179,9 @@ it.layer(NodeServices.layer)("z9 uninstall launcher", (it) => {
         .makeTempDirectoryScoped({ prefix: "t3-uninstall-" })
         .pipe(Effect.flatMap(fs.realPath));
       const versionsDir = path.join(root, "runtime/versions");
-      const exe = path.join(versionsDir, "1.0.0/t3");
-      const otherExe = path.join(root, "other/runtime/versions/1.0.0/t3");
-      const copy = path.join(root, "copy/t3");
+      const exe = path.join(versionsDir, "1.0.0/z9");
+      const otherExe = path.join(root, "other/runtime/versions/1.0.0/z9");
+      const copy = path.join(root, "copy/z9");
       for (const file of [exe, otherExe, copy]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
         yield* fs.writeFileString(file, "");
@@ -233,16 +233,16 @@ it.layer(NodeServices.layer)("z9 uninstall launcher", (it) => {
       const scriptThroughAlias = path.join(scriptDir, "t3-alias");
       const prunedScript = path.join(scriptDir, "t3-pruned");
       yield* fs.symlink(root, path.join(root, "alias"));
-      yield* fs.symlink(path.join(root, "alias/runtime/versions/1.0.0/t3"), throughAlias);
-      yield* fs.symlink(path.join(versionsDir, "0.9.0/t3"), pruned);
+      yield* fs.symlink(path.join(root, "alias/runtime/versions/1.0.0/z9"), throughAlias);
+      yield* fs.symlink(path.join(versionsDir, "0.9.0/z9"), pruned);
       yield* fs.writeFileString(
         scriptThroughAlias,
-        posixLauncherScript(path.join(root, "alias/runtime/versions/1.0.0/t3")),
+        posixLauncherScript(path.join(root, "alias/runtime/versions/1.0.0/z9")),
         { mode: 0o755 },
       );
       yield* fs.writeFileString(
         prunedScript,
-        posixLauncherScript(path.join(versionsDir, "0.9.0/t3")),
+        posixLauncherScript(path.join(versionsDir, "0.9.0/z9")),
         { mode: 0o755 },
       );
       // Another program inside a version is not a launcher.

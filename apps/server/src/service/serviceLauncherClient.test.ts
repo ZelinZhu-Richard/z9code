@@ -337,8 +337,8 @@ it.layer(NodeServices.layer)("self-update launchers", (it) => {
       const baseDir = path.join(root, ".z9code");
       const installed = path.join(root, ".local/bin/z9");
       const onPath = path.join(root, "bin/z9");
-      const foreign = path.join(root, "other-home/runtime/versions/1.0.0/t3");
-      const target = path.join(baseDir, "runtime/versions/2.0.0/t3");
+      const foreign = path.join(root, "other-home/runtime/versions/1.0.0/z9");
+      const target = path.join(baseDir, "runtime/versions/2.0.0/z9");
       for (const file of [installed, foreign, target]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
         yield* fs.writeFileString(file, "user-owned file");

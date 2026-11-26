@@ -1159,7 +1159,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
           {
             path: repo,
             git: {
-              remoteKey: "github.com/ZelinZhu-Richard/z9code",
+              remoteKey: "github.com/zelinzhu-richard/z9code",
               repository: "ZelinZhu-Richard/z9code",
             },
             threadCount: 2,
@@ -1223,7 +1223,7 @@ it.layer(NodeServices.layer)("AgentSessionScanner", (it) => {
           const input = { claudeHomePath, codexHomePath, configBaseDir };
           const result = yield* runScan(input);
           const git = {
-            remoteKey: "github.com/ZelinZhu-Richard/z9code",
+            remoteKey: "github.com/zelinzhu-richard/z9code",
             repository: "ZelinZhu-Richard/z9code",
           };
           expect(

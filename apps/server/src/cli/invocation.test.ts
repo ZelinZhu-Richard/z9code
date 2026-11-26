@@ -60,7 +60,7 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
 
   it.effect("keeps the arguments, so root runs setup on the same z9code home", () =>
     Effect.gen(function* () {
-      const args = ["--base-dir", "/srv/t3 home"];
+      const args = ["--base-dir", "/srv/z9 home"];
       expect(
         yield* rootCommand({
           node: "/home/theo/.local/node/bin/node",
@@ -68,10 +68,10 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
           path: yield* pathWithT3,
           args,
         }),
-      ).toBe(`sudo env "PATH=$PATH" z9 browser setup --base-dir '/srv/t3 home'`);
+      ).toBe(`sudo env "PATH=$PATH" z9 browser setup --base-dir '/srv/z9 home'`);
       expect(
-        yield* rootCommand({ node: "/opt/t3/t3", entry: "/opt/t3/t3", executable: true, args }),
-      ).toBe("sudo /opt/t3/t3 browser setup --base-dir '/srv/t3 home'");
+        yield* rootCommand({ node: "/opt/z9/z9", entry: "/opt/z9/z9", executable: true, args }),
+      ).toBe("sudo /opt/z9/z9 browser setup --base-dir '/srv/z9 home'");
     }),
   );
 
@@ -105,21 +105,21 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
 
       expect(
         yield* rootCommand({
-          node: "/opt/t3/t3",
-          entry: "/opt/t3/t3",
+          node: "/opt/z9/z9",
+          entry: "/opt/z9/z9",
           executable: true,
         }),
-      ).toBe("sudo /opt/t3/t3 browser setup");
+      ).toBe("sudo /opt/z9/z9 browser setup");
 
       // A standalone executable started directly (systemd, no launcher) is still this install.
       expect(
         yield* rootCommand({
-          node: "/opt/t3/t3",
-          entry: "/opt/t3/t3",
+          node: "/opt/z9/z9",
+          entry: "/opt/z9/z9",
           executable: true,
           path: yield* pathWithT3,
         }),
-      ).toBe("sudo /opt/t3/t3 browser setup");
+      ).toBe("sudo /opt/z9/z9 browser setup");
 
       // A global npm launcher runs the downloaded executable; PATH's `z9` is that launcher.
       const prefix = path.join(home, "npm");
@@ -134,8 +134,8 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
       yield* fs.symlink(npmLauncher, path.join(prefix, "bin/z9"));
       expect(
         yield* rootCommand({
-          node: "/home/theo/.z9code/runtime/versions/1.0.0/t3",
-          entry: "/home/theo/.z9code/runtime/versions/1.0.0/t3",
+          node: "/home/theo/.z9code/runtime/versions/1.0.0/z9",
+          entry: "/home/theo/.z9code/runtime/versions/1.0.0/z9",
           executable: true,
           path: path.join(prefix, "bin"),
           env: { Z9CODE_NPM_LAUNCHER_PATH: npmLauncher },
@@ -158,7 +158,7 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
       const shim = path.join(home, "z9.cmd");
       yield* fs.writeFileString(shim, "@echo off\r\n");
       const hostCommand = (platform: NodeJS.Platform, env: Record<string, string>) =>
-        resolveHostCliCommand("doctor", ["--base-dir", "C:\\Users\\Jane Doe\\.t3"]).pipe(
+        resolveHostCliCommand("doctor", ["--base-dir", "C:\\Users\\Jane Doe\\.z9code"]).pipe(
           Effect.provideService(HostProcess.ExecutablePath, "C:\\Program Files\\z9code\\z9.exe"),
           Effect.provideService(HostProcess.Arguments, [
             "C:\\Program Files\\z9code\\z9.exe",
@@ -169,10 +169,10 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
           Effect.provideService(HostProcess.Environment, { PATH: "", ...env }),
         );
       expect((yield* hostCommand("win32", { Z9CODE_CLI_PATH: shim })).command).toBe(
-        `& "${shim}" doctor "--base-dir" "C:\\Users\\Jane Doe\\.t3"`,
+        `& "${shim}" doctor "--base-dir" "C:\\Users\\Jane Doe\\.z9code"`,
       );
       expect((yield* hostCommand("win32", {})).command).toBe(
-        'z9 doctor "--base-dir" "C:\\Users\\Jane Doe\\.t3"',
+        'z9 doctor "--base-dir" "C:\\Users\\Jane Doe\\.z9code"',
       );
       expect(
         (yield* resolveHostCliCommand("doctor", [
@@ -187,7 +187,7 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
         )).command,
       ).toBe('z9 doctor "--base-dir" "C:\\z9code\\\u201C\u201CArchive\u201D\u201D"');
       expect((yield* hostCommand("linux", { Z9CODE_CLI_PATH: shim })).command).toMatch(
-        / doctor --base-dir 'C:\\Users\\Jane Doe\\\.t3'$/,
+        / doctor --base-dir 'C:\\Users\\Jane Doe\\\.z9code'$/,
       );
     }),
   );
@@ -205,7 +205,7 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
             Effect.provideService(HostProcess.ExecutablePath, "/usr/bin/node"),
             Effect.provideService(HostProcess.Arguments, [
               "/usr/bin/node",
-              "/opt/t3/lib/node_modules/z9/dist/bin.mjs",
+              "/opt/z9/lib/node_modules/z9/dist/bin.mjs",
             ]),
             Effect.provideService(HostProcess.IsExecutable, false),
             Effect.provideService(HostProcess.Platform, "linux"),
@@ -233,14 +233,14 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
-      const executable = path.join(root, ".z9code/runtime/versions/1.0.0/t3");
+      const executable = path.join(root, ".z9code/runtime/versions/1.0.0/z9");
       yield* fs.makeDirectory(path.dirname(executable), { recursive: true });
       yield* fs.writeFileString(executable, "");
       for (const [relative, kind] of [
         ["npm/_npx/hash/node_modules/z9/dist/bin.mjs", "npx"],
         ["npm/_npx/hash/node_modules/z9/bin/z9.mjs", "npx"],
         ["pnpm/dlx/hash/node_modules/z9/dist/bin.mjs", "pnpm-dlx"],
-        [".bun/install/cache/t3/dist/bin.mjs", "bunx"],
+        [".bun/install/cache/z9/dist/bin.mjs", "bunx"],
       ] as const) {
         const entry = path.join(root, relative);
         yield* fs.makeDirectory(path.dirname(entry), { recursive: true });
@@ -270,7 +270,7 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
       const prefix = path.join(root, "bunx-tools");
-      const packageRoot = path.join(prefix, "lib/node_modules/t3");
+      const packageRoot = path.join(prefix, "lib/node_modules/z9");
       const entry = path.join(packageRoot, "dist/bin.mjs");
       const globalBin = path.join(prefix, "bin/z9");
       yield* fs.makeDirectory(path.dirname(entry), { recursive: true });
@@ -301,9 +301,9 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
       const prefix = path.join(root, "bunx-tools");
-      const packageRoot = path.join(prefix, "lib/node_modules/t3");
+      const packageRoot = path.join(prefix, "lib/node_modules/z9");
       const launcher = path.join(packageRoot, "bin/z9.mjs");
-      const executable = path.join(root, ".z9code/runtime/versions/1.0.0/t3");
+      const executable = path.join(root, ".z9code/runtime/versions/1.0.0/z9");
       yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
       yield* fs.makeDirectory(path.dirname(executable), { recursive: true });
       yield* fs.makeDirectory(path.join(prefix, "bin"));
@@ -335,20 +335,20 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
-      // The install script's launcher names ~/.t3, which here links to a home elsewhere.
-      const executable = path.join(root, "data/t3/runtime/versions/1.0.0/t3");
+      // The install script's launcher names ~/.z9code, which here links to a home elsewhere.
+      const executable = path.join(root, "data/z9/runtime/versions/1.0.0/z9");
       const launcher = path.join(root, "bin/z9");
       const copy = path.join(root, "bin/z9-copy");
       yield* fs.makeDirectory(path.dirname(executable), { recursive: true });
       yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
       yield* fs.writeFileString(executable, "", { mode: 0o755 });
       yield* fs.writeFileString(copy, "", { mode: 0o755 });
-      yield* fs.symlink(path.join(root, "data/t3"), path.join(root, ".z9code"));
-      yield* fs.symlink(path.join(root, ".z9code/runtime/versions/1.0.0/t3"), launcher);
-      // Earlier PATH entries hold a directory and a non-executable file named t3.
-      yield* fs.makeDirectory(path.join(root, "shadow-dir/t3"), { recursive: true });
+      yield* fs.symlink(path.join(root, "data/z9"), path.join(root, ".z9code"));
+      yield* fs.symlink(path.join(root, ".z9code/runtime/versions/1.0.0/z9"), launcher);
+      // Earlier PATH entries hold a directory and a non-executable file named z9.
+      yield* fs.makeDirectory(path.join(root, "shadow-dir/z9"), { recursive: true });
       yield* fs.makeDirectory(path.join(root, "shadow-file"));
-      yield* fs.writeFileString(path.join(root, "shadow-file/t3"), "");
+      yield* fs.writeFileString(path.join(root, "shadow-file/z9"), "");
       const resolve = (invokedAs: string, PATH = "shadow-dir:shadow-file:bin") =>
         resolveServerInstallation.pipe(
           Effect.provideService(HostProcess.ExecutablePath, executable),
@@ -370,7 +370,7 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       yield* fs.remove(launcher);
       yield* fs.writeFileString(
         launcher,
-        posixLauncherScript(path.join(root, ".z9code/runtime/versions/1.0.0/t3")),
+        posixLauncherScript(path.join(root, ".z9code/runtime/versions/1.0.0/z9")),
         { mode: 0o755 },
       );
       expect(yield* resolve(executable, path.join(root, "bin"))).toEqual({
@@ -389,7 +389,7 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
       for (const relative of [
         "project/node_modules/z9/dist/bin.mjs",
         "project/apps/server/dist/bin.mjs",
-        ".z9code/runtime/0.0.45/t3",
+        ".z9code/runtime/0.0.45/z9",
         "missing/dist/bin.mjs",
       ]) {
         const entry = path.join(root, relative);

@@ -1318,7 +1318,7 @@ const program = Effect.gen(function* () {
                 sources: [
                   { type: "url", url: "https://github.com/ZelinZhu-Richard/z9code" },
                   { type: "url", url: "https://github.com/ZelinZhu-Richard/z9code" },
-                  { type: "url", url: "https://github.com/ZelinZhu-Richard/z9code" },
+                  { type: "url", url: "https://github.com/ZelinZhu-Richard/z9code/releases" },
                 ],
               },
               id: "grok-web-search",

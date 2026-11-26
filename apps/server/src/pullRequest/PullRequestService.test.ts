@@ -638,7 +638,7 @@ it.effect("says where each repository carries on, and from nothing it has run ou
     const result = yield* service.list({ state: "open" });
 
     assert.deepStrictEqual(result.nextCursors, {
-      "github.com ZelinZhu-Richard/z9code": "2026-07-02T00:00:00Z|1|1",
+      "github.com zelinzhu-richard/z9code": "2026-07-02T00:00:00Z|1|1",
     });
   }),
 );
@@ -766,7 +766,7 @@ it.effect("keeps a row already sent at the boundary instant from arriving twice"
 
     const result = yield* service.list({
       state: "open",
-      cursors: { "github.com ZelinZhu-Richard/z9code": "2026-07-02T00:00:00Z|1|7" },
+      cursors: { "github.com zelinzhu-richard/z9code": "2026-07-02T00:00:00Z|1|7" },
     });
 
     assert.deepStrictEqual(
@@ -774,7 +774,7 @@ it.effect("keeps a row already sent at the boundary instant from arriving twice"
       [8, 9],
     );
     assert.deepStrictEqual(result.nextCursors, {
-      "github.com ZelinZhu-Richard/z9code": "2026-07-01T00:00:00Z|3|9",
+      "github.com zelinzhu-richard/z9code": "2026-07-01T00:00:00Z|3|9",
     });
   }),
 );
@@ -807,7 +807,7 @@ it.effect("keeps the earlier exclusions when a slice ends on the instant it bega
 
     const result = yield* service.list({
       state: "open",
-      cursors: { "github.com ZelinZhu-Richard/z9code": "2026-07-02T00:00:00Z|1|6" },
+      cursors: { "github.com zelinzhu-richard/z9code": "2026-07-02T00:00:00Z|1|6" },
     });
 
     assert.deepStrictEqual(
@@ -815,7 +815,7 @@ it.effect("keeps the earlier exclusions when a slice ends on the instant it bega
       [7, 8],
     );
     assert.deepStrictEqual(result.nextCursors, {
-      "github.com ZelinZhu-Richard/z9code": "2026-07-02T00:00:00Z|3|6,7,8",
+      "github.com zelinzhu-richard/z9code": "2026-07-02T00:00:00Z|3|6,7,8",
     });
   }),
 );
@@ -1127,7 +1127,7 @@ it.effect("reads a repository once when several worktrees share it", () =>
           id: "p2",
           title: "z9code worktree",
           workspaceRoot: "/b",
-          repository: "PingDotGG/Z9Code",
+          repository: "ZelinZhu-Richard/Z9Code",
         }),
       ],
       providers: [
@@ -3306,7 +3306,7 @@ it.effect("carries every repository of a slice on from the oldest row in it", ()
 
     assert.isTrue(result.truncated);
     assert.deepStrictEqual(result.nextCursors, {
-      "github.com ZelinZhu-Richard/z9code": "2026-07-02T00:00:00Z|1|2",
+      "github.com zelinzhu-richard/z9code": "2026-07-02T00:00:00Z|1|2",
       "github.com acme/web": "2026-07-02T00:00:00Z|2|3",
     });
   }),

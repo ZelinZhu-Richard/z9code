@@ -206,8 +206,8 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "t3-update-" });
-      const oldExe = path.join(root, "runtime/versions/1.0.0/t3");
-      const newExe = path.join(root, "runtime/versions/2.0.0/t3");
+      const oldExe = path.join(root, "runtime/versions/1.0.0/z9");
+      const newExe = path.join(root, "runtime/versions/2.0.0/z9");
       const launcher = path.join(root, "bin/z9");
       for (const file of [oldExe, newExe]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
@@ -275,7 +275,7 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
           });
         }
         const launcher = path.join(root, "bin/z9");
-        const alias = path.join(root, "alias/t3");
+        const alias = path.join(root, "alias/z9");
         yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
         yield* fs.makeDirectory(path.dirname(alias), { recursive: true });
         yield* fs.writeFileString(launcher, posixLauncherScript(entry("1.0.0")), { mode: 0o755 });
@@ -301,7 +301,7 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
 
         // Like the shell, a relative PATH entry resolves from the working directory, and a
         // script nobody can execute is passed over.
-        const unrunnable = path.join(root, "unrunnable/t3");
+        const unrunnable = path.join(root, "unrunnable/z9");
         yield* fs.makeDirectory(path.dirname(unrunnable), { recursive: true });
         yield* fs.writeFileString(unrunnable, posixLauncherScript(entry("2.0.0")), { mode: 0o644 });
         yield* fs.writeFileString(launcher, posixLauncherScript(entry("2.0.0")), { mode: 0o755 });
@@ -329,12 +329,12 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
   it.effect.each([
     { name: "no launcher records", recorded: undefined },
     { name: "an empty launcher record", recorded: "" },
-    { name: "whole launcher records", recorded: "/opt/t3\n" },
+    { name: "whole launcher records", recorded: "/opt/z9\n" },
     { name: "Windows launcher records", recorded: "C:\\z9.cmd\r\n" },
     // An interrupted append cut this record short.
     { name: "an unterminated launcher record", recorded: "/opt/t" },
     // Another process's append is cut short after z9 update reads the records.
-    { name: "a record cut short after the read", recorded: "/opt/t3\n", cut: "/opt/t" },
+    { name: "a record cut short after the read", recorded: "/opt/z9\n", cut: "/opt/z" },
   ])("keeps the runtime a repointed launcher off PATH points at with $name", ({ recorded, cut }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -353,13 +353,13 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
       }
       // A launcher in the z9code home itself, which neither PATH nor the default bin dir reaches.
       const launcher = path.join(root, "z9");
-      yield* fs.symlink(path.join(root, "runtime/versions/1.0.0/t3"), launcher);
+      yield* fs.symlink(path.join(root, "runtime/versions/1.0.0/z9"), launcher);
 
       const launchersFile = path.join(root, "runtime/launchers");
       yield* repointLauncher({
         launchedAs: launcher,
         baseDir: root,
-        targetEntryPath: path.join(root, "runtime/versions/2.0.0/t3"),
+        targetEntryPath: path.join(root, "runtime/versions/2.0.0/z9"),
       }).pipe(
         Effect.provideService(FileSystem.FileSystem, {
           ...fs,
@@ -375,7 +375,7 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
               ),
         }),
       );
-      // A later server start prunes with no idea how this machine launches t3.
+      // A later server start prunes with no idea how this machine launches z9.
       const removed = yield* prunePinnedRuntimes({ baseDir: root, keep: [] }).pipe(
         Effect.provideService(ProcessRunner.ProcessRunner, unrelatedLsof),
         Effect.provideService(HostProcess.Platform, "darwin"),
@@ -386,7 +386,7 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
       assert.deepStrictEqual(removed, ["1.0.0"]);
       assert.equal(
         yield* readPosixLauncherTarget(launcher),
-        path.join(root, "runtime/versions/2.0.0/t3"),
+        path.join(root, "runtime/versions/2.0.0/z9"),
       );
     }).pipe(Effect.provideService(HostProcess.Platform, "linux")),
   );
@@ -395,8 +395,8 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "t3-update-" });
-    const oldExe = path.join(root, "runtime/versions/1.0.0/t3");
-    const newExe = path.join(root, "runtime/versions/2.0.0/t3");
+    const oldExe = path.join(root, "runtime/versions/1.0.0/z9");
+    const newExe = path.join(root, "runtime/versions/2.0.0/z9");
     const launcher = path.join(root, "z9");
     for (const file of [oldExe, newExe]) {
       yield* fs.makeDirectory(path.dirname(file), { recursive: true });
@@ -481,11 +481,11 @@ it.layer(NodeServices.layer)("z9 update launcher", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "t3-update-" });
-      const newExe = path.join(root, "runtime/versions/2.0.0/t3");
-      const copy = path.join(root, "copy/t3");
-      const foreign = path.join(root, "foreign/t3");
-      const elsewhere = path.join(root, "elsewhere/t3");
-      const otherHome = path.join(root, "other/runtime/versions/1.0.0/t3");
+      const newExe = path.join(root, "runtime/versions/2.0.0/z9");
+      const copy = path.join(root, "copy/z9");
+      const foreign = path.join(root, "foreign/z9");
+      const elsewhere = path.join(root, "elsewhere/z9");
+      const otherHome = path.join(root, "other/runtime/versions/1.0.0/z9");
       const otherLauncher = path.join(root, "other/bin/z9");
       for (const file of [newExe, copy, elsewhere, otherHome]) {
         yield* fs.makeDirectory(path.dirname(file), { recursive: true });
