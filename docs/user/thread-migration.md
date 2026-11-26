@@ -9,6 +9,10 @@ V1 is open. Opening V2 again resumes your V2 history. The copy happens only once
 and changes in either version do not sync to the other. Settings, attachments, and workspace files
 remain shared.
 
+Deleting a thread in V2 that came from V1 also deletes V1's database, so the deleted thread is not
+left behind in it. This happens only when V1 is closed and V2 already has every V1 project and
+thread. Afterwards V1 starts with no threads or settings, so you can no longer roll back.
+
 The V2 desktop app uses a separate browser profile, so browser cookies and caches do not carry
 over from V1. You may need to sign in again to websites opened inside the app. On its first launch,
 the V2 desktop app copies stashed prompts, unsent drafts, layout, and theme from V1. Anything you
@@ -42,7 +46,8 @@ z9code does not currently have a whole-thread export command. Before a major ser
 the server and copy its `userdata` directory to a safe location. The default is
 `~/.z9code/userdata`; a server started with `--base-dir <path>` uses `<path>/userdata`.
 
-If a migrated transcript is missing from the app, keep that copy unchanged. You can inspect the
+If a migrated transcript is missing from the app, keep that copy unchanged. A copy made after you
+deleted a thread from V1 has no `state.sqlite`. You can inspect the
 old transcript without starting a server against it:
 
 ```sh
