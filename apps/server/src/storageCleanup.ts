@@ -1147,7 +1147,15 @@ const make = Effect.gen(function* () {
       ? fs.remove(leftoversPath, { force: true })
       : writeFileStringAtomically({
           filePath: leftoversPath,
-          contents: `${JSON.stringify(leftovers, null, 2)}\n`,
+          // Retrying needs only the path; a title would outlive its thread's deletion.
+          contents: `${JSON.stringify(
+            leftovers.map(({ adminDir, entry }) => ({
+              adminDir,
+              entry: { ...entry, threadTitle: null },
+            })),
+            null,
+            2,
+          )}\n`,
         });
   const worktreeAdminDir = Effect.fn("StorageCleanup.worktreeAdminDir")(function* (
     worktreePath: string,
@@ -1217,7 +1225,10 @@ const make = Effect.gen(function* () {
         error: failure,
       });
     }
-    if (remaining.length !== leftovers.length)
+    if (
+      remaining.length !== leftovers.length ||
+      remaining.some(({ entry }) => entry.threadTitle !== null)
+    )
       yield* writeLeftovers(remaining).pipe(
         Effect.catch((error) =>
           Effect.logWarning("storage cleanup could not update leftover git metadata", { error }),

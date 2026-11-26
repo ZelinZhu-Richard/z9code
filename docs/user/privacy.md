@@ -44,7 +44,8 @@ builds have none. The mobile app does not check for over-the-air updates.
   result, belongs to that thread and goes when it is deleted.
   Command receipts stay, without their text, so a replayed command cannot recreate the thread.
   Other clients drop their cached copy when they hear of the deletion, or when they next connect.
-  Not yet covered: the pre-upgrade `state.sqlite` copy and browser screenshots.
+  Not yet covered: the pre-upgrade `state.sqlite` copy and browser screenshots saved by earlier
+  versions.
 - Agent feedback reports, if enabled, are stored locally and never sent anywhere.
 - The resource monitor samples only z9code's own process tree, redacts secrets from command
   lines, and can be turned off with `Z9CODE_RESOURCE_MONITOR_DISABLED=1`.

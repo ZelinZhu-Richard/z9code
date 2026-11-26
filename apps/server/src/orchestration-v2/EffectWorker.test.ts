@@ -1,4 +1,7 @@
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
+import * as SecretResolver from "@z9code/secret-provider-core/server/SecretResolver";
 import {
   CheckpointId,
   CheckpointScopeId,
@@ -13,6 +16,7 @@ import {
   RunId,
   RuntimeRequestId,
   ThreadId,
+  TurnItemId,
   VcsProcessExitError,
   type OrchestrationV2ThreadProjection,
 } from "@z9code/contracts";
@@ -23,6 +27,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
@@ -42,7 +47,15 @@ import * as ProviderTurnStartService from "./ProviderTurnStartService.ts";
 import * as RuntimeRequestService from "./RuntimeRequestService.ts";
 import * as ThreadTitleRegenerationService from "./ThreadTitleRegenerationService.ts";
 import * as ThreadManagementService from "./ThreadManagementService.ts";
+import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
+import * as ServerConfig from "../config.ts";
+import * as DeviceService from "../device/DeviceService.ts";
+import * as PreviewManager from "../preview/Manager.ts";
+import * as ScheduledTaskService from "../scheduledTasks/ScheduledTaskService.ts";
+import * as SecretRequests from "../secrets/SecretRequests.ts";
 import * as ServerSettings from "../serverSettings.ts";
+import * as TerminalManager from "../terminal/Manager.ts";
+import * as ResourceCleanupService from "./ResourceCleanupService.ts";
 
 const threadId = ThreadId.make("thread:effect-worker-restart");
 const oldSessionId = ProviderSessionId.make("provider-session:effect-worker-restart:old");
@@ -838,4 +851,121 @@ it.effect.each([3, 4])(
         processLossCount > 3 ? ["recover-child"] : ["dispatch", "recover-child"],
       );
     }),
+);
+
+it.effect("a secrets.cleanup effect removes the thread's unused answer and secret files", () =>
+  Effect.gen(function* () {
+    const now = yield* DateTime.now;
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "effect-worker-secrets-" });
+    const secretThreadId = ThreadId.make("thread:effect-worker-secrets");
+    const otherThreadId = ThreadId.make("thread:effect-worker-secrets-other");
+    const turnItemId = TurnItemId.make("turn-item:effect-worker-secret");
+    const stored = new Map<string, Uint8Array>();
+    let secretStatus = "pending";
+    const answers = () =>
+      [...stored.keys()].filter(
+        (name) => name.startsWith("secret-request-") && name !== "secret-request-salt",
+      );
+    const layerSecrets = SecretRequests.layer.pipe(
+      Layer.provide(
+        Layer.mergeAll(
+          NodeCrypto.layer,
+          NodeServices.layer,
+          SecretResolver.layer({ drivers: [], secretProviders: Effect.succeed({}) }).pipe(
+            Layer.provide(Layer.merge(NodeServices.layer, NodeCrypto.layer)),
+          ),
+          Layer.succeed(
+            ServerSecretStore.ServerSecretStore,
+            ServerSecretStore.ServerSecretStore.of({
+              directory,
+              get: (name) => Effect.succeed(Option.fromNullishOr(stored.get(name))),
+              set: (name, value) => Effect.sync(() => void stored.set(name, value)),
+              create: (name, value) => Effect.sync(() => void stored.set(name, value)),
+              getOrCreateRandom: (name, bytes) =>
+                Effect.sync(() => {
+                  const value = stored.get(name) ?? new Uint8Array(bytes).fill(7);
+                  stored.set(name, value);
+                  return value;
+                }),
+              remove: (name) => Effect.sync(() => void stored.delete(name)),
+            }),
+          ),
+          Layer.mock(ThreadManagementService.ThreadManagementService)({
+            getThreadRecords: (id) =>
+              Effect.succeed({
+                thread: { projectId: ProjectId.make("project-1") },
+                runs: [{ id: "run-1", status: "running" }],
+                turnItems:
+                  id === secretThreadId
+                    ? [
+                        {
+                          id: turnItemId,
+                          threadId: secretThreadId,
+                          runId: "run-1",
+                          nodeId: "node-root",
+                          type: "secret_request",
+                          label: "API token",
+                          reason: "Used as API_TOKEN.",
+                          secretStatus,
+                        },
+                      ]
+                    : [],
+              } as never),
+            dispatch: (command) =>
+              Effect.sync(() => {
+                if (command.type === "secret_request.record") secretStatus = command.secretStatus;
+                return {} as never;
+              }),
+          }),
+        ),
+      ),
+    );
+    const events = yield* Ref.make<ReadonlyArray<string>>([]);
+    yield* Effect.gen(function* () {
+      const secrets = yield* SecretRequests.SecretRequests;
+      yield* secrets.answer({
+        threadId: secretThreadId,
+        turnItemId,
+        answer: { type: "save", secret: "tok" },
+      });
+      const paste = (id: ThreadId) =>
+        secrets.savePasted({ threadId: id, requestNamespace: "s", requestKey: "k", value: "p" });
+      const own = yield* paste(secretThreadId);
+      const others = yield* paste(otherThreadId);
+      assert.lengthOf(answers(), 1);
+
+      const executor = yield* EffectWorker.OrchestrationEffectExecutorV2;
+      yield* executor.execute({
+        ...restartEffect(now, { type: "detach" }),
+        threadId: secretThreadId,
+        request: { type: "secrets.cleanup" },
+      });
+      assert.deepEqual(answers(), []);
+      assert.isFalse(yield* fs.exists(own));
+      assert.isTrue(yield* fs.exists(others));
+    }).pipe(
+      Effect.provide(
+        Layer.merge(
+          layerExecutorFor({ events }).pipe(
+            Layer.provide(
+              ResourceCleanupService.layer.pipe(
+                Layer.provide(
+                  Layer.mergeAll(
+                    layerSecrets,
+                    Layer.mock(TerminalManager.TerminalManager)({}),
+                    Layer.mock(PreviewManager.PreviewManager)({}),
+                    Layer.mock(DeviceService.DeviceService)({}),
+                    Layer.mock(ScheduledTaskService.ScheduledTaskService)({}),
+                    ServerConfig.layerTest(process.cwd(), { prefix: "effect-worker-secrets-" }),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          layerSecrets,
+        ),
+      ),
+    );
+  }).pipe(Effect.provide(NodeServices.layer)),
 );

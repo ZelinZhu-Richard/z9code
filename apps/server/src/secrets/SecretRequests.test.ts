@@ -498,7 +498,7 @@ it.effect("a file request moves its value to an owner-only file, once", () =>
           }
           // A retried request_secret gets the same file; the value is never a ref again.
           assert.deepEqual(yield* service.saveToFile({ threadId, turnItemId }), { file });
-          const ref = SecretRef.make(`secret-ref:${path.basename(file)}`);
+          const ref = SecretRef.make(`secret-ref:${path.basename(file).split("-").at(-1)}`);
           const reused = yield* service.consume({ ref, projectId }).pipe(Effect.flip);
           assert.equal(reused.reason, "ref_unavailable");
           return file;
@@ -645,8 +645,19 @@ it.effect("a failed file write keeps the value, so the request can retry", () =>
           });
           const ref = Option.getOrThrow(yield* service.savedRef({ threadId, turnItemId }));
           const name = ref.slice("secret-ref:".length);
+          // Files carry their thread's tag, which a pasted file in the same thread shows.
+          const [tag] = path
+            .basename(
+              yield* service.savePasted({
+                threadId,
+                requestNamespace: "session-a",
+                requestKey: "key-1",
+                value: "x",
+              }),
+            )
+            .split("-");
           // A non-empty directory where the partial file goes makes the write fail.
-          const partial = path.join(directory, "files", `${name}.partial`);
+          const partial = path.join(directory, "files", `${tag}-${name}.partial`);
           yield* fs.makeDirectory(path.join(partial, "block"), { recursive: true });
           const failed = yield* service.saveToFile({ threadId, turnItemId }).pipe(Effect.flip);
           assert.equal(failed.reason, "store_failed");
@@ -721,7 +732,8 @@ it.effect("a pasted secret goes straight to an owner-only file, with no card", (
             value: pasted,
           });
           assert.equal(path.dirname(file), path.join(directory, "files"));
-          assert.match(path.basename(file), /^[0-9a-f]{32}$/);
+          // The thread's tag, so deleting the thread finds it, then the ref's own name.
+          assert.match(path.basename(file), /^[0-9a-f]{16}-[0-9a-f]{32}$/);
           assert.equal(yield* fs.readFileString(file), pasted);
           if ((yield* HostProcess.Platform) !== "win32") {
             assert.equal((yield* fs.stat(file)).mode & 0o777, 0o600);
@@ -758,7 +770,7 @@ it.effect("a pasted secret goes straight to an owner-only file, with no card", (
           assert.notEqual(otherSession, file);
           assert.equal(yield* fs.readFileString(file), pasted);
           // Its name is not a ref to the value.
-          const ref = SecretRef.make(`secret-ref:${path.basename(file)}`);
+          const ref = SecretRef.make(`secret-ref:${path.basename(file).split("-").at(-1)}`);
           const reused = yield* service.consume({ ref, projectId }).pipe(Effect.flip);
           assert.equal(reused.reason, "ref_unavailable");
           return file;
@@ -779,6 +791,45 @@ it.effect("a pasted secret goes straight to an owner-only file, with no card", (
     yield* TestClock.setTime(Option.getOrThrow(mtime).getTime() + SECRET_FILE_TTL_MS + 1);
     yield* withService(() => Effect.void, { directory });
     assert.isFalse(yield* fs.exists(file));
+  }).pipe(Effect.provide(NodeServices.layer)),
+);
+
+it.effect("forgetting a thread removes its unused answers and its secret files", () =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({ prefix: "secret-files-test-" });
+    const otherThread = ThreadId.make("thread-other");
+    yield* withService(
+      ({ service, stored }) =>
+        Effect.gen(function* () {
+          yield* service.answer({ threadId, turnItemId, answer: { type: "save", secret: "tok" } });
+          assert.deepEqual(valuesOf(stored).length, 1);
+          const paste = (id: ThreadId) =>
+            service.savePasted({
+              threadId: id,
+              requestNamespace: "session-a",
+              requestKey: "key-1",
+              value: "pasted",
+            });
+          const own = yield* paste(threadId);
+          const others = yield* paste(otherThread);
+          yield* service.forgetThread(threadId);
+          assert.deepEqual(valuesOf(stored), []);
+          assert.isFalse(yield* fs.exists(own));
+          assert.isTrue(yield* fs.exists(others));
+        }),
+      { directory },
+    );
+    yield* withService(
+      ({ service }) =>
+        Effect.gen(function* () {
+          yield* service.answer({ threadId, turnItemId, answer: { type: "save", secret: "tok" } });
+          const delivered = singleFile(yield* service.saveToFile({ threadId, turnItemId }));
+          yield* service.forgetThread(threadId);
+          assert.isFalse(yield* fs.exists(delivered));
+        }),
+      { delivery: "file", directory },
+    );
   }).pipe(Effect.provide(NodeServices.layer)),
 );
 

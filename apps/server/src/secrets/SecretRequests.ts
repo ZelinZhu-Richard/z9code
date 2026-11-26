@@ -36,7 +36,8 @@ const storeName = (ref: SecretRef) => `secret-request-${ref.slice(SECRET_REF_PRE
 const REF_PATTERN = /^secret-ref:[0-9a-f]{32}$/;
 const SECRET_REF_TTL_MS = 24 * 60 * 60 * 1000;
 const STORE_NAME_PATTERN = /^(secret-request-[0-9a-f]{32})\.bin$/;
-const FILE_NAME_PATTERN = /^[0-9a-f]{32}(\.partial)?$/;
+/** Files start with their thread's tag; earlier versions wrote them without one. */
+const FILE_NAME_PATTERN = /^(?:[0-9a-f]{16}-)?[0-9a-f]{32}(\.partial)?$/;
 
 const StoredSecret = Schema.fromJsonString(
   Schema.Struct({ projectId: Schema.String, value: Schema.String, savedAt: Schema.Number }),
@@ -97,6 +98,8 @@ export class SecretRequests extends Context.Service<
       readonly requestKey: string;
       readonly value: string;
     }) => Effect.Effect<string, SecretRequestError>;
+    /** Removes a deleted thread's unused answers and every secret file written for it. */
+    readonly forgetThread: (threadId: ThreadId) => Effect.Effect<void, SecretRequestError>;
   }
 >()("z9/secrets/SecretRequests") {}
 
@@ -131,6 +134,16 @@ const make = Effect.gen(function* () {
         Effect.orDie,
         Effect.map((tag) => SecretRef.make(`${SECRET_REF_PREFIX}${Hex.encode(tag).slice(0, 32)}`)),
       );
+  // Not reversible to the thread id, so a file's name says nothing about the thread.
+  const threadTag = (threadId: ThreadId) =>
+    mac.sign(refKey, new TextEncoder().encode(`thread\u0000${threadId}`)).pipe(
+      Effect.orDie,
+      Effect.map((tag) => Hex.encode(tag).slice(0, 16)),
+    );
+  const fileFor = (dir: string, threadId: ThreadId, ref: SecretRef) =>
+    threadTag(threadId).pipe(
+      Effect.map((tag) => path.join(dir, `${tag}-${ref.slice(SECRET_REF_PREFIX.length)}`)),
+    );
   const removeAnswered = (threadId: ThreadId, item: SecretRequestItem) =>
     Effect.forEach(fieldNames(item), (field) =>
       refFor(threadId, item.id, field).pipe(Effect.flatMap((ref) => removeLogged(storeName(ref)))),
@@ -355,7 +368,7 @@ const make = Effect.gen(function* () {
     const projectId = records.thread.projectId;
     const deliver = Effect.fn("SecretRequests.deliverFile")(function* (field: FieldName) {
       const ref = yield* refFor(input.threadId, item.id, field);
-      const file = path.join(filesDir, ref.slice(SECRET_REF_PREFIX.length));
+      const file = yield* fileFor(filesDir, input.threadId, ref);
       // One use: the file counts as delivered only once the stored copy is gone. A retry with the
       // same clientRequestId gets the file the first call wrote and finishes that removal.
       const removeStored = removeLogged(storeName(ref)).pipe(
@@ -388,7 +401,7 @@ const make = Effect.gen(function* () {
       input.threadId,
       `pasted\u0000${input.requestNamespace}\u0000${input.requestKey}`,
     );
-    const file = path.join(filesDir, ref.slice(SECRET_REF_PREFIX.length));
+    const file = yield* fileFor(filesDir, input.threadId, ref);
     // A retry with the same clientRequestId gets the file the first call wrote, unchanged, so a
     // command already holding that path never reads another value.
     return yield* Effect.gen(function* () {
@@ -396,6 +409,37 @@ const make = Effect.gen(function* () {
       yield* writeSecretFile(filesDir, file, input.value);
       return file;
     }).pipe(consumeLock.withPermits(1));
+  });
+
+  const forgetThread: SecretRequests["Service"]["forgetThread"] = Effect.fn(
+    "SecretRequests.forgetThread",
+  )(function* (threadId) {
+    const records = yield* threadManagement
+      .getThreadRecords(threadId, ["turnItems"], {
+        turnItemTypes: ["secret_request"],
+        messageRoles: [],
+      })
+      .pipe(Effect.mapError((cause) => new SecretRequestError({ reason: "load_failed", cause })));
+    return yield* Effect.gen(function* () {
+      let removed = true;
+      for (const item of records.turnItems) {
+        if (item.type !== "secret_request") continue;
+        for (const ok of yield* removeAnswered(threadId, item)) removed &&= ok;
+      }
+      if (filesDir !== undefined && (yield* fileSystem.exists(filesDir))) {
+        const prefix = `${yield* threadTag(threadId)}-`;
+        for (const name of yield* fileSystem.readDirectory(filesDir)) {
+          if (name.startsWith(prefix)) yield* fileSystem.remove(path.join(filesDir, name));
+        }
+      }
+      if (!removed) return yield* new SecretRequestError({ reason: "store_failed" });
+    }).pipe(
+      Effect.catchTags({
+        PlatformError: (cause) =>
+          Effect.fail(new SecretRequestError({ reason: "store_failed", cause })),
+      }),
+      consumeLock.withPermits(1),
+    );
   });
 
   const sweepExpired = Effect.gen(function* () {
@@ -444,7 +488,7 @@ const make = Effect.gen(function* () {
     Effect.forkScoped,
   );
 
-  return SecretRequests.of({ answer, savedRef, consume, saveToFile, savePasted });
+  return SecretRequests.of({ answer, savedRef, consume, saveToFile, savePasted, forgetThread });
 });
 
 export const layer = Layer.effect(SecretRequests, make);

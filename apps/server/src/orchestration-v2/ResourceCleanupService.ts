@@ -11,12 +11,20 @@ import * as ServerConfig from "../config.ts";
 import * as DeviceService from "../device/DeviceService.ts";
 import * as PreviewManager from "../preview/Manager.ts";
 import * as ScheduledTaskService from "../scheduledTasks/ScheduledTaskService.ts";
+import * as SecretRequests from "../secrets/SecretRequests.ts";
 import * as TerminalManager from "../terminal/Manager.ts";
 
 export class ResourceCleanupError extends Schema.TaggedError<ResourceCleanupError>()(
   "ResourceCleanupError",
   {
-    operation: Schema.Literals(["terminal", "preview", "device", "attachment", "scheduled-tasks"]),
+    operation: Schema.Literals([
+      "terminal",
+      "preview",
+      "device",
+      "attachment",
+      "scheduled-tasks",
+      "secrets",
+    ]),
     threadId: Schema.optional(Schema.String),
     attachmentId: Schema.optional(Schema.String),
     cause: Schema.Defect(),
@@ -32,6 +40,8 @@ export class ResourceCleanupService extends Context.Reference<{
   readonly cleanupAttachments: (
     attachmentIds: ReadonlyArray<string>,
   ) => Effect.Effect<void, ResourceCleanupError>;
+  /** Removes the thread's unused secret answers and secret files. */
+  readonly cleanupSecrets: (threadId: ThreadId) => Effect.Effect<void, ResourceCleanupError>;
 }>("z9/orchestration-v2/ResourceCleanupService", {
   defaultValue: () => ({
     cleanupScheduledTasks: () => Effect.void,
@@ -39,6 +49,7 @@ export class ResourceCleanupService extends Context.Reference<{
     cleanupPreviews: () => Effect.void,
     cleanupDevices: () => Effect.void,
     cleanupAttachments: () => Effect.void,
+    cleanupSecrets: () => Effect.void,
   }),
 }) {}
 
@@ -51,6 +62,7 @@ export const layer = Layer.effect(
     const fileSystem = yield* FileSystem.FileSystem;
     const config = yield* ServerConfig.ServerConfig;
     const scheduledTasks = yield* ScheduledTaskService.ScheduledTaskService;
+    const secretRequests = yield* SecretRequests.SecretRequests;
     return {
       cleanupScheduledTasks: Effect.fn("ResourceCleanupService.cleanupScheduledTasks")(function (
         threadId: ThreadId,
@@ -131,6 +143,17 @@ export const layer = Layer.effect(
           },
           { discard: true, concurrency: 4 },
         );
+      }),
+      cleanupSecrets: Effect.fn("ResourceCleanupService.cleanupSecrets")(function (
+        threadId: ThreadId,
+      ) {
+        return secretRequests
+          .forgetThread(threadId)
+          .pipe(
+            Effect.mapError(
+              (cause) => new ResourceCleanupError({ operation: "secrets", threadId, cause }),
+            ),
+          );
       }),
     };
   }),

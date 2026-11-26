@@ -36,6 +36,7 @@ import * as ManagedProjectFolders from "../project/ManagedProjectFolders.ts";
 import * as ThreadLaunchService from "../orchestration-v2/ThreadLaunchService.ts";
 import * as AssetSigner from "../assets/AssetSigner.ts";
 import * as DocumentText from "../provider/DocumentText.ts";
+import { resolveThreadSegment } from "../provider/EventNdjsonLogger.ts";
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as GitVcsDriver from "../vcs/GitVcsDriver.ts";
 import * as EnvironmentAuth from "../auth/EnvironmentAuth.ts";
@@ -555,6 +556,8 @@ it.effect("saves the uncapped screenshot while the agent sees the capped one", (
       const saved = yield* (yield* FileSystem.FileSystem).readFile(screenshotPath);
 
       expect(Buffer.from(saved).toString("base64")).toBe(full);
+      // ThreadPurge finds a deleted thread's screenshots by this segment.
+      expect(screenshotPath).toContain(`/browser-screenshot.${resolveThreadSegment(threadId)}.`);
       expect(snapshot.structuredContent).not.toHaveProperty("fullScreenshot");
       expect(snapshot.content.at(-1)).toEqual({
         type: "image",

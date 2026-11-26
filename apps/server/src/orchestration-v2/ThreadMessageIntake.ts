@@ -43,10 +43,12 @@ function dispatchWasNotAccepted(
 const isOrchestratorError = Schema.is(Orchestrator.OrchestratorV2Error);
 const isThreadManagementError = Schema.is(ThreadManagement.ThreadManagementError);
 
+/** Runs only once a send is accepted, so the pending sources of the copies it kept can go too. */
 const releaseUnusedClaims = Effect.fn("ThreadMessageIntake.releaseUnusedClaims")(function* (
-  claimedPaths: ReadonlyArray<string>,
+  claimed: Pick<AttachmentClaims.ClaimedAttachments, "claimedPaths" | "sources">,
   accepted: ReadonlyArray<ChatAttachment>,
 ) {
+  const { claimedPaths } = claimed;
   if (claimedPaths.length === 0) return;
   const config = yield* ServerConfig.ServerConfig;
   const retained = new Set(
@@ -61,6 +63,7 @@ const releaseUnusedClaims = Effect.fn("ThreadMessageIntake.releaseUnusedClaims")
   yield* AttachmentClaims.releaseClaimedAttachments(
     claimedPaths.filter((path) => !retained.has(path)),
   );
+  yield* AttachmentClaims.removeAcceptedSources(claimed.sources, retained);
 });
 
 /**
@@ -143,6 +146,7 @@ export const dispatchCommand = Effect.fn("ThreadMessageIntake.dispatchCommand")(
     const incomingByQuestionId = command.attachmentsByQuestionId;
     yield* AttachmentClaims.validateAttachmentLimits(Object.values(incomingByQuestionId).flat());
     const claimedPaths: string[] = [];
+    const sources = new Map<string, ReadonlyArray<string>>();
     const prepared = yield* Effect.gen(function* () {
       const attachmentsByQuestionId: import("@z9code/contracts").UserInputAttachments = {};
       for (const [questionId, attachments] of Object.entries(incomingByQuestionId)) {
@@ -151,6 +155,7 @@ export const dispatchCommand = Effect.fn("ThreadMessageIntake.dispatchCommand")(
           attachments,
         });
         claimedPaths.push(...claimed.claimedPaths);
+        for (const [finalPath, paths] of claimed.sources) sources.set(finalPath, paths);
         Object.defineProperty(attachmentsByQuestionId, questionId, {
           value: claimed.attachments,
           enumerable: true,
@@ -205,7 +210,7 @@ export const dispatchCommand = Effect.fn("ThreadMessageIntake.dispatchCommand")(
           );
           return answeredItems.length > 0
             ? releaseUnusedClaims(
-                claimedPaths,
+                { claimedPaths, sources },
                 answeredItems.flatMap((item) =>
                   item.questionAnswer === undefined
                     ? []
@@ -265,7 +270,7 @@ export const dispatchCommand = Effect.fn("ThreadMessageIntake.dispatchCommand")(
     .pipe(
       Effect.tap((result) =>
         releaseUnusedClaims(
-          claimed.claimedPaths,
+          claimed,
           result.storedEvents.flatMap(({ event }) =>
             event.type === "message.updated" ? event.payload.attachments : [],
           ),
@@ -285,7 +290,7 @@ export const sendToThread = Effect.fn("ThreadMessageIntake.sendToThread")(functi
   const threads = yield* ThreadManagement.ThreadManagementService;
   const claimed = yield* AttachmentClaims.claimPendingAttachments(input);
   return yield* threads.sendToThread({ ...input, attachments: claimed.attachments }).pipe(
-    Effect.tap((result) => releaseUnusedClaims(claimed.claimedPaths, result.message.attachments)),
+    Effect.tap((result) => releaseUnusedClaims(claimed, result.message.attachments)),
     Effect.tapError((error) =>
       dispatchWasNotAccepted(error)
         ? AttachmentClaims.releaseClaimedAttachments(claimed.claimedPaths)
@@ -331,7 +336,7 @@ export const launchThread = Effect.fn("ThreadMessageIntake.launchThread")(functi
     .pipe(
       Effect.tap((result) =>
         releaseUnusedClaims(
-          claimed.claimedPaths,
+          claimed,
           result.projection.messages.flatMap((message) => message.attachments),
         ),
       ),

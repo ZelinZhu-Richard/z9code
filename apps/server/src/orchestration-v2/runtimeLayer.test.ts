@@ -445,6 +445,7 @@ const layerResourceCleanupTest = ResourceCleanupService.layer.pipe(
     Layer.mergeAll(
       Layer.mock(PreviewManager.PreviewManager)({ close: () => Effect.void }),
       Layer.mock(TerminalManager.TerminalManager)({ close: () => Effect.void }),
+      Layer.mock(SecretRequests.SecretRequests)({ forgetThread: () => Effect.void }),
     ),
   ),
 );
