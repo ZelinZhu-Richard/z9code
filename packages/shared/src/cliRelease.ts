@@ -6,6 +6,7 @@ import { compareSemverVersions } from "./semver.ts";
 const CLI_RELEASE_REPOSITORY = "ZelinZhu-Richard/z9code";
 export const CLI_RELEASES_PAGE_URL = `https://github.com/${CLI_RELEASE_REPOSITORY}/releases`;
 export const CLI_RELEASE_CHECKSUMS_FILE = "SHA256SUMS";
+export const CLI_RELEASE_MANIFEST_FILE = "release.json";
 export const CLI_RELEASE_BASE_URL_ENV = "Z9CODE_RELEASE_BASE_URL";
 
 // Keep archive keys aligned with the Linux matrix, Windows ARM64 build, and cli_archive rows in release.yml,
@@ -136,6 +137,10 @@ export function cliReleaseIndexPageUrl(page: number): string {
   return `https://api.github.com/repos/${CLI_RELEASE_REPOSITORY}/releases?per_page=100&page=${page}`;
 }
 
+export function cliReleaseByTagUrl(version: string): string {
+  return `https://api.github.com/repos/${CLI_RELEASE_REPOSITORY}/releases/tags/v${encodeURIComponent(version)}`;
+}
+
 /** Draft assets are not downloadable. */
 export function newestCliReleaseVersion(
   releases: ReadonlyArray<{
@@ -153,13 +158,16 @@ export function newestCliReleaseVersion(
   return undefined;
 }
 
-const NpmReleaseMigrationManifest = Schema.Struct({
-  z9code: Schema.Struct({ databaseMigration: Schema.Int }),
+export const CliReleaseManifest = Schema.Struct({
+  version: Schema.String,
+  databaseMigration: Schema.Int,
 });
-const decodeNpmReleaseMigrationManifest = Schema.decodeUnknownOption(NpmReleaseMigrationManifest);
+export type CliReleaseManifest = typeof CliReleaseManifest.Type;
+const decodeCliReleaseManifest = Schema.decodeUnknownOption(
+  Schema.fromJsonString(CliReleaseManifest),
+);
 
-/** Highest database migration a release's server knows, from its npm `z9` manifest. */
-export function npmReleaseDatabaseMigration(manifest: unknown): number | undefined {
-  return Option.getOrUndefined(decodeNpmReleaseMigrationManifest(manifest))?.z9code
-    .databaseMigration;
+/** The release's `release.json`, which records the highest database migration its server knows. */
+export function parseCliReleaseManifest(text: string): CliReleaseManifest | undefined {
+  return Option.getOrUndefined(decodeCliReleaseManifest(text));
 }

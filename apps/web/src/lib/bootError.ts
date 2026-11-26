@@ -1,6 +1,6 @@
 import type { DesktopBridge, DesktopUpdateState } from "@z9code/contracts";
 
-const FALLBACK_TRIAGE_COMMAND = "npx z9 triage";
+const FALLBACK_TRIAGE_COMMAND = "z9 triage";
 const DOWNLOAD_URL = "https://github.com/ZelinZhu-Richard/z9code/releases";
 const ISSUE_URL = "https://github.com/ZelinZhu-Richard/z9code/issues/new";
 const LAST_FAILURE_KEY = "z9code:boot-failed-at";
@@ -23,7 +23,7 @@ function launcherCommand(launcherPath: string) {
     : `'${launcherPath.replaceAll("'", `'"'"'`)}'`;
 }
 
-/** Desktop can run its bundled launcher without Node; everything else falls back to npx. */
+/** Desktop can run its bundled launcher; everything else falls back to the installed `z9`. */
 export async function resolveTriageCommand(bridge: DesktopBridge | undefined) {
   try {
     const state = await bridge?.cliCommand.getState();

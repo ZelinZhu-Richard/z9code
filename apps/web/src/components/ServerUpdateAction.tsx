@@ -306,31 +306,24 @@ export function ServerUpdateAction({
   const canUpdate = useAtomValue(sessionStateAtom, canUpdateServer);
   const updatesDenial = managedUpdatesDenial(useManagedPolicy(environmentId), messages);
   const update = useServerUpdate();
-  const updatesInstall =
-    installation?.kind === "npm-global" || installation?.kind === "t3-launcher";
+  const updatesInstall = installation?.kind === "t3-launcher";
   const { copyToClipboard } = useCopyToClipboard<{ command: string }>({
-    target: updatesInstall
-      ? {
-          target: "update command",
-          unavailableMessage: msg("Clipboard API is unavailable while copying update command."),
-          failureMessage: msg("Failed to copy update command to the clipboard."),
-        }
-      : {
-          target: "relaunch command",
-          unavailableMessage: msg("Clipboard API is unavailable while copying relaunch command."),
-          failureMessage: msg("Failed to copy relaunch command to the clipboard."),
-        },
+    target: {
+      target: "update command",
+      unavailableMessage: msg("Clipboard API is unavailable while copying update command."),
+      failureMessage: msg("Failed to copy update command to the clipboard."),
+    },
     onCopy: ({ command }) => {
       toastManager.add({
         type: "success",
-        title: updatesInstall ? gt("Update command copied") : gt("Relaunch command copied"),
+        title: gt("Update command copied"),
         description: updatesInstall
           ? gt("Run `{command}` on {serverLabel}, then restart z9 with your usual options.", {
               command,
               serverLabel,
             })
           : gt(
-              "Stop z9 on {serverLabel}, then relaunch with `{command}` using the same subcommand and options. This does not update an installed z9 command.",
+              "Run `{command}` on {serverLabel}, then restart z9 with your usual options. If z9 is not installed there, install it first with the install script from z9code's GitHub releases.",
               { command, serverLabel },
             ),
       });
@@ -402,9 +395,7 @@ export function ServerUpdateAction({
     selfUpdate === null ? manualServerUpdateCommand(targetVersion, installation) : null;
   const actionLabel =
     manualCommand !== null
-      ? updatesInstall
-        ? gt("Copy update command")
-        : gt("Copy relaunch command")
+      ? gt("Copy update command")
       : (label ?? gt("Update", { $context: "verb, updates the server" }));
   const onClick =
     manualCommand !== null

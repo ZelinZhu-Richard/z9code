@@ -1,4 +1,4 @@
-import { type ServerConfig, ServerNpmReleaseError } from "@z9code/contracts";
+import { type ServerConfig, ServerCliReleaseError } from "@z9code/contracts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -12,38 +12,34 @@ import { environmentSummaries } from "./presentation";
 import { primaryEnvironmentIdAtom } from "./primaryEnvironment";
 import { serverEnvironment } from "./server";
 
-const isServerNpmReleaseError = Schema.is(ServerNpmReleaseError);
+const isServerCliReleaseError = Schema.is(ServerCliReleaseError);
 
-function unsupportedLookup(config: ServerConfig | null): ServerNpmReleaseError | null {
+function unsupportedLookup(config: ServerConfig | null): ServerCliReleaseError | null {
   if (config === null) {
-    return new ServerNpmReleaseError({
+    return new ServerCliReleaseError({
       reason: m(msg("Connect to this server to check releases.")),
     });
   }
-  return config.environment.capabilities.npmReleaseLookup === true
+  return config.environment.capabilities.cliReleaseLookup === true
     ? null
-    : new ServerNpmReleaseError({
-        reason: m(
-          msg("This server does not support registry lookups. Update it before switching tracks."),
-        ),
+    : new ServerCliReleaseError({
+        reason: m(msg("This server cannot look up releases. Update it before switching tracks.")),
       });
 }
 
-export function npmReleaseFailureMessage(
+export function cliReleaseFailureMessage(
   cause: Cause.Cause<unknown>,
   resolve: MessageResolver = m,
 ): string {
   const error = Option.getOrUndefined(Cause.findErrorOption(cause));
-  return isServerNpmReleaseError(error)
+  return isServerCliReleaseError(error)
     ? error.message
     : resolve(
-        msg(
-          "Could not check this environment's npm registry. Check the connection and registry settings.",
-        ),
+        msg("Could not check z9code's GitHub releases. Check this environment's connection."),
       );
 }
 
-export const npmReleaseAtom = Atom.family((spec: string) =>
+export const cliReleaseAtom = Atom.family((spec: string) =>
   Atom.make((get) => {
     const primary = get(primaryEnvironmentIdAtom);
     // With the desktop's local server turned off there is no primary, so a connected server answers.
@@ -55,13 +51,13 @@ export const npmReleaseAtom = Atom.family((spec: string) =>
       ) ?? candidates[0];
     if (environmentId === undefined) {
       return Effect.fail(
-        new ServerNpmReleaseError({ reason: m(msg("Connect to a server to check releases.")) }),
+        new ServerCliReleaseError({ reason: m(msg("Connect to a server to check releases.")) }),
       );
     }
     const unsupported = unsupportedLookup(get(serverEnvironment.configValueAtom(environmentId)));
     if (unsupported !== null) return Effect.fail(unsupported);
     return get
-      .result(serverEnvironment.npmRelease({ environmentId, input: { spec } }))
+      .result(serverEnvironment.cliRelease({ environmentId, input: { spec } }))
       .pipe(
         Effect.map((release) =>
           release === null
@@ -69,5 +65,5 @@ export const npmReleaseAtom = Atom.family((spec: string) =>
             : { version: release.version, databaseMigration: release.databaseMigration },
         ),
       );
-  }).pipe(Atom.withLabel(`npm-release:${spec}`)),
+  }).pipe(Atom.withLabel(`cli-release:${spec}`)),
 );

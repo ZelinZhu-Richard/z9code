@@ -12,7 +12,7 @@ lags behind after a launcher-protocol bump. Keep new server runtimes compatible 
 launcher protocol unless impossible, and validate protocol compatibility during preflight.
 
 Installations use exact versions and stage/preflight before publishing an immutable runtime so
-restarts never depend on npm cache eviction or a moving tag.
+restarts never depend on a download cache or a moving tag.
 
 ## Commit boundary and database rollback
 

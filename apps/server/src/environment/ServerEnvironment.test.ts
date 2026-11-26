@@ -74,18 +74,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("ServerEnvironmen
   it.effect("publishes proven install ownership only for manually updated servers", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const platform = yield* HostProcess.Platform;
       const baseDir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
-      const prefix = `${baseDir}/node`;
-      const entry = `${prefix}/lib/node_modules/z9/dist/bin.mjs`;
-      yield* fs.makeDirectory(`${prefix}/lib/node_modules/z9/dist`, { recursive: true });
-      yield* fs.makeDirectory(`${prefix}/bin`, { recursive: true });
+      const entry = `${baseDir}/.npm/_npx/hash/node_modules/z9/dist/bin.mjs`;
+      yield* fs.makeDirectory(`${baseDir}/.npm/_npx/hash/node_modules/z9/dist`, {
+        recursive: true,
+      });
       yield* fs.writeFileString(entry, "");
-      yield* fs.writeFileString(
-        `${prefix}/lib/node_modules/z9/package.json`,
-        '{"name":"z9","version":"0.0.45","bin":{"z9":"./dist/bin.mjs"}}',
-      );
-      yield* fs.symlink(entry, `${prefix}/bin/z9`);
       const config = yield* makeServerConfig(baseDir);
       yield* fs.makeDirectory(config.stateDir, { recursive: true });
       for (const mode of ["web", "desktop"] as const) {
@@ -104,7 +98,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("ServerEnvironmen
           Effect.provideService(HostProcess.Environment, {}),
         );
         expect(descriptor.capabilities.serverInstallation).toEqual(
-          mode === "web" && platform !== "win32" ? { kind: "npm-global", prefix } : undefined,
+          mode === "web" ? { kind: "npx" } : undefined,
         );
         expect(descriptor.capabilities.serverSelfUpdate).toBe(
           mode === "web" ? undefined : "desktop-managed",

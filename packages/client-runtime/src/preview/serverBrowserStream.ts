@@ -468,7 +468,7 @@ const decodeHostSetup = (reason: string): PreviewStreamHostSetup => {
       return { need: value.need, command: value.command };
     }
   } catch {}
-  return { need: "sandbox", command: "sudo npx z9 browser setup" };
+  return { need: "sandbox", command: "sudo z9 browser setup" };
 };
 
 export const previewStreamHostSetupMessage = (

@@ -9,7 +9,14 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import { awaitCliNotarization, signMacArchiveContents } from "./build-cli-archive.ts";
+import { CLI_RELEASE_MANIFEST_FILE, parseCliReleaseManifest } from "@z9code/shared/cliRelease";
+
+import {
+  awaitCliNotarization,
+  latestServerMigrationId,
+  signMacArchiveContents,
+  writeCliReleaseManifest,
+} from "./build-cli-archive.ts";
 
 const signedEnv = {
   Z9CODE_CLI_MAC_SIGN_IDENTITY: "Developer ID Application: Test (TEAM)",
@@ -212,5 +219,26 @@ it.layer(NodeServices.layer)("build-cli-archive notarization", (it) => {
       assert.equal(error._tag, "CliArchiveNotarizationRejectedError");
       assert.isTrue(notarySubcommands(stub.calls)[0]?.includes("--wait"));
     }).pipe(Effect.scoped),
+  );
+});
+
+it.layer(NodeServices.layer)("build-cli-archive release manifest", (it) => {
+  it.effect("writes release.json with the newest server migration for the track switch check", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outputDir = path.join(
+        yield* fs.makeTempDirectoryScoped({ prefix: "t3-cli-manifest-" }),
+        "release-cli",
+      );
+      const manifestPath = yield* writeCliReleaseManifest({ version: "1.2.3", outputDir });
+      assert.equal(path.basename(manifestPath), CLI_RELEASE_MANIFEST_FILE);
+      const manifest = parseCliReleaseManifest(yield* fs.readFileString(manifestPath));
+      assert.deepStrictEqual(manifest, {
+        version: "1.2.3",
+        databaseMigration: yield* latestServerMigrationId(),
+      });
+      assert.isAbove(manifest?.databaseMigration ?? 0, 0);
+    }),
   );
 });

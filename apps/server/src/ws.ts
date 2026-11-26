@@ -188,7 +188,7 @@ import * as ProviderMaintenanceRunner from "./provider/providerMaintenanceRunner
 import * as ProviderAuthService from "./provider/ProviderAuthService.ts";
 import * as ProviderInstallation from "./provider/providerInstallation.ts";
 import * as ServerSelfUpdate from "./service/selfUpdate.ts";
-import * as NpmRelease from "./service/npmRelease.ts";
+import * as CliReleaseLookup from "./service/cliReleaseLookup.ts";
 import * as ServerLifecycleEvents from "./serverLifecycleEvents.ts";
 import * as ServerRuntimeStartup from "./serverRuntimeStartup.ts";
 import * as SecretResolver from "@z9code/secret-provider-core/server/SecretResolver";
@@ -1466,7 +1466,7 @@ export const layerWsRpc = (
       const providerAuth = yield* ProviderAuthService.ProviderAuthService;
       const providerInstallation = yield* ProviderInstallation.ProviderInstallation;
       const serverSelfUpdate = yield* ServerSelfUpdate.ServerSelfUpdate;
-      const npmRelease = yield* NpmRelease.NpmRelease;
+      const cliReleaseLookup = yield* CliReleaseLookup.CliReleaseLookup;
       const config = yield* ServerConfig.ServerConfig;
       const lifecycleEvents = yield* ServerLifecycleEvents.ServerLifecycleEvents;
       const storageCleanup = yield* StorageCleanup.StorageCleanup;
@@ -2639,7 +2639,7 @@ export const layerWsRpc = (
         [WS_METHODS.providerInstallSubscribe]: (input) => providerInstallation.subscribe(input),
         [WS_METHODS.providerInstallRemove]: (input) => providerInstallation.remove(input),
         [WS_METHODS.serverUpdateServer]: (input) => serverSelfUpdate.update(input),
-        [WS_METHODS.serverGetNpmRelease]: (input) => npmRelease.get(input),
+        [WS_METHODS.serverGetCliRelease]: (input) => cliReleaseLookup.get(input),
         [WS_METHODS.serverUpdateServerWithProgress]: (input) =>
           ServerSelfUpdate.updateProgressStream(serverSelfUpdate, input),
         [WS_METHODS.serverCommitDesktopUpdate]: (input) =>
@@ -3602,7 +3602,7 @@ export const layer = Layer.unwrap(
     const serverBrowser = yield* ServerBrowser.ServerBrowser;
     const serverSelfUpdate = yield* ServerSelfUpdate.ServerSelfUpdate;
     const providerMaintenanceRunner = yield* ProviderMaintenanceRunner.ProviderMaintenanceRunner;
-    const npmRelease = yield* NpmRelease.NpmRelease;
+    const cliReleaseLookup = yield* CliReleaseLookup.CliReleaseLookup;
     const pullRequests = yield* PullRequestService.PullRequestService;
     const issues = yield* IssueService.IssueService;
     const threadIssues = yield* ThreadIssueService.ThreadIssueService;
@@ -3674,7 +3674,7 @@ export const layer = Layer.unwrap(
                   providerMaintenanceRunner,
                 ),
               ),
-              Layer.provide(Layer.succeed(NpmRelease.NpmRelease, npmRelease)),
+              Layer.provide(Layer.succeed(CliReleaseLookup.CliReleaseLookup, cliReleaseLookup)),
               Layer.provide(Layer.succeed(ServerSelfUpdate.ServerSelfUpdate, serverSelfUpdate)),
               // Share server-lifetime PR caches so WS mutations invalidate every client's HTTP diffs.
               Layer.provide(Layer.succeed(PullRequestService.PullRequestService, pullRequests)),
@@ -3748,4 +3748,4 @@ export const layer = Layer.unwrap(
       ),
     );
   }),
-).pipe(Layer.provide(NpmRelease.layer));
+).pipe(Layer.provide(CliReleaseLookup.layer));

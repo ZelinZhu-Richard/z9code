@@ -5,7 +5,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-import packageJson from "../../package.json" with { type: "json" };
 import { posixLauncherScript } from "../service/pinnedRuntime.ts";
 import {
   hostShellWord,
@@ -42,12 +41,13 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
   it.effect("keeps a user-installed Node reachable when the command runs under sudo", () =>
     Effect.gen(function* () {
       const npx = "/home/theo/.npm/_npx/abc/node_modules/z9/dist/bin.mjs";
+      // A runner cache is not an install z9code publishes, so the command names the installed z9.
       expect(yield* rootCommand({ node: "/usr/bin/node", entry: npx })).toBe(
-        "sudo npx z9 browser setup",
+        "sudo z9 browser setup",
       );
       expect(
         yield* rootCommand({ node: "/home/theo/.nvm/versions/node/v24/bin/node", entry: npx }),
-      ).toBe('sudo env "PATH=$PATH" npx z9 browser setup');
+      ).toBe('sudo env "PATH=$PATH" z9 browser setup');
       expect(
         yield* rootCommand({
           node: "/home/theo/.local/node/bin/node",
@@ -91,7 +91,7 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
 
       expect(yield* rootCommand(desktop)).toBe(`sudo '${shim}' browser setup`);
 
-      // An unrelated `z9` on PATH, such as an older npm global, is another install's CLI.
+      // An unrelated `z9` on PATH is another install's CLI.
       expect(yield* rootCommand({ ...desktop, path: yield* pathWithT3 })).toBe(
         `sudo '${shim}' browser setup`,
       );
@@ -120,27 +120,6 @@ it.layer(NodeServices.layer)("root CLI commands", (it) => {
           path: yield* pathWithT3,
         }),
       ).toBe("sudo /opt/z9/z9 browser setup");
-
-      // A global npm launcher runs the downloaded executable; PATH's `z9` is that launcher.
-      const prefix = path.join(home, "npm");
-      const npmLauncher = path.join(prefix, "lib/node_modules/z9/bin/z9.mjs");
-      yield* fs.makeDirectory(path.dirname(npmLauncher), { recursive: true });
-      yield* fs.makeDirectory(path.join(prefix, "bin"));
-      yield* fs.writeFileString(npmLauncher, "", { mode: 0o755 });
-      yield* fs.writeFileString(
-        path.join(prefix, "lib/node_modules/z9/package.json"),
-        `{"name":"z9","version":"${packageJson.version}"}`,
-      );
-      yield* fs.symlink(npmLauncher, path.join(prefix, "bin/z9"));
-      expect(
-        yield* rootCommand({
-          node: "/home/theo/.z9code/runtime/versions/1.0.0/z9",
-          entry: "/home/theo/.z9code/runtime/versions/1.0.0/z9",
-          executable: true,
-          path: path.join(prefix, "bin"),
-          env: { Z9CODE_NPM_LAUNCHER_PATH: npmLauncher },
-        }),
-      ).toBe('sudo env "PATH=$PATH" z9 browser setup');
 
       expect(
         yield* rootCommand({ ...desktop, env: { Z9CODE_CLI_PATH: path.join(home, "gone") } }),
@@ -228,48 +207,34 @@ it.layer(NodeServices.layer)("host CLI commands", (it) => {
 });
 
 it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
-  it.effect("recognizes runner caches for script packages and the npm launcher", () =>
+  it.effect("reports a runner cache as the installation kind", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
-      const executable = path.join(root, ".z9code/runtime/versions/1.0.0/z9");
-      yield* fs.makeDirectory(path.dirname(executable), { recursive: true });
-      yield* fs.writeFileString(executable, "");
       for (const [relative, kind] of [
         ["npm/_npx/hash/node_modules/z9/dist/bin.mjs", "npx"],
-        ["npm/_npx/hash/node_modules/z9/bin/z9.mjs", "npx"],
         ["pnpm/dlx/hash/node_modules/z9/dist/bin.mjs", "pnpm-dlx"],
         [".bun/install/cache/z9/dist/bin.mjs", "bunx"],
       ] as const) {
         const entry = path.join(root, relative);
         yield* fs.makeDirectory(path.dirname(entry), { recursive: true });
         yield* fs.writeFileString(entry, "");
-        yield* fs.writeFileString(
-          path.join(path.dirname(entry), "../package.json"),
-          `{"name":"z9","version":"${packageJson.version}","bin":{"z9":"./bin/z9.mjs"}}`,
-        );
-        const launchedBy = entry.endsWith("z9.mjs");
         const installation = yield* resolveServerInstallation.pipe(
-          Effect.provideService(HostProcess.Arguments, [launchedBy ? executable : "node", entry]),
-          Effect.provideService(HostProcess.ExecutablePath, executable),
-          Effect.provideService(HostProcess.IsExecutable, launchedBy),
-          Effect.provideService(
-            HostProcess.Environment,
-            launchedBy ? { Z9CODE_NPM_LAUNCHER_PATH: entry } : {},
-          ),
+          Effect.provideService(HostProcess.Arguments, ["node", entry]),
+          Effect.provideService(HostProcess.IsExecutable, false),
         );
         expect(installation).toEqual({ kind });
       }
     }),
   );
 
-  it.effect("requires the npm prefix's bin to point to the running package", () =>
+  it.effect("leaves a global npm install unknown", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped();
-      const prefix = path.join(root, "bunx-tools");
+      const prefix = path.join(root, "tools");
       const packageRoot = path.join(prefix, "lib/node_modules/z9");
       const entry = path.join(packageRoot, "dist/bin.mjs");
       const globalBin = path.join(prefix, "bin/z9");
@@ -280,53 +245,14 @@ it.layer(NodeServices.layer)("manual server installation ownership", (it) => {
         path.join(packageRoot, "package.json"),
         '{"name":"z9","version":"0.0.45","bin":{"z9":"./dist/bin.mjs"}}',
       );
-      const resolve = resolveServerInstallation.pipe(
-        Effect.provideService(HostProcess.Arguments, ["node", entry]),
-        Effect.provideService(HostProcess.IsExecutable, false),
-        Effect.provideService(HostProcess.Platform, "linux"),
-      );
-      expect(yield* resolve).toBeNull();
       yield* fs.symlink(entry, globalBin);
-      expect(yield* resolve).toEqual({ kind: "npm-global", prefix });
-      yield* fs.remove(globalBin);
-      yield* fs.writeFileString(globalBin, "an unrelated z9 command");
-      expect(yield* resolve).toBeNull();
-      expect(yield* resolve.pipe(Effect.provideService(HostProcess.Platform, "win32"))).toBeNull();
-    }),
-  );
-
-  it.effect("proves the downloaded executable was started by a global npm launcher", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped();
-      const prefix = path.join(root, "bunx-tools");
-      const packageRoot = path.join(prefix, "lib/node_modules/z9");
-      const launcher = path.join(packageRoot, "bin/z9.mjs");
-      const executable = path.join(root, ".z9code/runtime/versions/1.0.0/z9");
-      yield* fs.makeDirectory(path.dirname(launcher), { recursive: true });
-      yield* fs.makeDirectory(path.dirname(executable), { recursive: true });
-      yield* fs.makeDirectory(path.join(prefix, "bin"));
-      yield* fs.writeFileString(launcher, "");
-      yield* fs.writeFileString(executable, "");
-      yield* fs.symlink(launcher, path.join(prefix, "bin/z9"));
-      const resolve = resolveServerInstallation.pipe(
-        Effect.provideService(HostProcess.ExecutablePath, executable),
-        Effect.provideService(HostProcess.Arguments, [executable, executable]),
-        Effect.provideService(HostProcess.IsExecutable, true),
-        Effect.provideService(HostProcess.Platform, "linux"),
-        Effect.provideService(HostProcess.Environment, { Z9CODE_NPM_LAUNCHER_PATH: launcher }),
-      );
-      for (const [version, expected] of [
-        ["0.0.1", null],
-        [packageJson.version, { kind: "npm-global", prefix }],
-      ] as const) {
-        yield* fs.writeFileString(
-          path.join(packageRoot, "package.json"),
-          `{"name":"z9","version":"${version}","bin":{"z9":"./bin/z9.mjs"}}`,
-        );
-        expect(yield* resolve).toEqual(expected);
-      }
+      expect(
+        yield* resolveServerInstallation.pipe(
+          Effect.provideService(HostProcess.Arguments, ["node", entry]),
+          Effect.provideService(HostProcess.IsExecutable, false),
+          Effect.provideService(HostProcess.Platform, "linux"),
+        ),
+      ).toBeNull();
     }),
   );
 

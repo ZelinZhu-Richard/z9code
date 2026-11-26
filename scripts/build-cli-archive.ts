@@ -16,6 +16,8 @@ import { Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import * as HostProcess from "@z9code/shared/HostProcess";
+import { CLI_RELEASE_MANIFEST_FILE, CliReleaseManifest } from "@z9code/shared/cliRelease";
+import { fromJsonStringPretty } from "@z9code/shared/schemaJson";
 import { fromYaml } from "@z9code/shared/schemaYaml";
 import { resolveSpawnCommand } from "@z9code/shared/shell";
 import rootPackageJson from "../package.json" with { type: "json" };
@@ -224,7 +226,7 @@ const stageRuntimeExternals = Effect.fn("stageRuntimeExternals")(function* (inpu
   ]) {
     yield* fs.remove(path.join(input.stageDir, entry), { recursive: true, force: true });
   }
-  // Nested .bin shims are unused symlinks, which the npm registry rejects in tarballs.
+  // Nested .bin shims are unused symlinks that dangle once the archive is extracted.
   yield* removeNestedBinDirectories(fs, path, path.join(input.stageDir, "node_modules"));
 });
 
@@ -584,6 +586,41 @@ const signWindowsExecutable = Effect.fn("signWindowsExecutable")(function* (
   yield* Effect.log("[cli-archive] Signed z9.exe (Azure Trusted Signing).");
 });
 
+/** Highest server migration id, from the `NNN_Name.ts` files the server registers. */
+export const latestServerMigrationId = Effect.fn("latestServerMigrationId")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const dir = yield* path.fromFileUrl(
+    new URL("../apps/server/src/persistence/Migrations/", import.meta.url),
+  );
+  const ids = (yield* fs.readDirectory(dir)).flatMap((name) => {
+    const id = /^(\d+)_\w+\.ts$/.exec(name)?.[1];
+    return id === undefined ? [] : [Number(id)];
+  });
+  return Math.max(0, ...ids);
+});
+
+const encodeCliReleaseManifest = Schema.encodeEffect(fromJsonStringPretty(CliReleaseManifest));
+
+/** Published beside SHA256SUMS so a track switch can check the database before installing. */
+export const writeCliReleaseManifest = Effect.fn("writeCliReleaseManifest")(function* (input: {
+  readonly version: string;
+  readonly outputDir: string;
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const manifestPath = path.join(input.outputDir, CLI_RELEASE_MANIFEST_FILE);
+  yield* fs.makeDirectory(input.outputDir, { recursive: true });
+  yield* fs.writeFileString(
+    manifestPath,
+    `${yield* encodeCliReleaseManifest({
+      version: input.version,
+      databaseMigration: yield* latestServerMigrationId(),
+    })}\n`,
+  );
+  return manifestPath;
+});
+
 const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   readonly platform: BuildPlatform;
   readonly arch: BuildArch;
@@ -692,7 +729,7 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
       "tar (zip)",
     );
   } else {
-    // npm rejects Linux hardlink entries; macOS pnpm clones and bsdtar lacks this flag.
+    // Some extractors mishandle Linux hardlink entries; macOS pnpm clones and bsdtar lacks this flag.
     yield* runCommand(
       ChildProcess.make("tar", [
         ...(input.platform === "linux" ? ["--hard-dereference"] : []),
@@ -707,6 +744,7 @@ const buildCliArchive = Effect.fn("buildCliArchive")(function* (input: {
   }
   const stat = yield* fs.stat(archivePath);
   yield* Effect.log(`[cli-archive] Wrote ${archivePath} (${String(stat.size)} bytes).`);
+  yield* writeCliReleaseManifest({ version: input.version, outputDir: input.outputDir });
   return archivePath;
 });
 

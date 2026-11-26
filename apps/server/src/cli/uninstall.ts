@@ -228,7 +228,7 @@ const runUninstall = Effect.fn("cli.uninstall.run")(function* (input: {
     yield* Console.log(`Nothing to remove: z9 is not installed for ${input.baseDir}.`);
     if (!(yield* HostProcess.IsExecutable)) {
       yield* Console.log(
-        "  This z9 runs from a Node script, so it was installed by npm or built from source. Remove it the same way (`npm uninstall -g z9`, or delete the checkout).",
+        "  This z9 runs from a Node script, so it was built from source. Delete the checkout to remove it.",
       );
     }
     yield* logOtherHomeService(plan);

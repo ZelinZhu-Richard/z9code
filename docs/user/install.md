@@ -51,13 +51,6 @@ command it names and open the pairing URL to connect to that server. Stop it
 before starting a replacement, or use a different `--base-dir` for an
 independent server.
 
-To try z9code once without installing it, run `npx z9@latest` instead (needs
-Node.js for `npx`). It offers to install the `z9` command first. If you say no,
-it asks again at the next minor release, and `npx z9 install` installs it later.
-`npx z9` always runs the version npm picked, even when a `z9` is installed. On
-the nightly train, run your installed `z9` (for example `z9 up`), not
-`npx z9`, which runs the latest stable release.
-
 ### Intel Macs
 
 There is no `z9` executable for Intel Macs (the desktop app is available). To

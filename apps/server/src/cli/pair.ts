@@ -92,7 +92,7 @@ export class IncompatibleServerProtocolError extends Schema.TaggedError<Incompat
   override get message(): string {
     return [
       `The running z9code server (${this.serverVersion}) speaks orchestration protocol ${String(this.serverProtocolVersion)}, but this CLI speaks protocol ${String(ORCHESTRATION_PROTOCOL_VERSION)}.`,
-      `Pair with the matching CLI instead: \`${this.pairCommand}\`.`,
+      `Run \`${this.pairCommand}\` from a z9 ${this.serverVersion} CLI, or update both to the same release with \`z9 update\`.`,
     ].join("\n");
   }
 }
@@ -557,7 +557,7 @@ export const pairCommand = Command.make("pair", {
         return yield* new IncompatibleServerProtocolError({
           serverVersion: target.descriptor.serverVersion,
           serverProtocolVersion,
-          pairCommand: `npx z9@${target.descriptor.serverVersion} pair${baseDirArgs}`,
+          pairCommand: `z9 pair${baseDirArgs}`,
         });
       }
 

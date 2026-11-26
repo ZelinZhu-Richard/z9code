@@ -17,7 +17,6 @@ import * as HostProcess from "@z9code/shared/HostProcess";
 import { resolveSpawnCommand } from "@z9code/shared/shell";
 import {
   ServerCliBootstrapTooLargeError,
-  ServerCliBuildAssetMissingError,
   ServerCliCommandExitError,
   ServerCliDevelopmentIconSourceMissingError,
   ServerCliDevelopmentIconTargetMissingError,
@@ -185,48 +184,9 @@ const buildExeCmd = Command.make(
   ),
 );
 
-/** Publish after the GitHub release exists; the launcher downloads from it. */
-const publishCmd = Command.make(
-  "publish",
-  {
-    packagesDir: Flag.String("packages-dir").pipe(
-      Flag.withDescription("Output dir of scripts/build-npm-launcher.ts."),
-    ),
-    tag: Flag.String("tag").pipe(Flag.withDefault("latest")),
-    access: Flag.String("access").pipe(Flag.withDefault("public")),
-    provenance: Flag.Boolean("provenance").pipe(Flag.withDefault(false)),
-    dryRun: Flag.Boolean("dry-run").pipe(Flag.withDefault(false)),
-    verbose: Flag.Boolean("verbose").pipe(Flag.withDefault(false)),
-  },
-  (config) =>
-    Effect.gen(function* () {
-      const path = yield* Path.Path;
-      const fs = yield* FileSystem.FileSystem;
-      const packagesDir = path.resolve(config.packagesDir);
-      const launcherTarball = path.join(packagesDir, "z9.tgz");
-      if (!(yield* fs.exists(launcherTarball))) {
-        return yield* new ServerCliBuildAssetMissingError({ assetPath: launcherTarball });
-      }
-
-      const args = ["publish", "--access", config.access, "--tag", config.tag];
-      if (config.provenance) args.push("--provenance");
-      if (config.dryRun) args.push("--dry-run");
-      const spawnCommand = yield* resolveSpawnCommand("npm", [...args, launcherTarball]);
-      yield* Effect.log(`[cli] npm ${args.join(" ")} z9.tgz`);
-      yield* runCommand(
-        ChildProcess.make(spawnCommand.command, spawnCommand.args, {
-          cwd: packagesDir,
-          stdout: config.verbose ? "inherit" : "ignore",
-          stderr: "inherit",
-          shell: spawnCommand.shell,
-        }),
-      );
-    }),
-).pipe(Command.withDescription("Publish the z9 launcher to npm."));
-
 const cli = Command.make("cli").pipe(
-  Command.withDescription("z9code server build & publish CLI."),
-  Command.withSubcommands([buildCmd, buildExeCmd, publishCmd]),
+  Command.withDescription("z9code server build CLI."),
+  Command.withSubcommands([buildCmd, buildExeCmd]),
 );
 
 Command.run(cli, { version: "0.0.0" }).pipe(

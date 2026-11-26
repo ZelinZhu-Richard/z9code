@@ -24,7 +24,7 @@ Code server, so it gives you any restart steps and does not do them itself.
 If the app does not start, or triage does not work in the app, run:
 
 ```sh
-npx z9 triage
+z9 triage
 ```
 
 It starts Claude Code or Codex in your terminal with the same
@@ -32,8 +32,8 @@ instructions. If more than one is installed, it asks which to use. You can also
 choose explicitly:
 
 ```sh
-npx z9 triage --agent claude
-npx z9 triage --agent codex
+z9 triage --agent claude
+z9 triage --agent codex
 ```
 
 Pass `--model <model-id>` to choose a model, or leave it out to use the CLI's default.

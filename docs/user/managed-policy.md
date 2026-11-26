@@ -217,7 +217,7 @@ The limit decides which modes z9code asks the provider for. It is not a sandbox;
 `clients` lists how the server may run:
 
 - `desktop`: as the desktop app's own server.
-- `local-browser`: as a server only browsers on this machine reach, such as `npx z9`.
+- `local-browser`: as a server only browsers on this machine reach, such as plain `z9`.
 - `remote`: reachable from phones, other computers, and other browsers over the network.
 
 `remote` is the line that matters. A server reachable from the network also accepts browsers on
@@ -287,9 +287,8 @@ starts the binary you set.
   and updates started from another device. Publish only the versions you have approved, laid out
   as on a GitHub release. The release's update files (`latest.yml`, `latest-mac.yml`,
   `latest-linux.yml`, `latest-linux-arm64.yml`, and their `nightly` versions if you allow nightly)
-  and the desktop installers they list go at the URL's root. The release's `t3-*` archives and
-  `SHA256SUMS` go under `v<version>/`. A `z9` run through `npx` comes from npm, so pin it with your
-  package tooling.
+  and the desktop installers they list go at the URL's root. The release's `t3-*` archives,
+  `SHA256SUMS`, and `release.json` go under `v<version>/`.
 - `allowNightly: false`: the nightly channel is unavailable.
 
 ## What a policy does not cover

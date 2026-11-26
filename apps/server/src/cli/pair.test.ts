@@ -500,7 +500,7 @@ describe("z9 pair", () => {
           if (Exit.isFailure(exit)) {
             assert.include(
               String(Cause.squash(exit.cause)),
-              `z9@0.0.45 pair --base-dir ${baseDir}`,
+              `Run \`z9 pair --base-dir ${baseDir}\` from a z9 0.0.45 CLI`,
             );
           }
         }),

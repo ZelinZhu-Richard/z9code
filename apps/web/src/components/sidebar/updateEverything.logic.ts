@@ -172,7 +172,7 @@ function unavailableReason(
   return null;
 }
 
-/** The latest release on the track a fleet switches to, as npm reports it. */
+/** The latest release on the track a fleet switches to, from z9code's GitHub releases. */
 export interface ChannelSwitchRelease {
   readonly channel: DesktopUpdateChannel;
   readonly version: string;

@@ -96,7 +96,7 @@ export const homeOwnedMessage = (owner: Option.Option<HomeOwner>): string =>
     onNone: () =>
       m(
         msg(
-          "Another z9code server, such as the background service, is using this data directory, or an older background service is set up for it. Stop that server or try `z9 update`. If the older launcher cannot update, run `z9 service uninstall` and optionally reinstall with `z9 service install` from a current CLI. Use `npx z9@latest` if `z9` is missing or outdated, and pass `--base-dir` with the service's z9code home to each command. Then reopen z9code. You can also set a separate Z9CODE_HOME and pair with the running server.",
+          "Another z9code server, such as the background service, is using this data directory, or an older background service is set up for it. Stop that server or try `z9 update`. If the older launcher cannot update, run `z9 service uninstall` and optionally reinstall with `z9 service install` from a current CLI. Reinstall z9 with the install script if `z9` is missing or outdated, and pass `--base-dir` with the service's z9code home to each command. Then reopen z9code. You can also set a separate Z9CODE_HOME and pair with the running server.",
         ),
       ),
     onSome: (owner) => {

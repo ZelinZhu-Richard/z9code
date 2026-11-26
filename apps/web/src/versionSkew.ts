@@ -105,17 +105,12 @@ export function manualServerUpdateCommand(
   targetVersion: string,
   installation?: ServerInstallation,
 ): string {
-  const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
-  if (installation?.kind === "npm-global") {
-    return `npm install --global --prefix ${quote(installation.prefix)} z9@${targetVersion}`;
-  }
   if (installation?.kind === "t3-launcher") {
+    const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
     // An inherited Z9CODE_HOME would otherwise send the update to a home the launcher is not in.
     return `${quote(installation.launcher)} update --base-dir ${quote(installation.baseDir)} ${targetVersion}`;
   }
-  const runner =
-    installation?.kind === "pnpm-dlx" ? "pnpm dlx" : installation?.kind === "bunx" ? "bunx" : "npx";
-  return `${runner} z9@${targetVersion}`;
+  return `z9 update ${targetVersion}`;
 }
 
 export function buildVersionMismatchDismissalKey(

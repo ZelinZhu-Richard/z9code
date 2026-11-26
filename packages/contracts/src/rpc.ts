@@ -378,9 +378,9 @@ import {
   ServerRemoveKeybindingResult,
   ServerProviderUpdatedPayload,
   ServerSelfUpdateError,
-  ServerNpmRelease,
-  ServerNpmReleaseError,
-  ServerNpmReleaseInput,
+  ServerCliRelease,
+  ServerCliReleaseError,
+  ServerCliReleaseInput,
   ServerSelfUpdateInput,
   ServerSelfUpdateProgressEvent,
   ServerSelfUpdateResult,
@@ -581,7 +581,7 @@ export const WS_METHODS = {
 
   serverProbe: "server.probe",
   serverGetConfig: "server.getConfig",
-  serverGetNpmRelease: "server.getNpmRelease",
+  serverGetCliRelease: "server.getCliRelease",
   serverRefreshProviders: "server.refreshProviders",
   serverUpdateProvider: "server.updateProvider",
   serverUpdateServer: "server.updateServer",
@@ -899,10 +899,10 @@ const WsProviderInstallRemoveRpc = Rpc.make(WS_METHODS.providerInstallRemove, {
   error: ProviderSetupRpcError,
 });
 
-const WsServerGetNpmReleaseRpc = Rpc.make(WS_METHODS.serverGetNpmRelease, {
-  payload: ServerNpmReleaseInput,
-  success: Schema.NullOr(ServerNpmRelease),
-  error: Schema.Union([ServerNpmReleaseError, EnvironmentAuthorizationError]),
+const WsServerGetCliReleaseRpc = Rpc.make(WS_METHODS.serverGetCliRelease, {
+  payload: ServerCliReleaseInput,
+  success: Schema.NullOr(ServerCliRelease),
+  error: Schema.Union([ServerCliReleaseError, EnvironmentAuthorizationError]),
 });
 
 const WsServerUpdateServerRpc = Rpc.make(WS_METHODS.serverUpdateServer, {
@@ -2480,7 +2480,7 @@ export const WsRpcGroup = RpcGroup.make(
   WsProviderInstallSubscribeRpc,
   WsProviderInstallRemoveRpc,
   WsServerUpdateServerRpc,
-  WsServerGetNpmReleaseRpc,
+  WsServerGetCliReleaseRpc,
   WsServerUpdateServerWithProgressRpc,
   WsServerCommitDesktopUpdateRpc,
   WsServerUpsertKeybindingRpc,

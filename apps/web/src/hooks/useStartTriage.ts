@@ -19,7 +19,7 @@ import { writeTextToClipboard } from "./useCopyToClipboard";
 import { useNewThreadHandler } from "./useHandleNewThread";
 import { useScratchProject } from "./useScratchProject";
 
-export const TRIAGE_CLI_COMMAND = "npx z9 triage";
+export const TRIAGE_CLI_COMMAND = "z9 triage";
 
 const copyTriageCliCommand = () =>
   writeTextToClipboard(TRIAGE_CLI_COMMAND, {

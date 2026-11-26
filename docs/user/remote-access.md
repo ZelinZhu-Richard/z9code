@@ -305,7 +305,7 @@ sudo z9 browser setup
 ```
 
 The server shows the exact line for how you started it, and keeps your `PATH`
-when you started it with `npx` and Node is installed only for your user. Where `z9` is not on your `PATH`, such as with only the
+when root's `PATH` would not find your `z9`. Where `z9` is not on your `PATH`, such as with only the
 desktop app installed, it names the full path of the app's own `z9` instead. It allows Chrome's sandbox with an AppArmor profile and installs
 any missing libraries and system fonts with apt; pages that load without text
 can mean the host has no fonts. It is safe to run again, and each run reloads

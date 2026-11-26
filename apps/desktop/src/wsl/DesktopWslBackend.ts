@@ -128,7 +128,7 @@ export const layer = Layer.effect(
                 Ref.set(
                   preflightErrorRef,
                   Option.some(
-                    "Another z9code server is using this distro's z9code home, or an older background service is set up for it. Stop that server or pair with it, or try `z9 update` in the distro. If the older launcher cannot update, run `z9 service uninstall` and optionally reinstall with `z9 service install` from a current CLI in the distro. Use `npx z9@latest` if `z9` is missing or outdated, and pass `--base-dir` with the service's z9code home to each command.",
+                    "Another z9code server is using this distro's z9code home, or an older background service is set up for it. Stop that server or pair with it, or try `z9 update` in the distro. If the older launcher cannot update, run `z9 service uninstall` and optionally reinstall with `z9 service install` from a current CLI in the distro. Reinstall z9 with the install script if `z9` is missing or outdated, and pass `--base-dir` with the service's z9code home to each command.",
                   ),
                 ),
               ),

@@ -384,14 +384,6 @@ export default defineConfig({
         rules: { "z9code/no-global-process-runtime": "off" },
       },
       {
-        // The `z9` npm launcher is published as plain, dependency-free Node.
-        files: ["scripts/npm-launcher/**"],
-        rules: {
-          "z9code/no-global-process-runtime": "off",
-          "z9code/namespace-node-imports": "off",
-        },
-      },
-      {
         files: ["apps/server/src/mcp/McpHttpServer.ts"],
         rules: { "z9code/no-raw-mcp-registration": "off" },
       },

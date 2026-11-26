@@ -21,12 +21,14 @@ const MISMATCH_HINT =
 
 describe("versionSkew", () => {
   it("updates only the proven install and safely quotes its paths", () => {
-    expect(manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/node" })).toBe(
-      "npm install --global --prefix '/opt/node' z9@0.0.45",
-    );
-    expect(
-      manualServerUpdateCommand("0.0.45", { kind: "npm-global", prefix: "/opt/maria's node" }),
-    ).toBe("npm install --global --prefix '/opt/maria'\\''s node' z9@0.0.45");
+    expect(manualServerUpdateCommand("0.0.45")).toBe("z9 update 0.0.45");
+    for (const installation of [
+      { kind: "npm-global", prefix: "/opt/node" },
+      { kind: "npx" },
+      { kind: "pnpm-dlx" },
+    ] as const) {
+      expect(manualServerUpdateCommand("0.0.45", installation)).toBe("z9 update 0.0.45");
+    }
     expect(
       manualServerUpdateCommand("0.0.45", {
         kind: "t3-launcher",

@@ -1,6 +1,6 @@
 import * as NodeAssert from "node:assert/strict";
 
-import { EnvironmentId, ServerConfig, ServerNpmReleaseError } from "@z9code/contracts";
+import { EnvironmentId, ServerConfig, ServerCliReleaseError } from "@z9code/contracts";
 import { expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
@@ -8,12 +8,12 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { vi } from "vite-plus/test";
 
-import { npmReleaseAtom, npmReleaseFailureMessage } from "./npmRelease";
+import { cliReleaseAtom, cliReleaseFailureMessage } from "./cliRelease";
 import { primaryEnvironmentIdAtom } from "./primaryEnvironment";
 import { serverEnvironment } from "./server";
 
 vi.mock("./server", () => ({
-  serverEnvironment: { npmRelease: vi.fn(), configValueAtom: vi.fn() },
+  serverEnvironment: { cliRelease: vi.fn(), configValueAtom: vi.fn() },
 }));
 vi.mock("./presentation", () => ({
   environmentSummaries: { connectedEnvironmentIdsAtom: Atom.make(["first", "second"]) },
@@ -36,7 +36,7 @@ const configFor = (environmentId: EnvironmentId | null, supported = true) =>
       serverVersion: version,
       capabilities: {
         repositoryIdentity: true,
-        ...(supported ? { npmReleaseLookup: true } : {}),
+        ...(supported ? { cliReleaseLookup: true } : {}),
       },
     },
     auth: {
@@ -64,7 +64,7 @@ function setup(supported = true) {
   vi.mocked(serverEnvironment.configValueAtom)
     .mockReset()
     .mockImplementation((environmentId) => Atom.make(configFor(environmentId, supported)));
-  return vi.mocked(serverEnvironment.npmRelease).mockReset();
+  return vi.mocked(serverEnvironment.cliRelease).mockReset();
 }
 
 it.effect(
@@ -78,7 +78,7 @@ it.effect(
         ),
       );
       const registry = AtomRegistry.make();
-      const release = npmReleaseAtom("nightly");
+      const release = cliReleaseAtom("nightly");
       NodeAssert.ok(
         Atom.isWritable<EnvironmentId | null, EnvironmentId | null>(primaryEnvironmentIdAtom),
         "Expected the mocked primary environment atom to be writable.",
@@ -116,7 +116,7 @@ it.effect("resolves track metadata through a supporting server when there is no 
     );
     query.mockReturnValue(Atom.make(AsyncResult.success({ version })));
     const registry = AtomRegistry.make();
-    const release = npmReleaseAtom("nightly");
+    const release = cliReleaseAtom("nightly");
     const unmount = registry.mount(release);
     try {
       expect(yield* AtomRegistry.getResult(registry, release, { suspendOnWaiting: true })).toEqual({
@@ -131,38 +131,40 @@ it.effect("resolves track metadata through a supporting server when there is no 
   }),
 );
 
-it.effect("does not call an unsupported RPC or fetch public npm for an older primary server", () =>
-  Effect.gen(function* () {
-    const query = setup(false);
-    using fetch = vi
-      .spyOn(globalThis, "fetch")
-      .mockRejectedValue(new Error("Unexpected browser fetch"));
-    const registry = AtomRegistry.make();
-    NodeAssert.ok(
-      Atom.isWritable<EnvironmentId | null, EnvironmentId | null>(primaryEnvironmentIdAtom),
-      "Expected the mocked primary environment atom to be writable.",
-    );
-    registry.set(primaryEnvironmentIdAtom, first);
-    const release = npmReleaseAtom("latest");
-    const unmount = registry.mount(release);
-    try {
-      const error = yield* AtomRegistry.getResult(registry, release).pipe(Effect.flip);
-      expect(npmReleaseFailureMessage(Cause.fail(error))).toContain(
-        "Update it before switching tracks",
+it.effect(
+  "does not call an unsupported RPC or fetch GitHub from the browser for an older primary server",
+  () =>
+    Effect.gen(function* () {
+      const query = setup(false);
+      using fetch = vi
+        .spyOn(globalThis, "fetch")
+        .mockRejectedValue(new Error("Unexpected browser fetch"));
+      const registry = AtomRegistry.make();
+      NodeAssert.ok(
+        Atom.isWritable<EnvironmentId | null, EnvironmentId | null>(primaryEnvironmentIdAtom),
+        "Expected the mocked primary environment atom to be writable.",
       );
-      expect(query).not.toHaveBeenCalled();
-      expect(fetch).not.toHaveBeenCalled();
-    } finally {
-      unmount();
-      registry.dispose();
-    }
-  }),
+      registry.set(primaryEnvironmentIdAtom, first);
+      const release = cliReleaseAtom("latest");
+      const unmount = registry.mount(release);
+      try {
+        const error = yield* AtomRegistry.getResult(registry, release).pipe(Effect.flip);
+        expect(cliReleaseFailureMessage(Cause.fail(error))).toContain(
+          "Update it before switching tracks",
+        );
+        expect(query).not.toHaveBeenCalled();
+        expect(fetch).not.toHaveBeenCalled();
+      } finally {
+        unmount();
+        registry.dispose();
+      }
+    }),
 );
 
 it("only displays the safe release error, not arbitrary transport diagnostics", () => {
-  const error = new ServerNpmReleaseError({ reason: "Install npm on the server's PATH." });
-  expect(npmReleaseFailureMessage(Cause.fail(error))).toBe(error.message);
+  const error = new ServerCliReleaseError({ reason: "Could not list z9 releases." });
+  expect(cliReleaseFailureMessage(Cause.fail(error))).toBe(error.message);
   expect(
-    npmReleaseFailureMessage(Cause.fail(new Error("sensitive transport details"))),
+    cliReleaseFailureMessage(Cause.fail(new Error("sensitive transport details"))),
   ).not.toContain("sensitive");
 });

@@ -101,12 +101,11 @@ Update the side the notice names, then reconnect.
 
 The offered action depends on how the server runs:
 
-| Action                     | What to do                                                                                                                                                                                      |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Update server**          | Keep the client open while it installs and reconnects. Supported background services update remotely. For a desktop-hosted server, this also closes and relaunches the desktop app on the host. |
-| **Update the desktop app** | Update the desktop app on the machine running the server, then reopen it if needed.                                                                                                             |
-| **Copy update command**    | Run the command on the named host to update the detected global npm install or installed `z9` command, then restart the server with your usual options.                                         |
-| **Copy relaunch command**  | Stop the command-line server on its host and relaunch with the copied command, keeping your usual subcommand and options. This does not update an installed `z9` command.                       |
+| Action                     | What to do                                                                                                                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Update server**          | Keep the client open while it installs and reconnects. Supported background services update remotely. For a desktop-hosted server, this also closes and relaunches the desktop app on the host.                    |
+| **Update the desktop app** | Update the desktop app on the machine running the server, then reopen it if needed.                                                                                                                                |
+| **Copy update command**    | Run the command on the named host to update its installed `z9` command, then restart the server with your usual options. If `z9` is not installed there, install it first with the [install script](./install.md). |
 
 On the host, run:
 
@@ -124,10 +123,6 @@ If you decline the restart for a background service installed by an older
 release, the service can stay down after a crash or reboot until you run
 `z9 service restart`.
 
-If you run the server with `npx` rather than an installed `z9`, there is
-nothing to update on the host: stop the server and relaunch it as
-`npx z9@<client-version>` with the same subcommand and options.
-
 ## If an update fails
 
 Keep the client open until it reconnects or reports a failure. A failed service
@@ -135,7 +130,7 @@ update can roll back to the previous version. If the update still fails:
 
 1. Retry the offered action once.
 2. Check that you updated the server's machine, not only the device you are using.
-3. For a command-line server, stop it and relaunch the exact version shown in the notice.
+3. For a command-line server, run `z9 update` with the exact version shown in the notice, then restart it.
 
 Only one server can use a z9code home directory at a time. If startup reports that
 another server owns it, stop that server before retrying, or use a separate home
@@ -164,12 +159,12 @@ details** to include the error in a bug report.
 
 ## Registries and proxies
 
-Each server checks z9code releases, and providers installed with npm, through
-its own npm, so the checks use npm's configured registry, authentication, and
-proxy settings. Providers installed with Homebrew or pnpm check through those
-tools.
+Each server checks z9code releases on GitHub. Providers installed with npm check
+through the server's own npm, so those checks use npm's configured registry,
+authentication, and proxy settings. Providers installed with Homebrew or pnpm
+check through those tools.
 Configure npm on the server's machine. If that registry cannot be reached, the
-release shows as unavailable; z9code does not try the public registry instead.
+provider update shows as unavailable; z9code does not try the public registry instead.
 Machines without npm check the public npm registry directly.
 
 ## Update providers

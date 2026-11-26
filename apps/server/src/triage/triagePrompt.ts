@@ -28,8 +28,8 @@ the database.
 
 Its triage CLI version (called "Installed version" in older context files) is only
 the version of the \`z9\` that ran \`z9 triage\`. It is often not the build the bug
-happened on: \`npx z9 triage\` runs whatever \`z9\` npm resolves, while the user may
-run the desktop app, the background service, or a nightly. The server process line
+happened on: the \`z9\` on PATH can differ from the build the user runs in
+the desktop app, the background service, or a nightly. The server process line
 gives the local server's version when the server recorded one.
 
 ## 3. Check for a newer playbook
@@ -69,7 +69,7 @@ Diagnosis grounded in source beats guessing.
 First establish the shape of the install, because the same symptom points at
 different code depending on it:
 
-- How is z9code running on this machine: \`npx z9 serve\` in a terminal, the
+- How is z9code running on this machine: \`z9 serve\` in a terminal, the
   background service, or the desktop app?
 - Which surface is the user connecting from: a browser, the desktop app against
   a local server, the desktop app against a remote server, or the mobile app?

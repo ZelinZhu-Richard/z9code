@@ -142,7 +142,7 @@ import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
 import * as ServerLifecycleEvents from "./serverLifecycleEvents.ts";
 import * as ServerRuntimeStartup from "./serverRuntimeStartup.ts";
 import * as ServerSelfUpdate from "./service/selfUpdate.ts";
-import * as NpmRelease from "./service/npmRelease.ts";
+import * as CliReleaseLookup from "./service/cliReleaseLookup.ts";
 import * as SessionStore from "./auth/SessionStore.ts";
 import * as SourceControlDiscovery from "./sourceControl/SourceControlDiscovery.ts";
 import * as SourceControlRepositoryService from "./sourceControl/SourceControlRepositoryService.ts";
@@ -894,7 +894,7 @@ const layerUnusedConfigRpcServices = Layer.mergeAll(
   Layer.mock(ServerLifecycleEvents.ServerLifecycleEvents)({}),
   Layer.mock(ServerRuntimeStartup.ServerRuntimeStartup)({}),
   Layer.mock(ServerSelfUpdate.ServerSelfUpdate)({}),
-  Layer.mock(NpmRelease.NpmRelease)({}),
+  Layer.mock(CliReleaseLookup.CliReleaseLookup)({}),
   Layer.mock(SessionStore.SessionStore)({ cookieName: "config-test", legacyCookieName: undefined }),
   Layer.mock(SourceControlDiscovery.SourceControlDiscovery)({}),
   Layer.mock(SourceControlRepositoryService.SourceControlRepositoryService)({}),
@@ -915,6 +915,7 @@ const layerUnusedConfigRpcServices = Layer.mergeAll(
   Layer.mock(WorkspaceFileSystem.WorkspaceFileSystem)({}),
   Layer.mock(WorktreeSetupTracker.WorktreeSetupTracker)({}),
   FeatureFlags.layerTest(),
+  ManagedPolicy.layerTest(),
 );
 
 const layerConfigSources = Layer.mergeAll(
