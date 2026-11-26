@@ -21,7 +21,10 @@ z9code's server only makes these connections, and only in the situations listed:
 | You configure an OTLP endpoint in **Settings → Diagnostics**       | your endpoint                                                                                                                      | Traces you asked for, sent to you   |
 
 Agent CLIs (Claude Code, Codex, Gemini CLI, …) talk to their own vendors under your account.
-That traffic is between you and that vendor. z9code does not read their credentials and starts
+That traffic is between you and that vendor. When the server starts, z9code runs each enabled
+agent CLI once to check that it is installed and signed in, and that check can contact the
+CLI's vendor (Claude Code reaches `api.anthropic.com`, for example). Disable a provider in
+**Settings → Providers** to stop z9code from starting it. z9code does not read their credentials and starts
 Gemini CLI with its usage statistics off.
 
 The desktop app checks for updates only if a release feed is configured at build time; source
