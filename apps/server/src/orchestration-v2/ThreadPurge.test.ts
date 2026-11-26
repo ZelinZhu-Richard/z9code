@@ -345,3 +345,230 @@ it.effect("removes cancelled effects with the deleted thread", () =>
     assert.deepEqual(yield* rowsContaining(SECRET), []);
   }).pipe(Effect.provide(layerTest)),
 );
+
+it.effect("names a policy for every column that references a thread", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const columns = yield* sql<{ readonly name: string }>`
+      SELECT DISTINCT column.name
+      FROM sqlite_schema AS tables, pragma_table_info(tables.name) AS column
+      WHERE tables.type = 'table' AND tables.name NOT LIKE 'sqlite_%'
+    `;
+    const unclassified = columns
+      .map((column) => column.name)
+      .filter(ThreadPurge.isThreadReferenceColumn)
+      .filter((name) => ThreadPurge.THREAD_REFERENCE_POLICY[name] === undefined);
+    assert.deepEqual(unclassified, []);
+  }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect("drops a deleted message's tokens from the search index", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const sink = yield* EventSink.EventSinkV2;
+    const now = yield* DateTime.now;
+    const thread = makeThread(ThreadId.make("thread:indexed"), now);
+    const kept = makeThread(ThreadId.make("thread:indexed-kept"), now);
+    yield* writeThread(thread, now);
+    yield* writeThread(kept, now);
+    const token = "qzxjvwk";
+    yield* sink.write({
+      events: [
+        {
+          id: EventId.make(`event:${thread.id}:token`),
+          type: "message.updated",
+          threadId: thread.id,
+          occurredAt: now,
+          payload: {
+            id: MessageId.make(`message:${thread.id}:token`),
+            threadId: thread.id,
+            runId: null,
+            nodeId: null,
+            role: "user",
+            text: `remember ${token}`,
+            attachments: [],
+            streaming: false,
+            createdBy: "user",
+            creationSource: "web",
+            createdAt: now,
+            updatedAt: now,
+          },
+        },
+      ],
+    });
+    const trigrams = Array.from({ length: token.length - 2 }, (_, i) => token.slice(i + 1, i + 3));
+    const blocksWithToken = Effect.gen(function* () {
+      const blocks = yield* sql<{ readonly block: Uint8Array | null }>`
+        SELECT block FROM orchestration_v2_message_search_data
+      `;
+      return blocks.filter((row) => {
+        const text = new TextDecoder("latin1").decode(row.block ?? new Uint8Array());
+        return trigrams.some((trigram) => text.includes(trigram));
+      }).length;
+    });
+    assert.isAbove(yield* blocksWithToken, 0);
+    yield* deleteThread(thread, now);
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+    assert.equal(yield* blocksWithToken, 0);
+    const matches = yield* sql<{ readonly rowid: number }>`
+      SELECT rowid FROM orchestration_v2_message_search
+      WHERE orchestration_v2_message_search MATCH 'private'
+    `;
+    assert.lengthOf(matches, 1);
+  }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect("clears search tokens an earlier run left behind on the first sweep", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const sink = yield* EventSink.EventSinkV2;
+    const now = yield* DateTime.now;
+    const thread = makeThread(ThreadId.make("thread:crashed"), now);
+    yield* writeThread(thread, now);
+    const token = "vqxkzjw";
+    yield* sink.write({
+      events: [
+        {
+          id: EventId.make(`event:${thread.id}:token`),
+          type: "message.updated",
+          threadId: thread.id,
+          occurredAt: now,
+          payload: {
+            id: MessageId.make(`message:${thread.id}:token`),
+            threadId: thread.id,
+            runId: null,
+            nodeId: null,
+            role: "user",
+            text: `remember ${token}`,
+            attachments: [],
+            streaming: false,
+            createdBy: "user",
+            creationSource: "web",
+            createdAt: now,
+            updatedAt: now,
+          },
+        },
+      ],
+    });
+    const trigrams = Array.from({ length: token.length - 2 }, (_, i) => token.slice(i + 1, i + 3));
+    const blocksWithToken = Effect.gen(function* () {
+      const blocks = yield* sql<{ readonly block: Uint8Array | null }>`
+        SELECT block FROM orchestration_v2_message_search_data
+      `;
+      return blocks.filter((row) => {
+        const text = new TextDecoder("latin1").decode(row.block ?? new Uint8Array());
+        return trigrams.some((trigram) => text.includes(trigram));
+      }).length;
+    });
+    // A purge that committed but stopped before its optimize leaves only the index tombstone.
+    yield* sql`DELETE FROM orchestration_v2_projection_messages WHERE thread_id = ${thread.id}`;
+    assert.isAbove(yield* blocksWithToken, 0);
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 0);
+    assert.equal(yield* blocksWithToken, 0);
+  }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect("removes context transfers into a deleted thread, keeping those a live thread got", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const now = yield* DateTime.now;
+    const live = makeThread(ThreadId.make("thread:transfer-live"), now);
+    const dead = makeThread(ThreadId.make("thread:transfer-dead"), now);
+    yield* writeThread(live, now);
+    yield* writeThread(dead, now);
+    const at = DateTime.formatIso(now);
+    const transfer = (id: string, source: ThreadId, target: ThreadId, type: string) => sql`
+      INSERT INTO orchestration_v2_projection_context_transfers
+        (context_transfer_id, source_thread_id, target_thread_id, type, status, updated_at,
+         payload_json)
+      VALUES (${id}, ${source}, ${target}, ${type}, 'failed', ${at},
+        ${JSON.stringify({ error: `${SECRET} ${id}` })})
+    `;
+    yield* transfer("transfer:into-dead", live.id, dead.id, "subagent_spawn");
+    yield* transfer("transfer:into-live", dead.id, live.id, "merge_back");
+    yield* deleteThread(dead, now);
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+    const remaining = yield* sql<{ readonly context_transfer_id: string }>`
+      SELECT context_transfer_id FROM orchestration_v2_projection_context_transfers
+    `;
+    assert.deepEqual(
+      remaining.map((row) => row.context_transfer_id),
+      ["transfer:into-live"],
+    );
+    yield* deleteThread(live, now);
+    assert.equal(yield* purge.sweep(), 1);
+    assert.deepEqual(yield* rowsContaining(SECRET), []);
+  }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect("keeps the deleted thread's command receipts without their free text", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const now = yield* DateTime.now;
+    const thread = makeThread(ThreadId.make("thread:receipts"), now);
+    yield* writeThread(thread, now);
+    const at = DateTime.formatIso(now);
+    yield* sql`
+      INSERT INTO orchestration_command_receipts
+        (command_id, aggregate_kind, aggregate_id, accepted_at, result_sequence, status, error,
+         command_type)
+      VALUES
+        ('command:receipt', 'thread', ${thread.id}, ${at}, 1, 'rejected', ${SECRET},
+         'message.dispatch'),
+        ('command:project', 'project', 'project:purge', ${at}, 2, 'accepted', NULL,
+         'project.create')
+    `;
+    yield* deleteThread(thread, now);
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+    assert.deepEqual(yield* rowsContaining(SECRET), []);
+    // A receipt guards against a replayed command recreating the purged thread.
+    const receipts = yield* sql<{ readonly command_id: string; readonly error: string | null }>`
+      SELECT command_id, error FROM orchestration_command_receipts ORDER BY command_id
+    `;
+    assert.deepEqual(
+      receipts.map((row) => [row.command_id, row.error]),
+      [
+        ["command:project", null],
+        ["command:receipt", null],
+      ],
+    );
+  }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect("removes webhook deliveries of the scheduled tasks bound to the deleted thread", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const now = yield* DateTime.now;
+    const thread = makeThread(ThreadId.make("thread:scheduled"), now);
+    yield* writeThread(thread, now);
+    const at = DateTime.formatIso(now);
+    yield* sql`
+      INSERT INTO scheduled_tasks
+        (task_id, title, prompt, enabled, schedule_json, project_id, thread_id,
+         workspace_strategy_json, model_selection_json, runtime_mode, interaction_mode, created_by,
+         creation_source, created_at, updated_at, last_run_status, run_count)
+      VALUES ('task:bound', 'Nightly', 'Run', 1, '{}', 'project:purge', ${thread.id}, '{}', '{}',
+        'full-access', 'default', 'user', 'web', ${at}, ${at}, 'never', 0)
+    `;
+    yield* sql`
+      INSERT INTO scheduled_task_webhook_deliveries
+        (delivery_id, task_id, received_at, method, query, headers_json, body, body_bytes,
+         body_truncated, outcome, signature_verified, missing_fields_json, rendered_prompt)
+      VALUES ('delivery:bound', 'task:bound', ${at}, 'POST', '', '{}', ${SECRET}, 1, 0,
+        'accepted', 1, '[]', ${SECRET})
+    `;
+    yield* deleteThread(thread, now);
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+    assert.deepEqual(yield* rowsContaining(SECRET), []);
+  }).pipe(Effect.provide(layerTest)),
+);

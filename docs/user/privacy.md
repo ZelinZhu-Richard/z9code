@@ -37,7 +37,11 @@ builds have none. The mobile app does not check for over-the-air updates.
 - **Deleting a thread** removes its rows from every table, its events (one scrubbed tombstone is
   kept so other devices learn about the deletion), its search index entries and its provider
   logs. SQLite `secure_delete` zeroes the freed pages. A thread whose history a live fork still
-  shows is kept until that fork is deleted too.
+  shows is kept until that fork is deleted too. What another thread received from it, such as a
+  merged-back summary or a subagent's result, belongs to that thread and goes when it is deleted.
+  Command receipts stay, without their text, so a replayed command cannot recreate the thread.
+  Not yet covered: a subagent's own child thread, the pre-upgrade `state.sqlite` copy, browser
+  screenshots, and threads cached on other clients that were offline during the deletion.
 - Agent feedback reports, if enabled, are stored locally and never sent anywhere.
 - The resource monitor samples only z9code's own process tree, redacts secrets from command
   lines, and can be turned off with `Z9CODE_RESOURCE_MONITOR_DISABLED=1`.

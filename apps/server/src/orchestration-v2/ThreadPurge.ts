@@ -1,6 +1,6 @@
 // Deletion marks a thread and runs its cleanup effects; this sweep then removes every row keyed
-// by the thread, its events except a scrubbed tombstone, and its provider logs. Threads a live
-// fork still shows wait for that fork.
+// by the thread, its events except a scrubbed tombstone, its search index tokens and its provider
+// logs. Threads a live fork still shows wait for that fork.
 import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -21,6 +21,25 @@ const EVENTS_TABLE = "orchestration_events";
 const KEPT_TABLES: ReadonlySet<string> = new Set([EVENTS_TABLE, "orchestration_v2_legacy_imports"]);
 /** Outbox rows are only removed once settled; a running effect still owns its row. */
 const OUTBOX_PREFIX = "orchestration_v2_effect_outbox";
+/** Contentless, so deleting a message only tombstones it; its tokens stay until a merge drops them. */
+const MESSAGE_SEARCH_TABLE = "orchestration_v2_message_search";
+/** Scheduled task tables without a thread column follow the task bound to the thread. */
+const TASKS_TABLE = "scheduled_tasks";
+const TASK_TABLE_PREFIX = "scheduled_task_";
+/**
+ * Columns that name an app thread. Purging an owner deletes the row; a row with other references
+ * goes once no thread it names is left, so a live thread keeps what it renders. A transfer belongs
+ * to the thread it delivered into. Any other `*thread_id` column counts as a reference.
+ */
+export const THREAD_REFERENCE_POLICY: Readonly<Record<string, "owner" | "reference">> = {
+  thread_id: "owner",
+  target_thread_id: "owner",
+  source_thread_id: "reference",
+  child_thread_id: "reference",
+};
+/** Provider thread ids live in another namespace. */
+export const isThreadReferenceColumn = (column: string) =>
+  /(?:^|_)thread_id$/u.test(column) && !column.endsWith("provider_thread_id");
 /**
  * The tombstone keeps only these structural fields, so a free-text field added to threads later is
  * dropped without anyone updating a list. Optional thread fields are omitted entirely.
@@ -53,11 +72,17 @@ const TOMBSTONE_PAYLOAD_SQL = `json_object(${[
 ].join(", ")})`;
 
 const quote = (name: string) => `"${name.replaceAll('"', '""')}"`;
-const placeholders = (count: number) => Array.from({ length: count }, () => "?").join(", ");
 
 interface ThreadKeyedTable {
   readonly name: string;
+  readonly owners: ReadonlyArray<string>;
+  readonly references: ReadonlyArray<string>;
+  /** `aggregate_kind`/`aggregate_id` rows, such as command receipts. */
+  readonly aggregate: boolean;
+  /** Keyed by a scheduled task rather than a thread. */
+  readonly task: boolean;
   readonly hasStatus: boolean;
+  readonly hasError: boolean;
 }
 
 export const make = Effect.gen(function* () {
@@ -81,13 +106,24 @@ export const make = Effect.gen(function* () {
       if (virtualTables.some((name) => table.name === name || table.name.startsWith(`${name}_`))) {
         continue;
       }
-      const columns = yield* sql<{ readonly name: string }>`
+      const columns = (yield* sql<{ readonly name: string }>`
         SELECT name FROM pragma_table_info(${table.name})
-      `.pipe(NodeSqliteClient.readOnly);
-      if (!columns.some((column) => column.name === "thread_id")) continue;
+      `.pipe(NodeSqliteClient.readOnly)).map((column) => column.name);
+      const references = columns.filter(isThreadReferenceColumn);
+      const aggregate = columns.includes("aggregate_kind") && columns.includes("aggregate_id");
+      const task =
+        references.length === 0 &&
+        table.name.startsWith(TASK_TABLE_PREFIX) &&
+        columns.includes("task_id");
+      if (references.length === 0 && !aggregate && !task) continue;
       keyed.push({
         name: table.name,
-        hasStatus: columns.some((column) => column.name === "status"),
+        owners: references.filter((column) => THREAD_REFERENCE_POLICY[column] === "owner"),
+        references,
+        aggregate,
+        task,
+        hasStatus: columns.includes("status"),
+        hasError: columns.includes("error"),
       });
     }
     return keyed;
@@ -126,15 +162,56 @@ export const make = Effect.gen(function* () {
   const purgeRows = (threadIds: ReadonlyArray<string>, tables: ReadonlyArray<ThreadKeyedTable>) =>
     sql.withTransaction(
       Effect.gen(function* () {
-        const ids = placeholders(threadIds.length);
-        for (const table of tables) {
+        const ids = `(${threadIds.map(() => "?").join(", ")})`;
+        const [messages] = yield* sql<{ readonly found: number }>`
+          SELECT EXISTS (
+            SELECT 1 FROM orchestration_v2_projection_messages
+            WHERE thread_id IN ${sql.in(threadIds)} AND streaming = 0
+          ) AS found
+        `;
+        // Task-keyed rows go first, while the task rows that name the thread still exist.
+        const ordered = [
+          ...tables.filter((table) => table.task),
+          ...tables.filter((table) => !table.task),
+        ];
+        for (const table of ordered) {
+          const params: Array<string> = [];
+          const purged = () => {
+            params.push(...threadIds);
+            return ids;
+          };
+          const conditions = table.owners.map((column) => `${quote(column)} IN ${purged()}`);
+          if (table.references.length > table.owners.length) {
+            const any = table.references.map((column) => `${quote(column)} IN ${purged()}`);
+            const none = table.references.map(
+              (column) =>
+                `(${quote(column)} IS NULL OR ${quote(column)} IN ${purged()} OR ${quote(column)} NOT IN (SELECT thread_id FROM ${THREADS_TABLE}))`,
+            );
+            conditions.push(`((${any.join(" OR ")}) AND ${none.join(" AND ")})`);
+          }
+          if (table.aggregate) {
+            // Receipts stay so a replayed command cannot recreate the thread; only free text goes.
+            if (table.hasError) {
+              yield* sql.unsafe(
+                `UPDATE ${quote(table.name)} SET error = NULL
+                 WHERE aggregate_kind = 'thread' AND aggregate_id IN ${ids}`,
+                [...threadIds],
+              );
+            }
+            if (conditions.length === 0 && !table.task) continue;
+          }
+          if (table.task) {
+            conditions.push(
+              `task_id IN (SELECT task_id FROM ${TASKS_TABLE} WHERE thread_id IN ${purged()})`,
+            );
+          }
           const settledOnly =
             table.name.startsWith(OUTBOX_PREFIX) && table.hasStatus
               ? " AND status IN ('succeeded', 'failed', 'cancelled')"
               : "";
           yield* sql.unsafe(
-            `DELETE FROM ${quote(table.name)} WHERE thread_id IN (${ids})${settledOnly}`,
-            [...threadIds],
+            `DELETE FROM ${quote(table.name)} WHERE (${conditions.join(" OR ")})${settledOnly}`,
+            params,
           );
         }
         for (const threadId of threadIds) {
@@ -167,6 +244,7 @@ export const make = Effect.gen(function* () {
         yield* sql`
           DELETE FROM orchestration_v2_projection_threads WHERE thread_id IN ${sql.in(threadIds)}
         `;
+        return (messages?.found ?? 0) === 1;
       }),
     );
 
@@ -185,6 +263,9 @@ export const make = Effect.gen(function* () {
     }
   });
 
+  // Starts set so a startup sweep also clears tokens left by a crash or a failed optimize.
+  let searchIndexNeedsOptimize = true;
+
   const sweep = Effect.fn("ThreadPurge.sweep")(function* () {
     let purged = 0;
     let tables: ReadonlyArray<ThreadKeyedTable> | undefined;
@@ -192,10 +273,31 @@ export const make = Effect.gen(function* () {
       const threadIds = yield* purgeableThreadIds;
       if (threadIds.length === 0) break;
       tables ??= yield* threadKeyedTables;
-      yield* purgeRows(threadIds, tables);
+      if (yield* purgeRows(threadIds, tables)) searchIndexNeedsOptimize = true;
       yield* purgeProviderLogs(threadIds);
       purged += threadIds.length;
       yield* Effect.yieldNow;
+    }
+    if (searchIndexNeedsOptimize) {
+      const [index] = yield* sql<{ readonly found: number }>`
+        SELECT EXISTS (SELECT 1 FROM sqlite_schema WHERE name = ${MESSAGE_SEARCH_TABLE}) AS found
+      `.pipe(NodeSqliteClient.readOnly);
+      // Rewrites the index without tombstoned rows, so secure_delete zeroes their old pages.
+      searchIndexNeedsOptimize =
+        index?.found !== 1
+          ? false
+          : yield* sql
+              .unsafe(
+                `INSERT INTO ${quote(MESSAGE_SEARCH_TABLE)}(${quote(MESSAGE_SEARCH_TABLE)}) VALUES ('optimize')`,
+              )
+              .pipe(
+                Effect.as(false),
+                Effect.catchCause((cause) =>
+                  Effect.logWarning("message search index optimize failed", { cause }).pipe(
+                    Effect.as(true),
+                  ),
+                ),
+              );
     }
     if (purged > 0) {
       yield* sql`PRAGMA wal_checkpoint(TRUNCATE)`.pipe(Effect.ignore);
