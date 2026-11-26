@@ -31,6 +31,7 @@ import { type DeletedThreadCleanup, StorageCleanup } from "../storageCleanup.ts"
 import * as EventSink from "./EventSink.ts";
 import * as EventStore from "./EventStore.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
+import * as LegacyV1ThreadImporter from "./legacy/LegacyV1ThreadImporter.ts";
 import * as ThreadPurge from "./ThreadPurge.ts";
 
 const storageCleanupStub = (
@@ -745,4 +746,54 @@ it.effect("keeps the database from before 0.1.0 when the purged thread never cam
     assert.equal(yield* purge.sweep(), 1);
     assert.isTrue(yield* fileSystem.exists(legacyPath), "rollback to before 0.1.0 still works");
   }).pipe(Effect.provide(layerFileTest)),
+);
+
+it.effect("keeps a purged V1 thread deleted when the next legacy import runs", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const projections = yield* ProjectionStore.ProjectionStoreV2;
+    const threadId = ThreadId.make("thread:v1-resurrect");
+    // The copied V1 tables in this database, which every startup reconciles against.
+    yield* sql`
+      INSERT INTO projection_projects (
+        project_id, title, workspace_root, scripts_json, created_at, updated_at
+      ) VALUES (
+        'project:legacy', 'Legacy project', '/tmp/legacy-purge', '[]',
+        '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'
+      )
+    `;
+    yield* sql`
+      INSERT INTO projection_threads (
+        thread_id, project_id, title, model_selection_json, runtime_mode,
+        interaction_mode, created_at, updated_at
+      ) VALUES (
+        ${threadId}, 'project:legacy', ${`${SECRET} legacy title`},
+        '{"instanceId":"codex","model":"gpt-5.4"}', 'full-access', 'default',
+        '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'
+      )
+    `;
+    yield* sql`
+      INSERT INTO projection_thread_messages (
+        message_id, thread_id, role, text, is_streaming, created_at, updated_at
+      ) VALUES (
+        ${`${threadId}:message`}, ${threadId}, 'user', ${`${SECRET} question`}, 0,
+        '2026-01-01T01:00:00.000Z', '2026-01-01T01:00:00.000Z'
+      )
+    `;
+    // Each provide builds a fresh importer, as a server restart would.
+    const reconcileShells = Effect.flatMap(
+      LegacyV1ThreadImporter.LegacyV1ThreadImporter,
+      (importer) => importer.reconcileShells,
+    ).pipe(Effect.provide(LegacyV1ThreadImporter.layer));
+    assert.equal((yield* reconcileShells).importedThreadCount, 1);
+
+    const now = yield* DateTime.now;
+    yield* deleteThread(yield* projections.getThread(threadId), now);
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+
+    assert.deepEqual(yield* reconcileShells, { importedThreadCount: 0, importedMessageCount: 0 });
+    assert.isNull(yield* projections.findThread(threadId));
+    assert.deepEqual(yield* rowsContaining(SECRET), []);
+  }).pipe(Effect.provide(layerTest)),
 );
