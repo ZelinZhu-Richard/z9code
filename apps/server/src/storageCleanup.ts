@@ -331,6 +331,8 @@ export class StorageCleanup extends Context.Service<
   }
 >()("z9/storageCleanup") {}
 
+const CHECKPOINT_CLEANUP_ATTEMPTS = 3;
+
 export interface DeletedThreadCleanup {
   readonly finished: ReadonlySet<string>;
   readonly waiting: ReadonlySet<string>;
@@ -2054,7 +2056,9 @@ const make = Effect.gen(function* () {
         )
     `.pipe(NodeSqliteClient.readOnly);
     const threadIds = new Set(rows.map((row) => row.threadId));
+    const failed = new Set<string>();
     const targets = new Map<string, Set<string>>();
+    const targetThreads = new Map<string, Set<string>>();
     for (const row of rows) {
       // Derive ownership from tombstones, never from absence in this database:
       // another z9code home can own refs in the same Git repository.
@@ -2074,9 +2078,15 @@ const make = Effect.gen(function* () {
         const owned = targets.get(key) ?? new Set<string>();
         for (const prefix of prefixes) owned.add(prefix);
         targets.set(key, owned);
+        const owners = targetThreads.get(key) ?? new Set<string>();
+        owners.add(row.threadId);
+        targetThreads.set(key, owners);
       }
     }
-    const repositories = new Map<string, { cwd: string; prefixes: Set<string> }>();
+    const repositories = new Map<
+      string,
+      { cwd: string; prefixes: Set<string>; threads: Set<string> }
+    >();
     for (const [cwd, prefixes] of targets) {
       yield* Effect.gen(function* () {
         if (!(yield* fs.exists(cwd))) return;
@@ -2088,16 +2098,24 @@ const make = Effect.gen(function* () {
         });
         if (result.exitCode !== 0) return;
         const commonDir = yield* fs.realPath(result.stdout.trim());
-        const repository = repositories.get(commonDir) ?? { cwd, prefixes: new Set<string>() };
+        const repository = repositories.get(commonDir) ?? {
+          cwd,
+          prefixes: new Set<string>(),
+          threads: new Set<string>(),
+        };
         for (const prefix of prefixes) repository.prefixes.add(prefix);
+        for (const threadId of targetThreads.get(cwd) ?? []) repository.threads.add(threadId);
         repositories.set(commonDir, repository);
       }).pipe(
         Effect.catch((cause) =>
-          Effect.logWarning("checkpoint repository inspection failed", { cause }),
+          Effect.gen(function* () {
+            for (const threadId of targetThreads.get(cwd) ?? []) failed.add(threadId);
+            yield* Effect.logWarning("checkpoint repository inspection failed", { cause });
+          }),
         ),
       );
     }
-    for (const { cwd, prefixes } of repositories.values()) {
+    for (const { cwd, prefixes, threads } of repositories.values()) {
       yield* Effect.gen(function* () {
         const result = yield* git.execute({
           operation: "StorageCleanup.listCheckpointRefs",
@@ -2127,16 +2145,24 @@ const make = Effect.gen(function* () {
         });
         yield* Effect.logInfo("storage cleanup removed checkpoint refs", { refCount: refs.length });
       }).pipe(
-        Effect.catch((cause) => Effect.logWarning("checkpoint ref cleanup failed", { cause })),
+        Effect.catch((cause) =>
+          Effect.gen(function* () {
+            for (const threadId of threads) failed.add(threadId);
+            yield* Effect.logWarning("checkpoint ref cleanup failed", { cause });
+          }),
+        ),
       );
     }
-    return threadIds;
+    return { threadIds, failed };
   });
   // Only deleted threads' worktrees wait on session stops: any stop while one waits, or a stop inside one kept for another reason.
   // A deletion stays pending until a sweep that started after it finishes.
   let deletedWorktreeWaits = true;
   let keptDeletedWorktrees: ReadonlyArray<string> = [];
   let deletedThreadCleanup: DeletedThreadCleanup = { finished: new Set(), waiting: new Set() };
+  // A failed ref cleanup is retried before the purge may drop the rows it needs; a repository that
+  // keeps failing must not keep the thread's content forever.
+  const checkpointCleanupFailures = new Map<string, number>();
   let deletions = 0;
   let sweptDeletions = 0;
   const sweep = Effect.fn("StorageCleanup.sweep")(function* (
@@ -2151,7 +2177,12 @@ const make = Effect.gen(function* () {
       Effect.asSome,
       Effect.catch((cause) =>
         Effect.logWarning("checkpoint ref cleanup failed", { cause }).pipe(
-          Effect.as(Option.none<ReadonlySet<string>>()),
+          Effect.as(
+            Option.none<{
+              readonly threadIds: ReadonlySet<string>;
+              readonly failed: ReadonlySet<string>;
+            }>(),
+          ),
         ),
       ),
     );
@@ -2198,10 +2229,24 @@ const make = Effect.gen(function* () {
     deletedWorktreeWaits = deletedWorktrees.waiting;
     keptDeletedWorktrees = deletedWorktrees.kept;
     if (Option.isSome(checkedDeletions)) {
-      const checked = [...checkedDeletions.value];
+      const { threadIds, failed } = checkedDeletions.value;
+      const retrying = new Set<string>();
+      for (const threadId of threadIds) {
+        if (!failed.has(threadId)) {
+          checkpointCleanupFailures.delete(threadId);
+          continue;
+        }
+        const attempts = (checkpointCleanupFailures.get(threadId) ?? 0) + 1;
+        checkpointCleanupFailures.set(threadId, attempts);
+        if (attempts < CHECKPOINT_CLEANUP_ATTEMPTS) retrying.add(threadId);
+        else
+          yield* Effect.logWarning("giving up on a deleted thread's checkpoint refs", { threadId });
+      }
+      const waiting = (id: string) => deletedWorktrees.waitingThreads.has(id) || retrying.has(id);
+      const checked = [...threadIds];
       deletedThreadCleanup = {
-        finished: new Set(checked.filter((id) => !deletedWorktrees.waitingThreads.has(id))),
-        waiting: new Set(checked.filter((id) => deletedWorktrees.waitingThreads.has(id))),
+        finished: new Set(checked.filter((id) => !waiting(id))),
+        waiting: new Set(checked.filter(waiting)),
       };
     }
     sweptDeletions = deletionsAtStart;

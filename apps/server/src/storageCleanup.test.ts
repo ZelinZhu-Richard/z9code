@@ -840,6 +840,42 @@ describe("checkpoint ref cleanup", () => {
     ),
   );
 
+  it.live("retries a deleted thread's refs after a failed deletion before finishing it", () =>
+    runCleanupTest(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { service, repo, addThread, listRefs } = yield* checkpointCleanupFixture();
+        const refs = yield* addThread("locked", { deleted: true });
+        // A stale lock, as a crashed git leaves, makes the ref transaction fail.
+        const lock = `${repo}/.git/${refs[0]}.lock`;
+        yield* fs.writeFileString(lock, "");
+        yield* service.runNow;
+        expect(yield* listRefs()).toEqual(refs.toSorted());
+        expect((yield* service.deletedThreadCleanup).waiting.has("locked")).toBe(true);
+        yield* fs.remove(lock);
+        yield* service.runNow;
+        expect(yield* listRefs()).toEqual([]);
+        expect((yield* service.deletedThreadCleanup).finished.has("locked")).toBe(true);
+      }).pipe(Effect.provide(Sqlite.layerMemory)),
+    ),
+  );
+
+  it.live("finishes a deleted thread whose refs keep failing to delete", () =>
+    runCleanupTest(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { service, repo, addThread } = yield* checkpointCleanupFixture();
+        const refs = yield* addThread("stuck", { deleted: true });
+        yield* fs.writeFileString(`${repo}/.git/${refs[0]}.lock`, "");
+        yield* service.runNow;
+        yield* service.runNow;
+        expect((yield* service.deletedThreadCleanup).waiting.has("stuck")).toBe(true);
+        yield* service.runNow;
+        expect((yield* service.deletedThreadCleanup).finished.has("stuck")).toBe(true);
+      }).pipe(Effect.provide(Sqlite.layerMemory)),
+    ),
+  );
+
   it.live("keeps the last known finished deletions when checkpoint ref cleanup fails", () =>
     runCleanupTest(
       Effect.gen(function* () {
