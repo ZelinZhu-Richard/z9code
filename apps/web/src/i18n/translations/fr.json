@@ -7500,6 +7500,7 @@
   "910aa6598e17c4d7": "Sélectionnez un ACP ou configurez-en un manuellement.",
   "be466e646129e4ec": "Commande ACP locale",
   "cd42b223a4fd2d6a": "ACP local",
+  "a9f8234315591783": "Gemini CLI",
   "52b42ebfa36012b3": "Impossible d’ajouter l’instance du fournisseur",
   "c63e407a9c88752b": "La mise à jour des paramètres a échoué.",
   "51b46e7723ed52d4": "Instance du fournisseur ajoutée",
@@ -7529,6 +7530,8 @@
     },
     "."
   ],
+  "72fa0f27876a3303": "Google Gemini runs through the official Gemini CLI.",
+  "a6080fd9f664a29f": "Set up Gemini CLI",
   "87885e38700e366f": "Ou choisissez dans l’ACP Registry",
   "2b69552f9e747c4e": "Rechercher dans le registre",
   "9588289bb956e0d6": "Documentation",

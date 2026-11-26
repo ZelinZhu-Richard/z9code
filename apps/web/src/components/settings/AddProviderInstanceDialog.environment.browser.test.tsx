@@ -291,6 +291,27 @@ describe("AddProviderInstanceDialog environment routing", () => {
     expect(signInStep()).toBeNull();
   });
 
+  it("sets up Google Gemini as the official Gemini CLI over ACP", async () => {
+    setup();
+    await using _screen = await render(dialog());
+    await click("Set up Gemini CLI");
+    expect(input("#add-provider-acpRegistry-manual-commandPath").value).toBe("gemini");
+    await click("Next");
+    expect(input("#add-provider-label").value).toBe("Gemini CLI");
+    await click("Add instance");
+
+    expect(settingsHooks.mutate).toHaveBeenCalledWith({
+      operation: "create",
+      instanceId: "acpRegistry_gemini_cli",
+      instance: {
+        driver: "acpRegistry",
+        enabled: true,
+        displayName: "Gemini CLI",
+        config: { source: "local", commandPath: "gemini", commandArgs: ["--acp"] },
+      },
+    });
+  });
+
   it("rejects a queued save after the provider grant is revoked", async () => {
     setup();
     await using screen = await prepareCodexInstance();

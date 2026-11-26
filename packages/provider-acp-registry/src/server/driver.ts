@@ -27,6 +27,7 @@ import * as Semaphore from "effect/Semaphore";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
+import { isGeminiCliAgent, withGeminiPrivacyEnvironment } from "./geminiAcp.ts";
 import { AcpRegistryAdapterV2Driver, type AcpRegistryAdapterV2DriverEnv } from "./adapter.ts";
 import { makeAcpRegistryTextGeneration } from "./textGeneration.ts";
 import { ProviderDriverError } from "@t3tools/provider-core/server/errors";
@@ -621,7 +622,7 @@ export const AcpRegistryDriver: ProviderDriver<AcpRegistrySettings, AcpRegistryD
     instanceId,
     displayName,
     accentColor,
-    environment,
+    environment: instanceEnvironment,
     enabled,
     config,
   }) {
@@ -644,6 +645,16 @@ export const AcpRegistryDriver: ProviderDriver<AcpRegistrySettings, AcpRegistryD
     const path = yield* Path.Path;
     const hostEnvironment = yield* HostProcess.Environment;
     const host = yield* ProviderHost.ProviderHost;
+    const environment = isGeminiCliAgent(config)
+      ? yield* withGeminiPrivacyEnvironment({
+          environment: instanceEnvironment,
+          hostEnvironment,
+          stateDir: host.paths.stateDir,
+        }).pipe(
+          Effect.provideService(FileSystem.FileSystem, fileSystem),
+          Effect.provideService(Path.Path, path),
+        )
+      : instanceEnvironment;
     const continuationIdentity = defaultProviderContinuationIdentity({
       driverKind: DRIVER_KIND,
       instanceId,

@@ -7498,6 +7498,7 @@
   "910aa6598e17c4d7": "Wähle einen ACP oder konfiguriere einen manuell.",
   "be466e646129e4ec": "Lokaler ACP-Befehl",
   "cd42b223a4fd2d6a": "Lokaler ACP",
+  "a9f8234315591783": "Gemini CLI",
   "52b42ebfa36012b3": "Anbieterinstanz konnte nicht hinzugefügt werden",
   "c63e407a9c88752b": "Die Aktualisierung der Einstellungen ist fehlgeschlagen.",
   "51b46e7723ed52d4": "Anbieterinstanz hinzugefügt",
@@ -7527,6 +7528,8 @@
     },
     "."
   ],
+  "72fa0f27876a3303": "Google Gemini runs through the official Gemini CLI.",
+  "a6080fd9f664a29f": "Set up Gemini CLI",
   "87885e38700e366f": "Oder aus der ACP Registry wählen",
   "2b69552f9e747c4e": "Registry durchsuchen",
   "9588289bb956e0d6": "Doku",
