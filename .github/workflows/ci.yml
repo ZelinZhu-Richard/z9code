@@ -28,6 +28,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Format and lint
         run: pnpm exec vp check
+      - name: No unlisted network hosts
+        run: pnpm run check:egress
       - name: Unused code
         run: pnpm exec vp run knip:check
       - name: i18n catalogs
