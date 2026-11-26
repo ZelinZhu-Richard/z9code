@@ -86,10 +86,20 @@ export const make = Effect.gen(function* () {
     FROM orchestration_v2_projection_threads AS thread
     WHERE thread.deleted_at IS NOT NULL
       AND NOT EXISTS (
-        SELECT 1 FROM orchestration_v2_projection_threads AS fork
-        WHERE fork.deleted_at IS NULL
-          AND json_extract(fork.payload_json, '$.forkedFrom.type') = 'run'
-          AND json_extract(fork.payload_json, '$.forkedFrom.threadId') = thread.thread_id
+        -- A live fork renders its whole ancestor chain, even through deleted intermediate forks.
+        WITH RECURSIVE descendant(thread_id, deleted_at) AS (
+          SELECT fork.thread_id, fork.deleted_at
+          FROM orchestration_v2_projection_threads AS fork
+          WHERE json_extract(fork.payload_json, '$.forkedFrom.type') = 'run'
+            AND json_extract(fork.payload_json, '$.forkedFrom.threadId') = thread.thread_id
+          UNION
+          SELECT fork.thread_id, fork.deleted_at
+          FROM orchestration_v2_projection_threads AS fork
+          JOIN descendant
+            ON json_extract(fork.payload_json, '$.forkedFrom.threadId') = descendant.thread_id
+          WHERE json_extract(fork.payload_json, '$.forkedFrom.type') = 'run'
+        )
+        SELECT 1 FROM descendant WHERE descendant.deleted_at IS NULL
       )
       AND NOT EXISTS (
         SELECT 1 FROM orchestration_v2_effect_outbox AS effect
@@ -108,7 +118,7 @@ export const make = Effect.gen(function* () {
         for (const table of tables) {
           const settledOnly =
             table.name.startsWith(OUTBOX_PREFIX) && table.hasStatus
-              ? " AND status IN ('succeeded', 'failed')"
+              ? " AND status IN ('succeeded', 'failed', 'cancelled')"
               : "";
           yield* sql.unsafe(
             `DELETE FROM ${quote(table.name)} WHERE thread_id IN (${ids})${settledOnly}`,

@@ -245,3 +245,55 @@ it.effect("keeps a deleted thread a live fork still shows until the fork is dele
     assert.deepEqual(yield* rowsContaining(SECRET), []);
   }).pipe(Effect.provide(layerTest)),
 );
+
+it.effect("keeps every ancestor of a live fork, through deleted intermediate forks", () =>
+  Effect.gen(function* () {
+    const now = yield* DateTime.now;
+    const root = makeThread(ThreadId.make("thread:root"), now);
+    const middle = makeThread(ThreadId.make("thread:middle"), now, {
+      type: "run",
+      threadId: root.id,
+      runId: RunId.make("run:root"),
+    });
+    const leaf = makeThread(ThreadId.make("thread:leaf"), now, {
+      type: "run",
+      threadId: middle.id,
+      runId: RunId.make("run:middle"),
+    });
+    yield* writeThread(root, now);
+    yield* writeThread(middle, now);
+    yield* writeThread(leaf, now);
+    yield* deleteThread(root, now);
+    yield* deleteThread(middle, now);
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 0);
+    yield* deleteThread(leaf, now);
+    assert.equal(yield* purge.sweep(), 3);
+    assert.deepEqual(yield* rowsContaining(SECRET), []);
+  }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect("removes cancelled effects with the deleted thread", () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const now = yield* DateTime.now;
+    const thread = makeThread(ThreadId.make("thread:cancelled-effect"), now);
+    yield* writeThread(thread, now);
+    const at = DateTime.formatIso(now);
+    yield* sql`
+      INSERT INTO orchestration_v2_effect_outbox
+        (effect_id, command_id, thread_id, effect_type, payload_json, status,
+         available_at, created_at, updated_at, completed_at)
+      VALUES
+        ('effect:cancelled', 'command:cancelled', ${thread.id},
+         'provider-session.apply-thread-title', ${JSON.stringify({ title: SECRET })},
+         'cancelled', ${at}, ${at}, ${at}, ${at})
+    `;
+    yield* deleteThread(thread, now);
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+    assert.deepEqual(yield* rowsContaining(SECRET), []);
+  }).pipe(Effect.provide(layerTest)),
+);
