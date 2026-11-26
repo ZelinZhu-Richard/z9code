@@ -256,8 +256,10 @@ branch. A squash or rebase merge on GitHub also counts when the pull request tar
 branch and the worktree is still at the pull request's last commit.
 
 Enable **Delete worktrees with deleted threads** to remove safe worktrees after their last
-thread is deleted, including archived threads and worktrees left by earlier deletions. The
-server waits for sessions and terminals to stop and retries skipped worktrees after restart.
+thread is deleted, including archived threads. The server waits for sessions and terminals to
+stop, and retries after a restart. A worktree kept when its thread is deleted, because this
+policy was off or the worktree had local changes, stays on disk; it is then listed as a folder
+no thread uses, for you to remove.
 Existing prompts for deleting a worktree manually remain available when this policy is off.
 
 Choose **Delete now** to run the enabled rules immediately. The latest results show which

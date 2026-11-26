@@ -321,8 +321,20 @@ export class StorageCleanup extends Context.Service<
     readonly latestReport: Effect.Effect<StorageCleanupReport | null>;
     readonly reports: Stream.Stream<StorageCleanupReport | null>;
     readonly drain: Effect.Effect<void>;
+    /**
+     * Deleted threads the latest sweep that could read them finished with, and those whose worktree
+     * removal waits for a session or terminal to stop. Purging a thread loses the rows that find its
+     * refs and worktree.
+     */
+    readonly deletedThreadCleanup: Effect.Effect<DeletedThreadCleanup>;
+    readonly requestSweep: Effect.Effect<void>;
   }
 >()("z9/storageCleanup") {}
+
+export interface DeletedThreadCleanup {
+  readonly finished: ReadonlySet<string>;
+  readonly waiting: ReadonlySet<string>;
+}
 
 const make = Effect.gen(function* () {
   const config = yield* ServerConfig.ServerConfig;
@@ -348,6 +360,9 @@ const make = Effect.gen(function* () {
     threadTerminals.set(terminal.terminalId, terminal);
     liveTerminals.set(terminal.threadId, threadTerminals);
   };
+
+  const isLiveTerminal = (terminal: TerminalSummary | undefined) =>
+    terminal?.status === "starting" || terminal?.status === "running";
 
   const isWindows = yield* HostProcess.isWindows;
   const pathKey = (target: string) => {
@@ -1214,8 +1229,9 @@ const make = Effect.gen(function* () {
     entries: StorageCleanupReportEntry[],
     trigger: StorageCleanupReport["trigger"],
   ) {
+    const waitingThreads = new Set<string>();
     if (!anyWorktreePolicy(serverSettings, worktreeCleanupEnabled))
-      return { waiting: false, kept: [] };
+      return { waiting: false, kept: [], waitingThreads };
     let waiting = false;
     const kept: string[] = [];
     const roots: Array<string> = [];
@@ -1357,7 +1373,7 @@ const make = Effect.gen(function* () {
       for (const terminal of [...liveTerminals.values()].flatMap((entries) => [
         ...entries.values(),
       ])) {
-        if (terminal.status !== "starting" && terminal.status !== "running") continue;
+        if (!isLiveTerminal(terminal)) continue;
         if (
           (terminal.worktreePath !== null &&
             (yield* occupies(worktreePaths, terminal.worktreePath))) ||
@@ -1432,7 +1448,10 @@ const make = Effect.gen(function* () {
       };
       // Reasons a provider session stop or finished deletion work can clear.
       const waitForStop = (reason: string) => {
-        if (deleted && settings.worktreeOnDelete) waiting = true;
+        if (deleted && settings.worktreeOnDelete) {
+          waiting = true;
+          waitingThreads.add(thread.id);
+        }
         return reason;
       };
       yield* Effect.gen(function* () {
@@ -1958,7 +1977,7 @@ const make = Effect.gen(function* () {
       scratchRoot,
       trigger,
     );
-    return { waiting, kept };
+    return { waiting, kept, waitingThreads };
   });
 
   const cleanFiles = Effect.fn("StorageCleanup.cleanFiles")(function* (
@@ -2034,6 +2053,7 @@ const make = Effect.gen(function* () {
           WHERE e.thread_id = t.thread_id AND e.status IN ('pending', 'running')
         )
     `.pipe(NodeSqliteClient.readOnly);
+    const threadIds = new Set(rows.map((row) => row.threadId));
     const targets = new Map<string, Set<string>>();
     for (const row of rows) {
       // Derive ownership from tombstones, never from absence in this database:
@@ -2110,11 +2130,13 @@ const make = Effect.gen(function* () {
         Effect.catch((cause) => Effect.logWarning("checkpoint ref cleanup failed", { cause })),
       );
     }
+    return threadIds;
   });
   // Only deleted threads' worktrees wait on session stops: any stop while one waits, or a stop inside one kept for another reason.
   // A deletion stays pending until a sweep that started after it finishes.
   let deletedWorktreeWaits = true;
   let keptDeletedWorktrees: ReadonlyArray<string> = [];
+  let deletedThreadCleanup: DeletedThreadCleanup = { finished: new Set(), waiting: new Set() };
   let deletions = 0;
   let sweptDeletions = 0;
   const sweep = Effect.fn("StorageCleanup.sweep")(function* (
@@ -2125,8 +2147,13 @@ const make = Effect.gen(function* () {
     const serverSettings = yield* settingsService.getSettings;
     const settings = serverSettings.storageCleanup;
     const entries: StorageCleanupReportEntry[] = [];
-    yield* cleanCheckpointRefs().pipe(
-      Effect.catch((cause) => Effect.logWarning("checkpoint ref cleanup failed", { cause })),
+    const checkedDeletions = yield* cleanCheckpointRefs().pipe(
+      Effect.asSome,
+      Effect.catch((cause) =>
+        Effect.logWarning("checkpoint ref cleanup failed", { cause }).pipe(
+          Effect.as(Option.none<ReadonlySet<string>>()),
+        ),
+      ),
     );
     yield* retryLeftovers(entries).pipe(
       Effect.catch((error) =>
@@ -2163,12 +2190,20 @@ const make = Effect.gen(function* () {
             files: null,
           });
           yield* Effect.logWarning("worktree cleanup failed", { error });
-          return { waiting: true, kept: [] };
+          // A pass that keeps failing must not keep every deleted thread's content forever.
+          return { waiting: true, kept: [], waitingThreads: new Set<string>() };
         }),
       ),
     );
     deletedWorktreeWaits = deletedWorktrees.waiting;
     keptDeletedWorktrees = deletedWorktrees.kept;
+    if (Option.isSome(checkedDeletions)) {
+      const checked = [...checkedDeletions.value];
+      deletedThreadCleanup = {
+        finished: new Set(checked.filter((id) => !deletedWorktrees.waitingThreads.has(id))),
+        waiting: new Set(checked.filter((id) => deletedWorktrees.waitingThreads.has(id))),
+      };
+    }
     sweptDeletions = deletionsAtStart;
     for (const category of [
       {
@@ -2273,17 +2308,24 @@ const make = Effect.gen(function* () {
 
   const start = Effect.fn("StorageCleanup.start")(function* () {
     const unsubscribe = yield* terminals.subscribeMetadata((event) =>
-      Effect.sync(() => {
+      Effect.suspend(() => {
         if (event.type === "snapshot") {
           liveTerminals.clear();
           for (const terminal of event.terminals) noteTerminal(terminal);
-        } else if (event.type === "upsert") {
+          return Effect.void;
+        }
+        const threadId = event.type === "upsert" ? event.terminal.threadId : event.threadId;
+        const terminalId = event.type === "upsert" ? event.terminal.terminalId : event.terminalId;
+        const wasLive = isLiveTerminal(liveTerminals.get(threadId)?.get(terminalId));
+        if (event.type === "upsert") {
           noteTerminal(event.terminal);
         } else {
           const threadTerminals = liveTerminals.get(event.threadId);
           threadTerminals?.delete(event.terminalId);
           if (threadTerminals?.size === 0) liveTerminals.delete(event.threadId);
         }
+        const stopped = wasLive && !(event.type === "upsert" && isLiveTerminal(event.terminal));
+        return stopped && deletedWorktreeWaits ? requestSweep : Effect.void;
       }),
     );
     yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
@@ -2346,6 +2388,8 @@ const make = Effect.gen(function* () {
     latestReport: SubscriptionRef.get(reportRef),
     reports: SubscriptionRef.changes(reportRef),
     drain: worker.drain,
+    deletedThreadCleanup: Effect.sync(() => deletedThreadCleanup),
+    requestSweep,
   });
 });
 

@@ -1,6 +1,7 @@
 // Deletion marks a thread and runs its cleanup effects; this sweep then removes every row keyed
 // by the thread, its events except a scrubbed tombstone, its search index tokens and its provider
-// logs. Threads a live fork still shows wait for that fork.
+// logs. Threads a live fork still shows wait for that fork, and every thread waits until storage
+// cleanup has finished with it, because these rows are how it finds the thread's refs and worktree.
 import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -12,6 +13,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 
 import { ServerConfig } from "../config.ts";
 import { resolveThreadSegment } from "../provider/EventNdjsonLogger.ts";
+import { StorageCleanup } from "../storageCleanup.ts";
 
 const SWEEP_INTERVAL = Duration.seconds(15);
 const BATCH_SIZE = 25;
@@ -90,6 +92,7 @@ export const make = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const config = yield* ServerConfig;
+  const storageCleanup = yield* StorageCleanup;
 
   // Discovered on each sweep so tables added by later migrations are covered without a list.
   const threadKeyedTables = Effect.gen(function* () {
@@ -129,35 +132,44 @@ export const make = Effect.gen(function* () {
     return keyed;
   });
 
-  const purgeableThreadIds = sql<{ readonly thread_id: string }>`
-    SELECT thread.thread_id
-    FROM orchestration_v2_projection_threads AS thread
-    WHERE thread.deleted_at IS NOT NULL
-      AND NOT EXISTS (
-        -- A live fork renders its whole ancestor chain, even through deleted intermediate forks.
-        WITH RECURSIVE descendant(thread_id, deleted_at) AS (
-          SELECT fork.thread_id, fork.deleted_at
-          FROM orchestration_v2_projection_threads AS fork
-          WHERE json_extract(fork.payload_json, '$.forkedFrom.type') = 'run'
-            AND json_extract(fork.payload_json, '$.forkedFrom.threadId') = thread.thread_id
-          UNION
-          SELECT fork.thread_id, fork.deleted_at
-          FROM orchestration_v2_projection_threads AS fork
-          JOIN descendant
-            ON json_extract(fork.payload_json, '$.forkedFrom.threadId') = descendant.thread_id
-          WHERE json_extract(fork.payload_json, '$.forkedFrom.type') = 'run'
-        )
-        SELECT 1 FROM descendant WHERE descendant.deleted_at IS NULL
+  const deletedThreadIds = (
+    filter: "IN" | "NOT IN",
+    threadIds: ReadonlySet<string>,
+    limit: number,
+  ) =>
+    sql
+      .unsafe<{ readonly thread_id: string }>(
+        `SELECT thread.thread_id
+         FROM ${THREADS_TABLE} AS thread
+         WHERE thread.deleted_at IS NOT NULL
+           AND thread.thread_id ${filter} (SELECT value FROM json_each(?))
+           AND NOT EXISTS (
+             -- A live fork renders its whole ancestor chain, even through deleted intermediate forks.
+             WITH RECURSIVE descendant(thread_id, deleted_at) AS (
+               SELECT fork.thread_id, fork.deleted_at
+               FROM ${THREADS_TABLE} AS fork
+               WHERE json_extract(fork.payload_json, '$.forkedFrom.type') = 'run'
+                 AND json_extract(fork.payload_json, '$.forkedFrom.threadId') = thread.thread_id
+               UNION
+               SELECT fork.thread_id, fork.deleted_at
+               FROM ${THREADS_TABLE} AS fork
+               JOIN descendant
+                 ON json_extract(fork.payload_json, '$.forkedFrom.threadId') = descendant.thread_id
+               WHERE json_extract(fork.payload_json, '$.forkedFrom.type') = 'run'
+             )
+             SELECT 1 FROM descendant WHERE descendant.deleted_at IS NULL
+           )
+           AND NOT EXISTS (
+             SELECT 1 FROM orchestration_v2_effect_outbox AS effect
+             WHERE effect.thread_id = thread.thread_id AND effect.status IN ('pending', 'running')
+           )
+         LIMIT ?`,
+        [JSON.stringify([...threadIds]), limit],
       )
-      AND NOT EXISTS (
-        SELECT 1 FROM orchestration_v2_effect_outbox AS effect
-        WHERE effect.thread_id = thread.thread_id AND effect.status IN ('pending', 'running')
-      )
-    LIMIT ${BATCH_SIZE}
-  `.pipe(
-    NodeSqliteClient.readOnly,
-    Effect.map((rows) => rows.map((row) => row.thread_id)),
-  );
+      .pipe(
+        NodeSqliteClient.readOnly,
+        Effect.map((rows) => rows.map((row) => row.thread_id)),
+      );
 
   const purgeRows = (threadIds: ReadonlyArray<string>, tables: ReadonlyArray<ThreadKeyedTable>) =>
     sql.withTransaction(
@@ -249,13 +261,13 @@ export const make = Effect.gen(function* () {
     );
 
   const purgeProviderLogs = Effect.fn("ThreadPurge.purgeProviderLogs")(function* (
-    threadIds: ReadonlyArray<string>,
+    segments: ReadonlySet<string>,
   ) {
+    if (segments.size === 0) return;
     const directory = config.providerLogsDir;
     const entries = yield* fileSystem
       .readDirectory(directory)
       .pipe(Effect.catchCause(() => Effect.succeed([] as ReadonlyArray<string>)));
-    const segments = new Set(threadIds.map((threadId) => resolveThreadSegment(threadId)));
     for (const entry of entries) {
       const match = /^[^.]+\.(.+)\.log(?:\.\d+)?$/u.exec(entry);
       if (match === null || !segments.has(match[1]!)) continue;
@@ -266,15 +278,31 @@ export const make = Effect.gen(function* () {
   // Starts set so a startup sweep also clears tokens left by a crash or a failed optimize.
   let searchIndexNeedsOptimize = true;
 
+  // The provider log store batches writes for about a second, so a late flush can recreate a
+  // purged thread's log after its sessions detached; the next sweep removes those files again.
+  let recentlyPurgedSegments: ReadonlySet<string> = new Set();
+
   const sweep = Effect.fn("ThreadPurge.sweep")(function* () {
+    yield* purgeProviderLogs(recentlyPurgedSegments);
+    const purgedSegments = new Set<string>();
     let purged = 0;
     let tables: ReadonlyArray<ThreadKeyedTable> | undefined;
+    const cleanup = yield* storageCleanup.deletedThreadCleanup;
+    // Storage cleanup's deletion sweep can run before the deletion's own effects settle.
+    const unseen = yield* deletedThreadIds(
+      "NOT IN",
+      new Set([...cleanup.finished, ...cleanup.waiting]),
+      1,
+    );
+    if (unseen.length > 0) yield* storageCleanup.requestSweep;
     for (;;) {
-      const threadIds = yield* purgeableThreadIds;
+      const threadIds = yield* deletedThreadIds("IN", cleanup.finished, BATCH_SIZE);
       if (threadIds.length === 0) break;
       tables ??= yield* threadKeyedTables;
       if (yield* purgeRows(threadIds, tables)) searchIndexNeedsOptimize = true;
-      yield* purgeProviderLogs(threadIds);
+      const segments = new Set(threadIds.map((threadId) => resolveThreadSegment(threadId)));
+      yield* purgeProviderLogs(segments);
+      for (const segment of segments) purgedSegments.add(segment);
       purged += threadIds.length;
       yield* Effect.yieldNow;
     }
@@ -303,6 +331,7 @@ export const make = Effect.gen(function* () {
       yield* sql`PRAGMA wal_checkpoint(TRUNCATE)`.pipe(Effect.ignore);
       yield* Effect.logInfo("purged deleted threads", { count: purged });
     }
+    recentlyPurgedSegments = purgedSegments;
     return purged;
   });
 

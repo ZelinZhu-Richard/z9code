@@ -20,10 +20,12 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
+import * as Stream from "effect/Stream";
 
 import { ServerConfig, layerTest as layerServerConfig } from "../config.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import { resolveThreadSegment } from "../provider/EventNdjsonLogger.ts";
+import { type DeletedThreadCleanup, StorageCleanup } from "../storageCleanup.ts";
 import * as EventSink from "./EventSink.ts";
 import * as EventStore from "./EventStore.ts";
 import * as ProjectionStore from "./ProjectionStore.ts";
@@ -35,7 +37,41 @@ const stores = Layer.mergeAll(
   EventStore.layer.pipe(Layer.provideMerge(database)),
   ProjectionStore.layer.pipe(Layer.provideMerge(database)),
 );
-const layerTest = Layer.mergeAll(stores, EventSink.layer.pipe(Layer.provide(stores))).pipe(
+const storageCleanupStub = (
+  deletedThreadCleanup: StorageCleanup["Service"]["deletedThreadCleanup"],
+  requestSweep: Effect.Effect<void> = Effect.void,
+) =>
+  StorageCleanup.of({
+    runNow: Effect.die("unused"),
+    latestReport: Effect.succeed(null),
+    reports: Stream.empty,
+    drain: Effect.void,
+    deletedThreadCleanup,
+    requestSweep,
+  });
+/** Storage cleanup has finished with every deleted thread. */
+const finishedStorageCleanup = Layer.effect(
+  StorageCleanup,
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    return storageCleanupStub(
+      sql<{ readonly thread_id: string }>`
+        SELECT thread_id FROM orchestration_v2_projection_threads WHERE deleted_at IS NOT NULL
+      `.pipe(
+        Effect.orDie,
+        Effect.map((rows) => ({
+          finished: new Set(rows.map((row) => row.thread_id)),
+          waiting: new Set<string>(),
+        })),
+      ),
+    );
+  }),
+);
+const layerTest = Layer.mergeAll(
+  stores,
+  EventSink.layer.pipe(Layer.provide(stores)),
+  finishedStorageCleanup.pipe(Layer.provide(database)),
+).pipe(
   Layer.provideMerge(layerServerConfig(process.cwd(), { prefix: "thread-purge-test" })),
   Layer.provideMerge(NodeServices.layer),
 );
@@ -227,7 +263,10 @@ it.effect("removes every trace of a deleted thread but a scrubbed tombstone", ()
     assert.isFalse(yield* fileSystem.exists(`${logFile}.1`));
     // The other thread is untouched, so its content is the only copy left.
     assert.isNotEmpty(yield* rowsContaining(`${kept.id}`));
+    // The provider log store's batched flush can land after the purge and recreate the file.
+    yield* fileSystem.writeFileString(logFile, `${SECRET}\n`);
     assert.equal(yield* purge.sweep(), 0);
+    assert.isFalse(yield* fileSystem.exists(logFile));
   }).pipe(Effect.provide(layerTest)),
 );
 
@@ -571,4 +610,39 @@ it.effect("removes webhook deliveries of the scheduled tasks bound to the delete
     assert.equal(yield* purge.sweep(), 1);
     assert.deepEqual(yield* rowsContaining(SECRET), []);
   }).pipe(Effect.provide(layerTest)),
+);
+
+it.effect(
+  "keeps a deleted thread until storage cleanup has finished with its refs and worktree",
+  () =>
+    Effect.gen(function* () {
+      const now = yield* DateTime.now;
+      const thread = makeThread(ThreadId.make("thread:storage-cleanup"), now);
+      yield* writeThread(thread, now);
+      yield* deleteThread(thread, now);
+      let cleanup: DeletedThreadCleanup = { finished: new Set(), waiting: new Set() };
+      let sweepRequests = 0;
+      const purge = yield* ThreadPurge.make.pipe(
+        Effect.provideService(
+          StorageCleanup,
+          storageCleanupStub(
+            Effect.sync(() => cleanup),
+            Effect.sync(() => void sweepRequests++),
+          ),
+        ),
+      );
+
+      // No storage cleanup sweep has seen the deletion yet, so one is asked for.
+      assert.equal(yield* purge.sweep(), 0);
+      assert.equal(sweepRequests, 1);
+      cleanup = { finished: new Set(), waiting: new Set([thread.id]) };
+      assert.equal(yield* purge.sweep(), 0);
+      assert.equal(sweepRequests, 1);
+      assert.include(yield* rowsContaining(SECRET), "orchestration_v2_projection_threads");
+
+      cleanup = { finished: new Set([thread.id]), waiting: new Set() };
+      assert.equal(yield* purge.sweep(), 1);
+      assert.equal(sweepRequests, 1);
+      assert.deepEqual(yield* rowsContaining(SECRET), []);
+    }).pipe(Effect.provide(layerTest)),
 );

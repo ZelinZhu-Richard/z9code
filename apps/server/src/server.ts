@@ -615,13 +615,14 @@ const layerRuntimeCoreDependenciesBase = Layer.mergeAll(
   ProviderHostPathWatcher.layer.pipe(Layer.provide(layerDesktopTelemetryReceiver)),
   layerThreadSettlementWorker,
   layerIdleCompactionWorker,
-  StorageCleanup.layer.pipe(Layer.provide(ProjectionStoreV2.layer)),
+  ThreadPurge.layer.pipe(
+    Layer.provideMerge(StorageCleanup.layer.pipe(Layer.provide(ProjectionStoreV2.layer))),
+  ),
   DatabaseStorage.layer.pipe(
     Layer.provide(ProjectionMaintenance.layer),
     Layer.provide(layerServerRestart),
   ),
   layerThreadPullRequestWorker,
-  ThreadPurge.layer,
   KeepAwake.layer,
   Layer.effectDiscard(
     Effect.gen(function* () {
