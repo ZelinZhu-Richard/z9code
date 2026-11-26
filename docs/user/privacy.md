@@ -36,12 +36,15 @@ builds have none. The mobile app does not check for over-the-air updates.
 - Threads, messages and settings live in the SQLite database in z9code's state directory.
 - **Deleting a thread** removes its rows from every table, its events (one scrubbed tombstone is
   kept so other devices learn about the deletion), its search index entries and its provider
-  logs. SQLite `secure_delete` zeroes the freed pages. A thread whose history a live fork still
-  shows is kept until that fork is deleted too. What another thread received from it, such as a
-  merged-back summary or a subagent's result, belongs to that thread and goes when it is deleted.
+  logs. Its side chats and the subagent threads it started, and theirs, are deleted with it; a
+  task it handed to a linked environment stays there. SQLite `secure_delete` zeroes the freed
+  pages. A thread whose history a live fork still shows is kept until that fork is deleted too,
+  and a thread whose worktree is waiting to be removed is kept until its sessions and terminals
+  stop. What another thread received from it, such as a merged-back summary or a subagent's
+  result, belongs to that thread and goes when it is deleted.
   Command receipts stay, without their text, so a replayed command cannot recreate the thread.
-  Not yet covered: a subagent's own child thread, the pre-upgrade `state.sqlite` copy, browser
-  screenshots, and threads cached on other clients that were offline during the deletion.
+  Not yet covered: the pre-upgrade `state.sqlite` copy, browser screenshots, and threads cached
+  on other clients that were offline during the deletion.
 - Agent feedback reports, if enabled, are stored locally and never sent anywhere.
 - The resource monitor samples only z9code's own process tree, redacts secrets from command
   lines, and can be turned off with `Z9CODE_RESOURCE_MONITOR_DISABLED=1`.

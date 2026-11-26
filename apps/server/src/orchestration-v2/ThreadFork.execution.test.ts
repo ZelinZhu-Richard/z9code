@@ -1725,7 +1725,7 @@ it.effect("merge-back rejects a second fork's context until the first is consume
       ],
     );
 
-    // Archiving or deleting a parent cascades only to side chats, so the full fork can still merge back.
+    // Archiving or deleting a parent never cascades to a full fork, so the fork can still merge back.
     const mergeNestedInto = (commandId: string) =>
       orchestrator
         .dispatch({

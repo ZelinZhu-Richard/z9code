@@ -1067,6 +1067,121 @@ it.layer(layerProjectDeletionTest)("project deletion during thread commands", (i
       }),
   );
 
+  it.effect("deletes a parent's local subagent threads and theirs with it", () =>
+    Effect.gen(function* () {
+      const projects = yield* ProjectService.ProjectService;
+      const orchestrator = yield* Orchestrator.OrchestratorV2;
+      const eventSink = yield* EventSink.EventSinkV2;
+      const projectId = ProjectId.make("runtime-subagent-delete");
+      const parentId = ThreadId.make("runtime-subagent-delete-parent");
+      const childId = ThreadId.make("runtime-subagent-delete-child");
+      const grandchildId = ThreadId.make("runtime-subagent-delete-grandchild");
+      yield* projects.create({
+        commandId: CommandId.make("runtime-subagent-delete-project"),
+        projectId,
+        title: "Subagent deletion",
+        workspaceRoot: "/work/subagent-deletion",
+      });
+      yield* orchestrator.dispatch({
+        type: "thread.create",
+        commandId: CommandId.make("runtime-subagent-delete-create"),
+        createdBy: "user",
+        creationSource: "web",
+        threadId: parentId,
+        projectId,
+        title: "Parent",
+        modelSelection,
+        runtimeMode: "full-access",
+        interactionMode: "default",
+        branch: null,
+        worktreePath: null,
+      });
+      const now = yield* DateTime.now;
+      const seedSubagent = (ownerId: ThreadId, threadId: ThreadId) => {
+        const taskId = NodeId.make(`node:${threadId}`);
+        return eventSink.write({
+          commandId: CommandId.make(`command:seed:${threadId}`),
+          events: [
+            {
+              id: EventId.make(`event:${threadId}:thread`),
+              type: "thread.created",
+              threadId,
+              occurredAt: now,
+              payload: {
+                createdBy: "agent",
+                creationSource: "server",
+                id: threadId,
+                projectId,
+                title: threadId,
+                providerInstanceId: modelSelection.instanceId,
+                modelSelection,
+                runtimeMode: "full-access",
+                interactionMode: "default",
+                branch: null,
+                worktreePath: null,
+                activeProviderThreadId: null,
+                lineage: {
+                  parentThreadId: ownerId,
+                  relationshipToParent: "subagent",
+                  rootThreadId: parentId,
+                },
+                forkedFrom: { type: "node", nodeId: taskId },
+                createdAt: now,
+                updatedAt: now,
+                archivedAt: null,
+                settledOverride: null,
+                settledAt: null,
+                lastVisitedAt: null,
+                deletedAt: null,
+              },
+            },
+            {
+              id: EventId.make(`event:${threadId}:task`),
+              type: "subagent.updated",
+              threadId: ownerId,
+              nodeId: taskId,
+              driver,
+              providerInstanceId: modelSelection.instanceId,
+              occurredAt: now,
+              payload: {
+                id: taskId,
+                threadId: ownerId,
+                runId: null,
+                parentNodeId: NodeId.make(`node:${ownerId}:root`),
+                origin: "app_owned",
+                createdBy: "agent",
+                driver,
+                providerInstanceId: modelSelection.instanceId,
+                providerThreadId: null,
+                childThreadId: threadId,
+                nativeTaskRef: null,
+                prompt: `Run ${threadId}.`,
+                title: null,
+                model: null,
+                status: "completed",
+                result: null,
+                startedAt: now,
+                completedAt: now,
+                updatedAt: now,
+              },
+            },
+          ],
+        });
+      };
+      yield* seedSubagent(parentId, childId);
+      yield* seedSubagent(childId, grandchildId);
+
+      yield* orchestrator.dispatch({
+        type: "thread.delete",
+        commandId: CommandId.make("runtime-subagent-delete-parent"),
+        threadId: parentId,
+      });
+
+      assert.isNotNull((yield* orchestrator.getThreadProjection(childId)).thread.deletedAt);
+      assert.isNotNull((yield* orchestrator.getThreadProjection(grandchildId)).thread.deletedAt);
+    }),
+  );
+
   // A fork from a side chat onto its parent used to lock the side chat, then the parent: the
   // reverse of the parent delete's order.
   it.effect("a parent delete and a fork from its side chat onto the parent do not deadlock", () =>
