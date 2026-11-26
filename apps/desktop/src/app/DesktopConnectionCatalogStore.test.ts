@@ -1,8 +1,8 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { ConnectionCatalogDocument } from "@t3tools/client-runtime/platform";
-import { EnvironmentId, type PersistedSavedEnvironmentRecord } from "@t3tools/contracts";
+import { ConnectionCatalogDocument } from "@z9code/client-runtime/platform";
+import { EnvironmentId, type PersistedSavedEnvironmentRecord } from "@z9code/contracts";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as FileSystem from "effect/FileSystem";
@@ -68,7 +68,7 @@ function layerFor(
     runningUnderArm64Translation: false,
   }).pipe(
     Layer.provide(
-      Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ T3CODE_HOME: baseDir })),
+      Layer.mergeAll(NodeServices.layer, DesktopConfig.layerTest({ Z9CODE_HOME: baseDir })),
     ),
   );
   const layerSafeStorage = layerSafeStorageFor(encryptionAvailable, failDecrypt);
@@ -114,6 +114,28 @@ describe("DesktopConnectionCatalogStore", () => {
     ),
   );
 
+  it.effect("keeps the saved catalog readable only by its owner, whatever the umask", () =>
+    withStore(
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const environment = yield* DesktopEnvironment.DesktopEnvironment;
+        const fileSystem = yield* FileSystem.FileSystem;
+        const store = yield* DesktopConnectionCatalogStore.DesktopConnectionCatalogStore;
+        const catalogPath = path.join(environment.stateDir, "connection-catalog.json");
+        yield* fileSystem.makeDirectory(environment.stateDir, { recursive: true });
+        // A world-readable catalog left by an older build is tightened by the next save.
+        yield* fileSystem.writeFileString(catalogPath, "{}\n", { mode: 0o644 });
+        const umask = process.umask(0o022);
+        try {
+          assert.isTrue(yield* store.set('{"schemaVersion":1,"targets":[]}'));
+        } finally {
+          process.umask(umask);
+        }
+        assert.strictEqual((yield* fileSystem.stat(catalogPath)).mode & 0o777, 0o600);
+      }),
+    ),
+  );
+
   it.effect("does not persist when secure storage is unavailable", () =>
     withStore(
       Effect.gen(function* () {
@@ -125,14 +147,15 @@ describe("DesktopConnectionCatalogStore", () => {
     ),
   );
 
-  it.effect("migrates legacy relay, SSH, bearer profile, and credential data", () =>
-    withStore(
-      Effect.gen(function* () {
-        const store = yield* DesktopConnectionCatalogStore.DesktopConnectionCatalogStore;
-        const environment = yield* DesktopEnvironment.DesktopEnvironment;
-        const fileSystem = yield* FileSystem.FileSystem;
-        const records: readonly PersistedSavedEnvironmentRecord[] = [
-          {
+  it.effect(
+    "migrates legacy SSH, bearer profile, and credential data, dropping T3 Connect records",
+    () =>
+      withStore(
+        Effect.gen(function* () {
+          const store = yield* DesktopConnectionCatalogStore.DesktopConnectionCatalogStore;
+          const environment = yield* DesktopEnvironment.DesktopEnvironment;
+          const fileSystem = yield* FileSystem.FileSystem;
+          const relayRecord = {
             environmentId: EnvironmentId.make("relay-environment"),
             label: "Relay",
             httpBaseUrl: "https://relay.example.com/",
@@ -140,106 +163,103 @@ describe("DesktopConnectionCatalogStore", () => {
             createdAt: "2026-06-01T00:00:00.000Z",
             lastConnectedAt: null,
             relayManaged: { relayUrl: "https://relay-control.example.com/" },
-          },
-          {
+          };
+          const records: readonly PersistedSavedEnvironmentRecord[] = [
+            {
+              environmentId: EnvironmentId.make("ssh-environment"),
+              label: "SSH",
+              httpBaseUrl: "http://127.0.0.1:41773/",
+              wsBaseUrl: "ws://127.0.0.1:41773/",
+              createdAt: "2026-06-02T00:00:00.000Z",
+              lastConnectedAt: null,
+              desktopSsh: {
+                alias: "devbox",
+                hostname: "devbox.example.com",
+                username: "julius",
+                port: 22,
+              },
+            },
+            {
+              environmentId: EnvironmentId.make("bearer-environment"),
+              label: "Bearer",
+              httpBaseUrl: "https://bearer.example.com/",
+              wsBaseUrl: "wss://bearer.example.com/",
+              createdAt: "2026-06-03T00:00:00.000Z",
+              lastConnectedAt: null,
+            },
+          ];
+          yield* fileSystem.makeDirectory(environment.stateDir, { recursive: true });
+          yield* fileSystem.writeFileString(
+            environment.savedEnvironmentRegistryPath,
+            yield* encodeLegacySavedEnvironments({
+              version: 1,
+              records: [relayRecord, ...records].map((record) =>
+                record.environmentId === "bearer-environment"
+                  ? {
+                      ...record,
+                      encryptedBearerToken: Base64.encode(
+                        textEncoder.encode("encrypted:legacy-token"),
+                      ),
+                    }
+                  : record,
+              ),
+            }),
+          );
+
+          const migrated = yield* store.get;
+          assert.isTrue(Option.isSome(migrated));
+          if (Option.isNone(migrated)) {
+            return;
+          }
+          const catalog = yield* decodeConnectionCatalog(migrated.value);
+
+          assert.equal(catalog.targets.length, 2);
+          assert.deepInclude(catalog.targets[0], {
+            _tag: "SshConnectionTarget",
             environmentId: EnvironmentId.make("ssh-environment"),
             label: "SSH",
-            httpBaseUrl: "http://127.0.0.1:41773/",
-            wsBaseUrl: "ws://127.0.0.1:41773/",
-            createdAt: "2026-06-02T00:00:00.000Z",
-            lastConnectedAt: null,
-            desktopSsh: {
+            connectionId: "ssh:ssh-environment",
+          });
+          assert.deepInclude(catalog.targets[1], {
+            _tag: "BearerConnectionTarget",
+            environmentId: EnvironmentId.make("bearer-environment"),
+            label: "Bearer",
+            connectionId: "bearer:bearer-environment",
+          });
+          assert.deepInclude(catalog.profiles[0], {
+            _tag: "SshConnectionProfile",
+            connectionId: "ssh:ssh-environment",
+            environmentId: EnvironmentId.make("ssh-environment"),
+            label: "SSH",
+            target: {
               alias: "devbox",
               hostname: "devbox.example.com",
               username: "julius",
               port: 22,
             },
-          },
-          {
+          });
+          assert.deepInclude(catalog.profiles[1], {
+            _tag: "BearerConnectionProfile",
+            connectionId: "bearer:bearer-environment",
             environmentId: EnvironmentId.make("bearer-environment"),
             label: "Bearer",
             httpBaseUrl: "https://bearer.example.com/",
             wsBaseUrl: "wss://bearer.example.com/",
-            createdAt: "2026-06-03T00:00:00.000Z",
-            lastConnectedAt: null,
-          },
-        ];
-        yield* fileSystem.makeDirectory(environment.stateDir, { recursive: true });
-        yield* fileSystem.writeFileString(
-          environment.savedEnvironmentRegistryPath,
-          yield* encodeLegacySavedEnvironments({
-            version: 1,
-            records: records.map((record) =>
-              record.environmentId === "bearer-environment"
-                ? {
-                    ...record,
-                    encryptedBearerToken: Base64.encode(
-                      textEncoder.encode("encrypted:legacy-token"),
-                    ),
-                  }
-                : record,
-            ),
-          }),
-        );
+          });
+          assert.equal(catalog.credentials.length, 1);
+          assert.equal(catalog.credentials[0]?.connectionId, "bearer:bearer-environment");
+          assert.equal(catalog.credentials[0]?.credential._tag, "BearerConnectionCredential");
+          if (catalog.credentials[0]?.credential._tag === "BearerConnectionCredential") {
+            assert.equal(catalog.credentials[0].credential.token, "legacy-token");
+          }
 
-        const migrated = yield* store.get;
-        assert.isTrue(Option.isSome(migrated));
-        if (Option.isNone(migrated)) {
-          return;
-        }
-        const catalog = yield* decodeConnectionCatalog(migrated.value);
-
-        assert.deepInclude(catalog.targets[0], {
-          _tag: "RelayConnectionTarget",
-          environmentId: EnvironmentId.make("relay-environment"),
-          label: "Relay",
-        });
-        assert.deepInclude(catalog.targets[1], {
-          _tag: "SshConnectionTarget",
-          environmentId: EnvironmentId.make("ssh-environment"),
-          label: "SSH",
-          connectionId: "ssh:ssh-environment",
-        });
-        assert.deepInclude(catalog.targets[2], {
-          _tag: "BearerConnectionTarget",
-          environmentId: EnvironmentId.make("bearer-environment"),
-          label: "Bearer",
-          connectionId: "bearer:bearer-environment",
-        });
-        assert.deepInclude(catalog.profiles[0], {
-          _tag: "SshConnectionProfile",
-          connectionId: "ssh:ssh-environment",
-          environmentId: EnvironmentId.make("ssh-environment"),
-          label: "SSH",
-          target: {
-            alias: "devbox",
-            hostname: "devbox.example.com",
-            username: "julius",
-            port: 22,
-          },
-        });
-        assert.deepInclude(catalog.profiles[1], {
-          _tag: "BearerConnectionProfile",
-          connectionId: "bearer:bearer-environment",
-          environmentId: EnvironmentId.make("bearer-environment"),
-          label: "Bearer",
-          httpBaseUrl: "https://bearer.example.com/",
-          wsBaseUrl: "wss://bearer.example.com/",
-        });
-        assert.equal(catalog.credentials.length, 1);
-        assert.equal(catalog.credentials[0]?.connectionId, "bearer:bearer-environment");
-        assert.equal(catalog.credentials[0]?.credential._tag, "BearerConnectionCredential");
-        if (catalog.credentials[0]?.credential._tag === "BearerConnectionCredential") {
-          assert.equal(catalog.credentials[0].credential.token, "legacy-token");
-        }
-
-        yield* fileSystem.writeFileString(
-          environment.savedEnvironmentRegistryPath,
-          '{"version":1,"records":[]}',
-        );
-        assert.deepEqual(yield* store.get, migrated);
-      }),
-    ),
+          yield* fileSystem.writeFileString(
+            environment.savedEnvironmentRegistryPath,
+            '{"version":1,"records":[]}',
+          );
+          assert.deepEqual(yield* store.get, migrated);
+        }),
+      ),
   );
 
   it.effect("surfaces malformed catalog documents without deleting them", () =>

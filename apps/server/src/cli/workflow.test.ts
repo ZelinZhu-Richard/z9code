@@ -1,8 +1,8 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import { AuthSessionId, type WorkflowRun } from "@t3tools/contracts";
-import * as NetService from "@t3tools/shared/Net";
+import { AuthSessionId, type WorkflowRun } from "@z9code/contracts";
+import * as NetService from "@z9code/shared/Net";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -54,7 +54,7 @@ const makeRun = (status: WorkflowRun["status"]): WorkflowRun => ({
   endedAt: ["running", "waiting", "paused"].includes(status) ? null : "2026-11-20T00:00:00.000Z",
 });
 
-/** Runs `t3 workflow <args>` against a live-looking server whose t3_workflow is `call`. */
+/** Runs `z9 workflow <args>` against a live-looking server whose z9_workflow is `call`. */
 const runCli = (
   args: ReadonlyArray<string>,
   call: McpBridge.McpToolSession["call"] = () => Effect.die("no tool call expected"),
@@ -95,7 +95,7 @@ const runCli = (
         NodeServices.layer,
         NodeCrypto.layer,
         NetService.layer,
-        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { T3CODE_PORT: "3773" } })),
+        ConfigProvider.layer(ConfigProvider.fromEnv({ env: { Z9CODE_PORT: "3773" } })),
       ),
     ),
   );
@@ -145,7 +145,7 @@ it.effect("reports what the server refused instead of calling it unreachable", (
     const refused = yield* runCli(["start", "review", "--key", "r1"], () =>
       Effect.fail(
         new McpBridge.AcpMcpBridgeError({
-          message: "T3 Code MCP tools/call failed.",
+          message: "z9code MCP tools/call failed.",
           rpcError: {
             code: -32602,
             message: 'Expected a non-blank string\n  at ["idempotencyKey"]',

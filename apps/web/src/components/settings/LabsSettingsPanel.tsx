@@ -1,17 +1,13 @@
 import { msg } from "gt-react";
-import { managedCapabilityDenial } from "@t3tools/client-runtime/contract-labels";
-import { useAuth } from "@clerk/react";
+import { managedCapabilityDenial } from "@z9code/client-runtime/contract-labels";
 import { Link } from "@tanstack/react-router";
 import {
   AgentFeedbackMode,
   DEFAULT_WORKFLOW_SKIPPED_RUNS_KEPT,
   MAX_WORKFLOW_SKIPPED_RUNS_KEPT,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { T, useGT, useMessages } from "gt-react";
 
-import { hasCloudPublicConfig } from "~/cloud/publicConfig";
-import { useT3ConnectAuthPrompt } from "../clerk/useT3ConnectAuthPrompt";
-import { Button } from "../ui/button";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "../ui/number-field";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
@@ -38,8 +34,7 @@ export function LabsSettingsPanel() {
     <SettingsPageContainer>
       <SettingsSection id="beta" title={gt("Beta")}>
         <BoringSidebarRow />
-        {/* Clerk is only mounted when this build has T3 Connect. */}
-        {hasCloudPublicConfig() ? <GuestLinksRowWithSignIn /> : <GuestLinksRow />}
+        <GuestLinksRow />
         <LinkedEnvironmentsRow />
         <WorkflowsRow />
         <WorkflowSkippedRunsRow />
@@ -105,29 +100,6 @@ function BoringSidebarMultilineRow() {
   );
 }
 
-/** Signed out of T3 Connect, the row offers to sign in instead of its switch. */
-function GuestLinksRowWithSignIn() {
-  const searchableSetting = useSearchableSetting();
-  const gt = useGT();
-  const { isSignedIn } = useAuth();
-  const { openAuthPrompt } = useT3ConnectAuthPrompt();
-  // `isSignedIn` is undefined until Clerk loads.
-  if (isSignedIn !== false) return <GuestLinksRow />;
-  return (
-    <SettingsRow
-      {...searchableSetting("guest-links")}
-      description={gt(
-        "Share a thread with a guest who watches it live in a browser and sends messages you approve. Sign in to T3 Connect to use guest links.",
-      )}
-      control={
-        <Button size="sm" variant="outline" onClick={openAuthPrompt}>
-          <T>Sign in</T>
-        </Button>
-      }
-    />
-  );
-}
-
 function GuestLinksRow() {
   const searchableSetting = useSearchableSetting();
   const settings = useScopedSettings();
@@ -136,28 +108,25 @@ function GuestLinksRow() {
   const messages = useMessages();
   const scope = useOptionalSettingsScope();
   const primaryPolicy = usePrimaryManagedPolicy();
-  // Guests arrive through T3 Connect, so a policy that turns Connect off turns this off too.
-  const connectDenial = firstManagedDenial(
+  // Guests are remote clients, so a policy that turns those off turns this off too.
+  const remoteDenial = firstManagedDenial(
     scope
       ? scope.connectedEnvironments.map((environment) => environment.serverConfig?.managedPolicy)
       : [primaryPolicy],
-    (policy) => managedCapabilityDenial(policy, "connect", messages),
+    (policy) => managedCapabilityDenial(policy, "remoteClients", messages),
   );
   return (
     <SettingsRow
       serverScoped
       {...searchableSetting("guest-links")}
       settingKeys={["guestSharingEnabled"]}
-      // Turning guest links off still works without T3 Connect.
-      managed={settings.guestSharingEnabled ? undefined : connectDenial}
+      // Turning guest links off still works under that policy.
+      managed={settings.guestSharingEnabled ? undefined : remoteDenial}
       description={
         <T>
           Share a thread with a guest who watches it live in a browser and sends messages you
-          approve. Needs T3 Connect: sign in and link this machine in{" "}
-          <Link to="/settings/access" className="underline underline-offset-2">
-            Sharing & access
-          </Link>
-          . Turning it off stops every guest link.
+          approve. The guest opens the address you reach this machine at. Turning it off stops every
+          guest link.
         </T>
       }
       control={
@@ -217,7 +186,7 @@ function WorkflowsRow() {
       {...searchableSetting("workflows-beta")}
       settingKeys={["workflowsEnabled"]}
       description={gt(
-        "Run multi-step workflows from files in the workflows folder of this server's T3 home. Open them from the command palette. While off, nothing in that folder runs; runs wait until it is on again.",
+        "Run multi-step workflows from files in the workflows folder of this server's z9code home. Open them from the command palette. While off, nothing in that folder runs; runs wait until it is on again.",
       )}
       control={
         <ScopedSwitch
@@ -337,7 +306,7 @@ function SimlockHostsRow() {
           <Link to="/settings/devices" className="underline underline-offset-2">
             Devices
           </Link>
-          . An alpha that may change or break. T3 Code never installs Simlock.
+          . An alpha that may change or break. z9code never installs Simlock.
         </T>
       }
       control={
@@ -377,7 +346,7 @@ function FastWorktreeCheckoutRow() {
       {...searchableSetting("worktree-fast-checkout")}
       settingKeys={["fastWorktreeCheckout"]}
       description={gt(
-        "On a Mac, clone new worktrees from a checkout cached in the T3 home folder instead of writing every file. Uses Git’s normal checkout when it can’t. Turning it off deletes the cache.",
+        "On a Mac, clone new worktrees from a checkout cached in the z9code home folder instead of writing every file. Uses Git’s normal checkout when it can’t. Turning it off deletes the cache.",
       )}
       control={
         <ScopedSwitch
@@ -399,12 +368,12 @@ const AGENT_FEEDBACK_MODE_LABELS: Record<AgentFeedbackMode, string> = {
   auto: msg("Automatic"),
 };
 const AGENT_FEEDBACK_MODE_DESCRIPTIONS: Record<AgentFeedbackMode, string> = {
-  off: msg("Agents send no feedback to the T3 team."),
+  off: msg("Agents send no feedback to the z9code team."),
   "on-request": msg(
-    "When you ask, agents show you a short report about T3 Code and send it to the T3 team if you approve.",
+    "When you ask, agents show you a short report about z9code and send it to the z9code team if you approve.",
   ),
   auto: msg(
-    "Agents also report T3 Code problems they hit on their own, such as a T3 tool that failed.",
+    "Agents also report z9code problems they hit on their own, such as a z9code tool that failed.",
   ),
 };
 

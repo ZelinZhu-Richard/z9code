@@ -8,18 +8,18 @@ import type {
   EnvironmentThreadStructure,
   ThreadStructure,
   ThreadStructureVisibleTurnItem,
-} from "@t3tools/client-runtime/state/shell";
+} from "@z9code/client-runtime/state/shell";
 import {
   EMPTY_THREAD_HISTORY_META,
   type EnvironmentThreadStatus,
   type ThreadHistoryMeta,
-} from "@t3tools/client-runtime/state/threads";
+} from "@z9code/client-runtime/state/threads";
 import {
   arrayElementsEqual,
   parseThreadKey,
   threadKey,
-} from "@t3tools/client-runtime/state/entities";
-import type { ScopedProjectRef, ScopedThreadRef } from "@t3tools/contracts";
+} from "@z9code/client-runtime/state/entities";
+import type { ScopedProjectRef, ScopedThreadRef } from "@z9code/contracts";
 import type {
   EnvironmentId,
   OrchestrationV2ProjectedTurnItem,
@@ -28,8 +28,8 @@ import type {
   NodeId,
   ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
-import type { ThreadCheckpointSummary } from "@t3tools/client-runtime/state/thread-checkpoints";
+} from "@z9code/contracts";
+import type { ThreadCheckpointSummary } from "@z9code/client-runtime/state/thread-checkpoints";
 import { Atom } from "effect/reactivity";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { environmentProjects } from "./projects";
@@ -554,7 +554,7 @@ export function readResponseSubagents(
           }),
         )
         ?.title.trim() ||
-      // oxlint-disable-next-line t3code/no-untranslated-copy -- subagent title stored in the reply record sent to the agent
+      // oxlint-disable-next-line z9code/no-untranslated-copy -- subagent title stored in the reply record sent to the agent
       "Agent",
   }));
 }

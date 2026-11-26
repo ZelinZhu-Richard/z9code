@@ -1,4 +1,4 @@
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
+import { thrownErrorMessage } from "@z9code/client-runtime/errors";
 import { m as resolveMessage } from "~/i18n/messages";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 
@@ -10,9 +10,9 @@ import type { MessageResolver } from "../../i18n/messages";
 import {
   deriveAvailableInstanceId,
   deriveInstanceId,
-} from "@t3tools/client-runtime/provider-instance-ids";
-import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
-import type { ProviderClientDefinition } from "@t3tools/provider-core/client";
+} from "@z9code/client-runtime/provider-instance-ids";
+import { squashAtomCommandFailure } from "@z9code/client-runtime/state/runtime";
+import type { ProviderClientDefinition } from "@z9code/provider-core/client";
 import {
   type AcpRegistrySearchAgent,
   AuthProvidersManageScope,
@@ -22,7 +22,7 @@ import {
   type ProviderInstanceConfig,
   type ProviderInstanceEnvironmentVariable,
   isManagedDriverAllowed,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 
 import {
   useEnvironmentSettings,
@@ -379,6 +379,30 @@ export function AddProviderInstanceDialog({
     setHasAttemptedSubmit(false);
   };
 
+  // Google's own CLI over ACP: it signs in to Google itself, so no credential passes through here.
+  const handleGeminiCliConfiguration = () => {
+    setShowMoreProviders(true);
+    setDriver(ACP_REGISTRY_DRIVER_KIND);
+    setSelectedAcp(null);
+    setIsManualAcpConfiguration(true);
+    setConfigByDriver((existing) => ({
+      ...existing,
+      [ACP_REGISTRY_DRIVER_KIND]: {
+        source: "local",
+        commandPath: "gemini",
+        commandArgs: ["--acp"],
+      },
+    }));
+    setIdentityByDriver((existing) =>
+      updateProviderIdentityDraft(existing, ACP_REGISTRY_DRIVER_KIND, {
+        label: gt("Gemini CLI"),
+        instanceIdOverride: null,
+      }),
+    );
+    setLocalEnvironment([]);
+    setHasAttemptedSubmit(false);
+  };
+
   // A policy that owns this driver's launch settings also rules out ChatGPT's own runtime.
   const driverLocks = managedInstanceLocks(managedPolicy, driver, m);
 
@@ -506,6 +530,21 @@ export function AddProviderInstanceDialog({
                   aria-labelledby="add-instance-driver-label"
                 />
                 <MultipleAccountsNote environmentId={environmentId} driver={driver} />
+                {acpRegistryAllowed ? (
+                  <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <span>
+                      <T>Google Gemini runs through the official Gemini CLI.</T>
+                    </span>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      disabled={isPreparingRegistryAgent}
+                      onClick={handleGeminiCliConfiguration}
+                    >
+                      <T>Set up Gemini CLI</T>
+                    </Button>
+                  </div>
+                ) : null}
               </div>
 
               {wizardStep === 0 && (moreDriverOptions.length > 0 || acpRegistryAllowed) ? (

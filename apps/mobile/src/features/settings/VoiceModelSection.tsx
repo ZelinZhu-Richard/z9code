@@ -1,4 +1,4 @@
-import { errorDisplayMessage } from "@t3tools/client-runtime/errors";
+import { errorDisplayMessage } from "@z9code/client-runtime/errors";
 import { T, useGT, useLocale, Var } from "gt-react-native";
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
 import { useNavigation } from "@react-navigation/native";
@@ -6,12 +6,12 @@ import {
   cancelEnvironmentSpeechModelDownload,
   installEnvironmentSpeechModel,
   selectEnvironmentSpeechModel,
-} from "@t3tools/client-runtime/voice-input";
+} from "@z9code/client-runtime/voice-input";
 import {
   AuthSettingsWriteScope,
   type EnvironmentId,
   type EnvironmentSpeechModel,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { type ReactNode, useEffect, useState } from "react";
 import { Platform, Text as NativeText, View } from "react-native";
@@ -52,7 +52,7 @@ export function useVoiceModels(environmentId: EnvironmentId, label: string) {
   const models = AsyncResult.getOrElse(modelsResult, () => null)?.models ?? [];
   const downloading = requested !== null || models.some(isDownloading);
 
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- polls the environment's download progress while one runs
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- polls the environment's download progress while one runs
   useEffect(() => {
     if (!downloading) return;
     const timer = setInterval(refreshModels, 1_000);
@@ -336,7 +336,7 @@ export function LocalModelChoice(props: {
             : voice.canManage
               ? gt("No model installed · Choose one to download")
               : gt("No model installed · Add one using {product} on {environment}", {
-                  product: "T3 Code",
+                  product: "z9code",
                   environment: props.label,
                 })
       }

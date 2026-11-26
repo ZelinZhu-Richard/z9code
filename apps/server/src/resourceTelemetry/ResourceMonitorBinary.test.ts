@@ -1,5 +1,5 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import { afterEach, assert, describe, it, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -31,11 +31,34 @@ describe("ResourceMonitorBinary", () => {
         Effect.provideService(HostProcess.Platform, "freebsd"),
         Effect.provideService(HostProcess.Architecture, "ia32"),
         Effect.provideService(HostProcess.Environment, {
-          T3CODE_RESOURCE_MONITOR_PATH: binaryPath,
+          Z9CODE_RESOURCE_MONITOR_PATH: binaryPath,
         }),
       );
 
       assert.equal(yield* service.resolve, binaryPath);
+    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
+  );
+
+  it.effect.skipIf(windowsHost)("starts no monitor when the opt-out is set", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const baseDir = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "t3-resource-monitor-binary-",
+      });
+      const binaryPath = `${baseDir}/custom-resource-monitor`;
+      yield* fileSystem.writeFileString(binaryPath, "binary");
+      yield* fileSystem.chmod(binaryPath, 0o755);
+
+      const service = yield* ResourceMonitorBinary.make().pipe(
+        Effect.provide(ServerConfig.layerTest(process.cwd(), baseDir)),
+        Effect.provideService(HostProcess.Environment, {
+          Z9CODE_RESOURCE_MONITOR_PATH: binaryPath,
+          Z9CODE_RESOURCE_MONITOR_DISABLED: "1",
+        }),
+      );
+
+      const error = yield* Effect.flip(service.resolve);
+      assert.instanceOf(error, ResourceMonitorBinary.ResourceMonitorBinaryUnsupported);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
 
@@ -55,7 +78,7 @@ describe("ResourceMonitorBinary", () => {
         Effect.provideService(HostProcess.Architecture, "x64"),
         Effect.provideService(HostProcess.LinuxLibc, "gnu"),
         Effect.provideService(HostProcess.Environment, {
-          T3CODE_RESOURCE_MONITOR_PATH: binaryPath,
+          Z9CODE_RESOURCE_MONITOR_PATH: binaryPath,
         }),
       );
       const error = yield* Effect.flip(service.resolve);
@@ -78,7 +101,7 @@ describe("ResourceMonitorBinary", () => {
         Effect.provideService(HostProcess.Platform, "win32"),
         Effect.provideService(HostProcess.Architecture, "arm64"),
         Effect.provideService(HostProcess.Environment, {
-          T3CODE_RESOURCE_MONITOR_PATH: baseDir,
+          Z9CODE_RESOURCE_MONITOR_PATH: baseDir,
         }),
       );
       const error = yield* Effect.flip(service.resolve);

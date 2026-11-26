@@ -67,7 +67,7 @@ const row = (fields: Record<string, unknown>) => ({
   createdAt: "2026-07-01T00:00:00Z",
   updatedAt: "2026-07-02T00:00:00Z",
   mergedAt: null,
-  repository: { nameWithOwner: "pingdotgg/t3code" },
+  repository: { nameWithOwner: "ZelinZhu-Richard/z9code" },
   reviewRequests: { nodes: [] },
   labels: { nodes: [] },
   commits: { nodes: [] },
@@ -459,7 +459,7 @@ describe("pull request detail decoding", () => {
         isCrossRepository: true,
         viewerDidAuthor: true,
         headRepositoryOwner: { __typename: "User", login: "octocat" },
-        headRepository: { nameWithOwner: "octocat/t3code", viewerPermission: "ADMIN" },
+        headRepository: { nameWithOwner: "octocat/z9code", viewerPermission: "ADMIN" },
         headRef: { id: "REF_7" },
         ...overrides,
       });
@@ -1114,7 +1114,7 @@ describe("review thread decoding", () => {
             id: "PRRT_all_hidden",
             path: "apps/web/src/main.tsx",
             comments: {
-              nodes: [{ id: "t3", createdAt: "2026-07-01T00:00:00Z", isMinimized: true }],
+              nodes: [{ id: "z9", createdAt: "2026-07-01T00:00:00Z", isMinimized: true }],
             },
           },
         ]),

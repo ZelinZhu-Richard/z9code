@@ -1,6 +1,6 @@
-import type { UsageProviderKind } from "@t3tools/contracts";
+import type { UsageProviderKind } from "@z9code/contracts";
 
-import { ProviderDriverKind } from "@t3tools/contracts";
+import { ProviderDriverKind } from "@z9code/contracts";
 
 import type { UsageMetric } from "./usageShortcuts";
 
@@ -31,11 +31,6 @@ export const PROVIDER_PRESENTATION = {
     label: "OpenCode",
     color: "#5b9bbd",
     driverKind: ProviderDriverKind.make("opencode"),
-  },
-  antigravity: {
-    label: "Antigravity",
-    color: "#8c7bd1",
-    driverKind: ProviderDriverKind.make("antigravity"),
   },
   pi: {
     label: "Pi",

@@ -3,12 +3,12 @@ import type {
   ServerProviderResetCredits,
   ServerProviderUsageLimits,
   ServerProviderUsageWindow,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import type * as CodexErrors from "effect-codex-app-server/errors";
 
-import { clampPercent, makeUsageLimits } from "@t3tools/provider-core/server/usageLimits";
+import { clampPercent, makeUsageLimits } from "@z9code/provider-core/server/usageLimits";
 
 interface CodexRateLimitWindow {
   readonly usedPercent: number;
@@ -219,7 +219,7 @@ export function codexTimeZone(
 /**
  * Codex writes a usage limit's reset into its error text in its own local time:
  * "Try again at 3:37 PM." for today, else "try again at Nov 11th, 2026 3:37 PM.".
- * It is the only reset left when a proxy such as CLIProxyAPI strips the rate-limit snapshot.
+ * It is the only reset left when a gateway strips the rate-limit snapshot.
  * `failedAt` is when Codex reported the failure, which fixes the date of today's form.
  */
 export function codexMessageResetAt(

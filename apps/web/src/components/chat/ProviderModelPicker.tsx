@@ -1,10 +1,9 @@
 import {
-  ANTIGRAVITY_DEFAULT_MODEL,
   type ProviderInstanceId,
   type EnvironmentId,
   type ProviderDriverKind,
   type ResolvedKeybindingsConfig,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { RegistryContext } from "@effect/atom-react";
 import { T, useGT } from "gt-react";
 import {
@@ -144,7 +143,7 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
     if (config?.environment.capabilities.modelCatalogRefresh !== true) return;
     void refreshProviders({ environmentId, input: { modelCatalogOnly: true } });
   });
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- asks the server for newly released models on every open; a parent, a keybinding or the palette can open the picker, so no one handler sees them all
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- asks the server for newly released models on every open; a parent, a keybinding or the palette can open the picker, so no one handler sees them all
   useEffect(() => {
     if (isMenuOpen) refreshModelCatalog();
   }, [isMenuOpen]);
@@ -169,14 +168,10 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
       options: selectedInstanceOptions,
     }) ??
     retainedModelWhileProviderLocked(activeEntry, props.model) ??
-    (activeEntry?.driverKind === "opencode" || activeEntry?.driverKind === "antigravity"
-      ? undefined
-      : selectedInstanceOptions[0]);
+    (activeEntry?.driverKind === "opencode" ? undefined : selectedInstanceOptions[0]);
   const triggerTitle = selectedModel
     ? getTriggerDisplayModelName(selectedModel, activeEntry?.driverKind)
-    : props.model === ANTIGRAVITY_DEFAULT_MODEL
-      ? gt("Choose model")
-      : props.model || gt("Choose model");
+    : props.model || gt("Choose model");
   const withUnavailable = (model: string, isUnavailable: boolean | undefined) =>
     isUnavailable ? gt("{model} (Unavailable)", { model }) : model;
   const triggerLabel = selectedModel

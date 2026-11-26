@@ -22,7 +22,7 @@ import {
   shouldRecommendDatabaseCompaction,
   type UsageSummary,
   WS_METHODS,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Equal from "effect/Equal";
@@ -130,7 +130,7 @@ export class ServerUpdateResumeTimeoutError extends Schema.TaggedError<ServerUpd
   get i18nMessage(): MarkedText {
     return [
       msg(
-        "Could not confirm that the server resumed on t3@{version}. Reconnect to check the update outcome.",
+        "Could not confirm that the server resumed on z9@{version}. Reconnect to check the update outcome.",
         { version: this.targetVersion },
       ),
     ];
@@ -149,7 +149,7 @@ export class ServerUpdateProgressIncompleteError extends Schema.TaggedError<Serv
 
   get i18nMessage(): MarkedText {
     return [
-      msg("The t3@{version} update ended before the server accepted the restart.", {
+      msg("The z9@{version} update ended before the server accepted the restart.", {
         version: this.targetVersion,
       }),
     ];
@@ -184,11 +184,11 @@ export class ServerUpdateTerminalError extends Schema.TaggedError<ServerUpdateTe
     const version = this.targetVersion;
     switch (this.status) {
       case "committed":
-        return [msg("The t3@{version} update committed.", { version })];
+        return [msg("The z9@{version} update committed.", { version })];
       case "rolled-back":
-        return [msg("The t3@{version} update rolled-back.", { version })];
+        return [msg("The z9@{version} update rolled-back.", { version })];
       case "failed":
-        return [msg("The t3@{version} update failed.", { version })];
+        return [msg("The z9@{version} update failed.", { version })];
     }
   }
 }
@@ -1612,9 +1612,9 @@ export function createServerEnvironmentAtoms<R, E>(
       label: "environment-data:server:trace-diagnostics",
       tag: WS_METHODS.serverGetTraceDiagnostics,
     }),
-    npmRelease: createEnvironmentRpcQueryAtomFamily(runtime, {
-      label: "environment-data:server:npm-release",
-      tag: WS_METHODS.serverGetNpmRelease,
+    cliRelease: createEnvironmentRpcQueryAtomFamily(runtime, {
+      label: "environment-data:server:cli-release",
+      tag: WS_METHODS.serverGetCliRelease,
       staleTimeMs: 60_000,
       refreshIntervalMs: 5 * 60_000,
     }),

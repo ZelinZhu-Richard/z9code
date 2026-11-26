@@ -5,7 +5,7 @@ import {
   type ServerProviderUsageLimits,
   type UsageLimitSourceSnapshot,
   UsageLimitSourceId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -78,7 +78,7 @@ function hub(
 ): UsageLimitSourceSnapshot {
   return {
     id: UsageLimitSourceId.make(label),
-    kind: "cliproxy",
+    kind: "http",
     label,
     origin,
     checkedAt,

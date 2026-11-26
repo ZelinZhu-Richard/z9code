@@ -1,5 +1,5 @@
-import type { ContextMenuItem } from "@t3tools/contracts";
-import type { SnoozePreset } from "@t3tools/client-runtime/state/thread-settled";
+import type { ContextMenuItem } from "@z9code/contracts";
+import type { SnoozePreset } from "@z9code/client-runtime/state/thread-settled";
 import { msg } from "gt-react";
 
 import { m, type MessageResolver } from "../i18n/messages";

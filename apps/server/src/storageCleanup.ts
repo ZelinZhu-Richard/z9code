@@ -6,7 +6,7 @@ import {
   OrchestrationV2AppThreadJson,
   OrchestrationV2ProviderSessionJson,
   StorageCleanupReportEntry,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Base64Url from "effect/encoding/Base64Url";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -19,11 +19,11 @@ import type {
   WorktreeCleanupRules,
   StorageCleanupReport,
   ThreadId,
-} from "@t3tools/contracts";
-import { writeFileStringAtomically } from "@t3tools/shared/atomicWrite";
-import { resolveWorktreeCleanup } from "@t3tools/shared/projectSettings";
-import { resolveWorktreeT3Home } from "@t3tools/shared/devHome";
-import { makeDrainableWorker } from "@t3tools/shared/DrainableWorker";
+} from "@z9code/contracts";
+import { writeFileStringAtomically } from "@z9code/shared/atomicWrite";
+import { resolveWorktreeCleanup } from "@z9code/shared/projectSettings";
+import { resolveWorktreeT3Home } from "@z9code/shared/devHome";
+import { makeDrainableWorker } from "@z9code/shared/DrainableWorker";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Layer from "effect/Layer";
@@ -63,9 +63,9 @@ import { isNonRepositoryGitStderr } from "./vcs/GitVcsDriverCore.ts";
 import { isLinkedWorktree, removeLinkedWorktree } from "./vcs/worktreeRemoval.ts";
 import * as TaskFolders from "./workspace/TaskFolders.ts";
 import { withWorkspaceLease } from "./workspace/workspaceLease.ts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
-import { isNetworkPath } from "@t3tools/shared/path";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
+import { isNetworkPath } from "@z9code/shared/path";
 
 const decodeCleanupThread = Schema.decodeUnknownEffect(
   Schema.fromJsonString(OrchestrationV2AppThreadJson),
@@ -321,8 +321,22 @@ export class StorageCleanup extends Context.Service<
     readonly latestReport: Effect.Effect<StorageCleanupReport | null>;
     readonly reports: Stream.Stream<StorageCleanupReport | null>;
     readonly drain: Effect.Effect<void>;
+    /**
+     * Deleted threads the latest sweep that could read them finished with, and those whose worktree
+     * removal waits for a session or terminal to stop. Purging a thread loses the rows that find its
+     * refs and worktree.
+     */
+    readonly deletedThreadCleanup: Effect.Effect<DeletedThreadCleanup>;
+    readonly requestSweep: Effect.Effect<void>;
   }
->()("t3/storageCleanup") {}
+>()("z9/storageCleanup") {}
+
+const CHECKPOINT_CLEANUP_ATTEMPTS = 3;
+
+export interface DeletedThreadCleanup {
+  readonly finished: ReadonlySet<string>;
+  readonly waiting: ReadonlySet<string>;
+}
 
 const make = Effect.gen(function* () {
   const config = yield* ServerConfig.ServerConfig;
@@ -348,6 +362,9 @@ const make = Effect.gen(function* () {
     threadTerminals.set(terminal.terminalId, terminal);
     liveTerminals.set(terminal.threadId, threadTerminals);
   };
+
+  const isLiveTerminal = (terminal: TerminalSummary | undefined) =>
+    terminal?.status === "starting" || terminal?.status === "running";
 
   const isWindows = yield* HostProcess.isWindows;
   const pathKey = (target: string) => {
@@ -1214,8 +1231,9 @@ const make = Effect.gen(function* () {
     entries: StorageCleanupReportEntry[],
     trigger: StorageCleanupReport["trigger"],
   ) {
+    const waitingThreads = new Set<string>();
     if (!anyWorktreePolicy(serverSettings, worktreeCleanupEnabled))
-      return { waiting: false, kept: [] };
+      return { waiting: false, kept: [], waitingThreads };
     let waiting = false;
     const kept: string[] = [];
     const roots: Array<string> = [];
@@ -1357,7 +1375,7 @@ const make = Effect.gen(function* () {
       for (const terminal of [...liveTerminals.values()].flatMap((entries) => [
         ...entries.values(),
       ])) {
-        if (terminal.status !== "starting" && terminal.status !== "running") continue;
+        if (!isLiveTerminal(terminal)) continue;
         if (
           (terminal.worktreePath !== null &&
             (yield* occupies(worktreePaths, terminal.worktreePath))) ||
@@ -1432,7 +1450,10 @@ const make = Effect.gen(function* () {
       };
       // Reasons a provider session stop or finished deletion work can clear.
       const waitForStop = (reason: string) => {
-        if (deleted && settings.worktreeOnDelete) waiting = true;
+        if (deleted && settings.worktreeOnDelete) {
+          waiting = true;
+          waitingThreads.add(thread.id);
+        }
         return reason;
       };
       yield* Effect.gen(function* () {
@@ -1958,7 +1979,7 @@ const make = Effect.gen(function* () {
       scratchRoot,
       trigger,
     );
-    return { waiting, kept };
+    return { waiting, kept, waitingThreads };
   });
 
   const cleanFiles = Effect.fn("StorageCleanup.cleanFiles")(function* (
@@ -1969,7 +1990,7 @@ const make = Effect.gen(function* () {
     removed: { files: number; bytes: number },
   ) {
     if (days === null || !(yield* fs.exists(root))) return removed;
-    // A symlinked parent (a linked T3 home) is fine; a symlinked folder is not.
+    // A symlinked parent (a linked z9code home) is fine; a symlinked folder is not.
     const realRoot = yield* fs.realPath(root);
     const realParent = yield* fs.realPath(path.dirname(root));
     if (realRoot !== path.join(realParent, path.basename(root))) return removed;
@@ -2034,10 +2055,13 @@ const make = Effect.gen(function* () {
           WHERE e.thread_id = t.thread_id AND e.status IN ('pending', 'running')
         )
     `.pipe(NodeSqliteClient.readOnly);
+    const threadIds = new Set(rows.map((row) => row.threadId));
+    const failed = new Set<string>();
     const targets = new Map<string, Set<string>>();
+    const targetThreads = new Map<string, Set<string>>();
     for (const row of rows) {
       // Derive ownership from tombstones, never from absence in this database:
-      // another T3 home can own refs in the same Git repository.
+      // another z9code home can own refs in the same Git repository.
       const prefixes = [`refs/t3/checkpoints/${Base64Url.encode(row.threadId)}/turn/`];
       if (row.scopeId !== null) {
         prefixes.push(
@@ -2054,9 +2078,15 @@ const make = Effect.gen(function* () {
         const owned = targets.get(key) ?? new Set<string>();
         for (const prefix of prefixes) owned.add(prefix);
         targets.set(key, owned);
+        const owners = targetThreads.get(key) ?? new Set<string>();
+        owners.add(row.threadId);
+        targetThreads.set(key, owners);
       }
     }
-    const repositories = new Map<string, { cwd: string; prefixes: Set<string> }>();
+    const repositories = new Map<
+      string,
+      { cwd: string; prefixes: Set<string>; threads: Set<string> }
+    >();
     for (const [cwd, prefixes] of targets) {
       yield* Effect.gen(function* () {
         if (!(yield* fs.exists(cwd))) return;
@@ -2068,16 +2098,24 @@ const make = Effect.gen(function* () {
         });
         if (result.exitCode !== 0) return;
         const commonDir = yield* fs.realPath(result.stdout.trim());
-        const repository = repositories.get(commonDir) ?? { cwd, prefixes: new Set<string>() };
+        const repository = repositories.get(commonDir) ?? {
+          cwd,
+          prefixes: new Set<string>(),
+          threads: new Set<string>(),
+        };
         for (const prefix of prefixes) repository.prefixes.add(prefix);
+        for (const threadId of targetThreads.get(cwd) ?? []) repository.threads.add(threadId);
         repositories.set(commonDir, repository);
       }).pipe(
         Effect.catch((cause) =>
-          Effect.logWarning("checkpoint repository inspection failed", { cause }),
+          Effect.gen(function* () {
+            for (const threadId of targetThreads.get(cwd) ?? []) failed.add(threadId);
+            yield* Effect.logWarning("checkpoint repository inspection failed", { cause });
+          }),
         ),
       );
     }
-    for (const { cwd, prefixes } of repositories.values()) {
+    for (const { cwd, prefixes, threads } of repositories.values()) {
       yield* Effect.gen(function* () {
         const result = yield* git.execute({
           operation: "StorageCleanup.listCheckpointRefs",
@@ -2107,14 +2145,24 @@ const make = Effect.gen(function* () {
         });
         yield* Effect.logInfo("storage cleanup removed checkpoint refs", { refCount: refs.length });
       }).pipe(
-        Effect.catch((cause) => Effect.logWarning("checkpoint ref cleanup failed", { cause })),
+        Effect.catch((cause) =>
+          Effect.gen(function* () {
+            for (const threadId of threads) failed.add(threadId);
+            yield* Effect.logWarning("checkpoint ref cleanup failed", { cause });
+          }),
+        ),
       );
     }
+    return { threadIds, failed };
   });
   // Only deleted threads' worktrees wait on session stops: any stop while one waits, or a stop inside one kept for another reason.
   // A deletion stays pending until a sweep that started after it finishes.
   let deletedWorktreeWaits = true;
   let keptDeletedWorktrees: ReadonlyArray<string> = [];
+  let deletedThreadCleanup: DeletedThreadCleanup = { finished: new Set(), waiting: new Set() };
+  // A failed ref cleanup is retried before the purge may drop the rows it needs; a repository that
+  // keeps failing must not keep the thread's content forever.
+  const checkpointCleanupFailures = new Map<string, number>();
   let deletions = 0;
   let sweptDeletions = 0;
   const sweep = Effect.fn("StorageCleanup.sweep")(function* (
@@ -2125,8 +2173,18 @@ const make = Effect.gen(function* () {
     const serverSettings = yield* settingsService.getSettings;
     const settings = serverSettings.storageCleanup;
     const entries: StorageCleanupReportEntry[] = [];
-    yield* cleanCheckpointRefs().pipe(
-      Effect.catch((cause) => Effect.logWarning("checkpoint ref cleanup failed", { cause })),
+    const checkedDeletions = yield* cleanCheckpointRefs().pipe(
+      Effect.asSome,
+      Effect.catch((cause) =>
+        Effect.logWarning("checkpoint ref cleanup failed", { cause }).pipe(
+          Effect.as(
+            Option.none<{
+              readonly threadIds: ReadonlySet<string>;
+              readonly failed: ReadonlySet<string>;
+            }>(),
+          ),
+        ),
+      ),
     );
     yield* retryLeftovers(entries).pipe(
       Effect.catch((error) =>
@@ -2163,12 +2221,34 @@ const make = Effect.gen(function* () {
             files: null,
           });
           yield* Effect.logWarning("worktree cleanup failed", { error });
-          return { waiting: true, kept: [] };
+          // A pass that keeps failing must not keep every deleted thread's content forever.
+          return { waiting: true, kept: [], waitingThreads: new Set<string>() };
         }),
       ),
     );
     deletedWorktreeWaits = deletedWorktrees.waiting;
     keptDeletedWorktrees = deletedWorktrees.kept;
+    if (Option.isSome(checkedDeletions)) {
+      const { threadIds, failed } = checkedDeletions.value;
+      const retrying = new Set<string>();
+      for (const threadId of threadIds) {
+        if (!failed.has(threadId)) {
+          checkpointCleanupFailures.delete(threadId);
+          continue;
+        }
+        const attempts = (checkpointCleanupFailures.get(threadId) ?? 0) + 1;
+        checkpointCleanupFailures.set(threadId, attempts);
+        if (attempts < CHECKPOINT_CLEANUP_ATTEMPTS) retrying.add(threadId);
+        else
+          yield* Effect.logWarning("giving up on a deleted thread's checkpoint refs", { threadId });
+      }
+      const waiting = (id: string) => deletedWorktrees.waitingThreads.has(id) || retrying.has(id);
+      const checked = [...threadIds];
+      deletedThreadCleanup = {
+        finished: new Set(checked.filter((id) => !waiting(id))),
+        waiting: new Set(checked.filter(waiting)),
+      };
+    }
     sweptDeletions = deletionsAtStart;
     for (const category of [
       {
@@ -2273,17 +2353,24 @@ const make = Effect.gen(function* () {
 
   const start = Effect.fn("StorageCleanup.start")(function* () {
     const unsubscribe = yield* terminals.subscribeMetadata((event) =>
-      Effect.sync(() => {
+      Effect.suspend(() => {
         if (event.type === "snapshot") {
           liveTerminals.clear();
           for (const terminal of event.terminals) noteTerminal(terminal);
-        } else if (event.type === "upsert") {
+          return Effect.void;
+        }
+        const threadId = event.type === "upsert" ? event.terminal.threadId : event.threadId;
+        const terminalId = event.type === "upsert" ? event.terminal.terminalId : event.terminalId;
+        const wasLive = isLiveTerminal(liveTerminals.get(threadId)?.get(terminalId));
+        if (event.type === "upsert") {
           noteTerminal(event.terminal);
         } else {
           const threadTerminals = liveTerminals.get(event.threadId);
           threadTerminals?.delete(event.terminalId);
           if (threadTerminals?.size === 0) liveTerminals.delete(event.threadId);
         }
+        const stopped = wasLive && !(event.type === "upsert" && isLiveTerminal(event.terminal));
+        return stopped && deletedWorktreeWaits ? requestSweep : Effect.void;
       }),
     );
     yield* Effect.addFinalizer(() => Effect.sync(unsubscribe));
@@ -2346,6 +2433,8 @@ const make = Effect.gen(function* () {
     latestReport: SubscriptionRef.get(reportRef),
     reports: SubscriptionRef.changes(reportRef),
     drain: worker.drain,
+    deletedThreadCleanup: Effect.sync(() => deletedThreadCleanup),
+    requestSweep,
   });
 });
 

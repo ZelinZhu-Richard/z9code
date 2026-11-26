@@ -1,5 +1,5 @@
 import * as NodeNet from "node:net";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -32,7 +32,7 @@ const listen = Effect.fn("scenario.listen")(function* (threadId: string, arg: st
   const hostEnvironment = yield* HostProcess.Environment;
   const child = yield* spawner.spawn(
     ChildProcess.make(yield* HostProcess.ExecutablePath, ["-e", LISTENER, "--", arg], {
-      env: { PATH: hostEnvironment.PATH, T3CODE_THREAD_ID: threadId },
+      env: { PATH: hostEnvironment.PATH, Z9CODE_THREAD_ID: threadId },
       extendEnv: false,
       stdin: "ignore",
       stdout: "pipe",

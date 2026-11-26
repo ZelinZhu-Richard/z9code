@@ -18,14 +18,14 @@ import {
   type VcsCreateWorktreeResult,
   type WorkspaceLayoutCommandsResult,
   type WorktreeLayoutCommandKind,
-  T3_PROJECT_FILE_NAME,
-} from "@t3tools/contracts";
-import { resolveProjectSettings } from "@t3tools/shared/projectSettings";
-import { flattenTemporaryWorktreeBranchName, isTemporaryWorktreeBranch } from "@t3tools/shared/git";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { windowsSystem32Path } from "@t3tools/shared/windowsSystem";
-import * as KeyedLock from "@t3tools/shared/KeyedLock";
-import { parseT3ProjectFile } from "@t3tools/shared/t3ProjectFile";
+  Z9_PROJECT_FILE_NAME,
+} from "@z9code/contracts";
+import { resolveProjectSettings } from "@z9code/shared/projectSettings";
+import { flattenTemporaryWorktreeBranchName, isTemporaryWorktreeBranch } from "@z9code/shared/git";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { windowsSystem32Path } from "@z9code/shared/windowsSystem";
+import * as KeyedLock from "@z9code/shared/KeyedLock";
+import { parseT3ProjectFile } from "@z9code/shared/t3ProjectFile";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -208,7 +208,7 @@ export class TaskFolders extends Context.Service<
       projectId: ProjectId,
     ) => Effect.Effect<WorkspaceLayoutCommandsResult, TaskFolderError>;
   }
->()("t3/workspace/TaskFolders") {}
+>()("z9/workspace/TaskFolders") {}
 
 const isTaskFolderError = Schema.is(TaskFolderError);
 
@@ -225,7 +225,7 @@ export type ProjectCommands = "permitted" | "request-not-permitted" | "agent-bel
 export type ProjectCommandsNow = ProjectCommands | Effect.Effect<ProjectCommands>;
 
 /**
- * A layout command is the project owner's own code. A link paired below full access grants T3's
+ * A layout command is the project owner's own code. A link paired below full access grants z9code's
  * tools only (see `mcp/linkOrigin.ts`), so work it started never runs one.
  */
 export const projectCommandsForLink = (
@@ -257,7 +257,7 @@ export const projectCommandsForAgent = (
 };
 
 /** Only `layoutCommand` makes one, so nothing runs that was not checked there. */
-const cleared: unique symbol = Symbol("t3/workspace/TaskFolders/cleared");
+const cleared: unique symbol = Symbol("z9/workspace/TaskFolders/cleared");
 interface ClearedLayoutCommand {
   readonly [cleared]: true;
   readonly text: string;
@@ -268,7 +268,7 @@ interface ClearedLayoutCommand {
 }
 
 const layoutRefusedDetail = (refusal: string) =>
-  `This project lays out its worktrees with its own command (worktreeLayout in ${T3_PROJECT_FILE_NAME}), ${refusal}`;
+  `This project lays out its worktrees with its own command (worktreeLayout in ${Z9_PROJECT_FILE_NAME}), ${refusal}`;
 
 const failureDetail = (cause: unknown) =>
   typeof cause === "object" &&
@@ -382,7 +382,7 @@ const make = Effect.gen(function* () {
 
   // A project that lays its own thread folder out says so in its `t3.json`.
   const projectFile = (projectRoot: string) =>
-    fileSystem.readFileString(path.join(projectRoot, T3_PROJECT_FILE_NAME)).pipe(
+    fileSystem.readFileString(path.join(projectRoot, Z9_PROJECT_FILE_NAME)).pipe(
       Effect.map(parseT3ProjectFile),
       Effect.orElseSucceed(() => null),
     );
@@ -484,12 +484,12 @@ const make = Effect.gen(function* () {
               ...hostEnvironment,
               // A `GIT_DIR` the server inherited would point the command's Git at another repository.
               ...VcsProcess.unsetInheritedRepositoryEnv(hostEnvironment, hostPlatform),
-              T3_PROJECT_ROOT: taskFolder.projectRoot,
-              T3_WORKTREE_ROOT: taskFolder.root,
-              T3_WORKTREE_PROJECT_PATH: taskFolder.projectPath,
-              T3_WORKTREE_BRANCH: branch,
-              T3_WORKTREE_BASE: baseBranch ?? "",
-              T3_WORKTREE_REPOSITORIES: repositories.join("\n"),
+              Z9_PROJECT_ROOT: taskFolder.projectRoot,
+              Z9_WORKTREE_ROOT: taskFolder.root,
+              Z9_WORKTREE_PROJECT_PATH: taskFolder.projectPath,
+              Z9_WORKTREE_BRANCH: branch,
+              Z9_WORKTREE_BASE: baseBranch ?? "",
+              Z9_WORKTREE_REPOSITORIES: repositories.join("\n"),
             },
             timeoutMs: LAYOUT_COMMAND_TIMEOUT_MS,
           })

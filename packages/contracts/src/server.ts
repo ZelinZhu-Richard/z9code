@@ -383,8 +383,6 @@ export const ServerObservability = Schema.Struct({
   otlpLogsSource: Schema.optional(OtlpEndpointSource),
   otlpLogsVariable: Schema.optional(TrimmedNonEmptyString),
   otlpLogsEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
-  /** Relay tracing policy for browsers opened from this server. */
-  relayTracingAllowed: Schema.optionalKey(Schema.Boolean),
 });
 export type ServerObservability = typeof ServerObservability.Type;
 
@@ -702,7 +700,7 @@ export const ServerEventLoopStall = Schema.Struct({
 });
 export type ServerEventLoopStall = typeof ServerEventLoopStall.Type;
 
-/** The boolean `T3CODE_FEATURE_FLAGS` a server started with. Unset flags are off. */
+/** The boolean `Z9CODE_FEATURE_FLAGS` a server started with. Unset flags are off. */
 export const ServerFeatureFlags = Schema.Struct({
   secretProviders: Schema.optionalKey(Schema.Boolean),
   tanstackSource: Schema.optionalKey(Schema.Boolean),
@@ -1014,31 +1012,31 @@ export class ServerProviderUpdateError extends Schema.TaggedError<ServerProvider
   }
 }
 
-export const ServerNpmReleaseInput = Schema.Struct({
+export const ServerCliReleaseInput = Schema.Struct({
   spec: Schema.String.check(
     Schema.isMaxLength(64),
     Schema.isPattern(/^(?:latest|nightly|\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/),
   ),
 });
-export type ServerNpmReleaseInput = typeof ServerNpmReleaseInput.Type;
+export type ServerCliReleaseInput = typeof ServerCliReleaseInput.Type;
 
-export const ServerNpmRelease = Schema.Struct({
+export const ServerCliRelease = Schema.Struct({
   version: Schema.String,
   databaseMigration: Schema.optionalKey(Schema.Int),
 });
-export type ServerNpmRelease = typeof ServerNpmRelease.Type;
+export type ServerCliRelease = typeof ServerCliRelease.Type;
 
-export class ServerNpmReleaseError extends Schema.TaggedError<ServerNpmReleaseError>()(
-  "ServerNpmReleaseError",
+export class ServerCliReleaseError extends Schema.TaggedError<ServerCliReleaseError>()(
+  "ServerCliReleaseError",
   { reason: Schema.String },
 ) {
   override get message(): string {
-    return `Could not check the configured npm registry: ${this.reason}`;
+    return `Could not check z9code's releases: ${this.reason}`;
   }
 }
 
 export const ServerSelfUpdateInput = Schema.Struct({
-  /** Exact npm version, never a dist-tag, so server and client agree on the request. */
+  /** Exact release version, never a track name, so server and client agree on the request. */
   targetVersion: TrimmedNonEmptyString,
   /** Desktop-managed hosts move their app to this update track first. Sent only for a track switch. */
   channel: Schema.optionalKey(DesktopUpdateChannelSchema),

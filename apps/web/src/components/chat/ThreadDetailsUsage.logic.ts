@@ -4,9 +4,8 @@ import {
   type ServerProvider,
   type ServerProviderUsageLimits,
   type UsageLimitSourceSnapshots,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
-  antigravityWindowLimitsModel,
   collectLimitAccounts,
   collectLimitPools,
   collectProviderUsageLimits,
@@ -14,8 +13,8 @@ import {
   hubRoutes,
   instanceHubs,
   type LimitPoolWindow,
-} from "@t3tools/shared/usageLimits";
-import { limitsNotice } from "@t3tools/shared/usageLimitsCopy";
+} from "@z9code/shared/usageLimits";
+import { limitsNotice } from "@z9code/shared/usageLimitsCopy";
 
 export type ThreadDetailsLimits =
   | { readonly kind: "instance"; readonly limits: ServerProviderUsageLimits }
@@ -83,19 +82,7 @@ function hubPool(
   const routes = hubRoutes(sources, driver, model);
   const routed = sources.map((source) => ({
     ...source,
-    accounts: source.accounts.filter(routes).map((account) =>
-      account.driver === "antigravity"
-        ? {
-            ...account,
-            usageLimits: {
-              ...account.usageLimits,
-              windows: account.usageLimits.windows.filter((window) =>
-                antigravityWindowLimitsModel(window, model),
-              ),
-            },
-          }
-        : account,
-    ),
+    accounts: source.accounts.filter(routes),
   }));
   const readable = routed
     .flatMap((source) => source.accounts)

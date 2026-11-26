@@ -1,5 +1,5 @@
-import { EnvironmentId } from "@t3tools/contracts";
-import { type EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
+import { EnvironmentId } from "@z9code/contracts";
+import { type EnvironmentConnectionPhase } from "@z9code/client-runtime/connection";
 
 export interface SavedRemoteConnection {
   readonly environmentId: EnvironmentId;
@@ -11,7 +11,6 @@ export interface SavedRemoteConnection {
   readonly bearerToken: string | null;
   readonly authenticationMethod?: "bearer" | "dpop";
   readonly dpopAccessToken?: string;
-  readonly relayManaged?: true;
 }
 
 export type RemoteClientConnectionState = EnvironmentConnectionPhase;

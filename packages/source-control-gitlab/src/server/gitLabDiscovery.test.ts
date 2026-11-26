@@ -1,15 +1,15 @@
 import {
   parseGitRemoteHost,
   unknownRemoteProvider,
-} from "@t3tools/source-control-core/shared/definition";
+} from "@z9code/source-control-core/shared/definition";
 import {
   probeSourceControlProvider,
   refineUnknownRemoteProvider,
-} from "@t3tools/source-control-core/server/discovery";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { SpawnExecutableResolution } from "@t3tools/shared/shell";
-import { processOutput } from "@t3tools/source-control-testing/TestSourceControlHost";
-import { VcsProcessSpawnError } from "@t3tools/contracts";
+} from "@z9code/source-control-core/server/discovery";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { SpawnExecutableResolution } from "@z9code/shared/shell";
+import { processOutput } from "@z9code/source-control-testing/TestSourceControlHost";
+import { VcsProcessSpawnError } from "@z9code/contracts";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";

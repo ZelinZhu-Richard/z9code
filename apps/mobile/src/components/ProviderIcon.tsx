@@ -5,13 +5,13 @@ import {
   normalizeProviderAccentColor,
   providerAccentForegroundColor,
   providerInstanceInitials,
-} from "@t3tools/client-runtime/state/provider-instance-display";
+} from "@z9code/client-runtime/state/provider-instance-display";
 import { useId, useState } from "react";
-import { resolveOfficialAcpRegistryIconUrl } from "@t3tools/contracts";
+import { resolveOfficialAcpRegistryIconUrl } from "@z9code/contracts";
 import { useAppearancePreferences } from "../features/settings/appearance/AppearancePreferencesProvider";
 import { AppText as Text } from "./ui/AppText";
 import { cn } from "../lib/cn";
-import { getProviderClient, openRouterIcon } from "@t3tools/client-runtime/provider-clients";
+import { getProviderClient, openRouterIcon } from "@z9code/client-runtime/provider-clients";
 
 type ProviderIconProps = {
   readonly provider: string | null | undefined;
@@ -75,15 +75,6 @@ export function ProviderIcon(props: ProviderIconProps) {
   const size = props.size ?? 16;
   const mono = isDarkMode ? "#e5e5e5" : "#171717";
 
-  if (props.provider?.trim().toLowerCase() === "antigravity") {
-    return (
-      <Image
-        source={require("../../assets/antigravity.png")}
-        style={{ width: size, height: size }}
-        contentFit="contain"
-      />
-    );
-  }
   if (props.provider === "acpRegistry") {
     return <AcpRegistryProviderIcon color={mono} iconUrl={props.iconUrl} size={size} />;
   }

@@ -12,7 +12,7 @@ curl -fsSL https://vite.plus | bash
 On Windows, clone with long paths enabled so `.repos/` checks out cleanly:
 
 ```powershell
-git clone -c core.longpaths=true https://github.com/pingdotgg/t3code.git
+git clone -c core.longpaths=true https://github.com/ZelinZhu-Richard/z9code.git
 ```
 
 From the repository root:
@@ -26,11 +26,11 @@ Open the pairing URL printed by the dev runner (the bare origin does not authent
 
 ## Forge mirror (optional)
 
-GitHub is the source of truth; [source.tanstack.com/@pingdotgg/t3code](https://source.tanstack.com/@pingdotgg/t3code) is a two-way mirror for parallel agent work:
+GitHub is the source of truth; [source.tanstack.com/@ZelinZhu-Richard/z9code](https://source.tanstack.com/@ZelinZhu-Richard/z9code) is a two-way mirror for parallel agent work:
 
 ```sh
-git remote set-url origin https://source.tanstack.com/@pingdotgg/t3code.git
-git remote add github https://github.com/pingdotgg/t3code.git
+git remote set-url origin https://source.tanstack.com/@ZelinZhu-Richard/z9code.git
+git remote add github https://github.com/ZelinZhu-Richard/z9code.git
 src auth login --web && src auth setup-git
 ```
 
@@ -39,11 +39,11 @@ With `origin` on the mirror, use `src` instead of `gh`. PRs into `main` still me
 ## Running dev servers
 
 - `vp run dev` (server + web), `vp run dev:desktop` (Electron), `vp run dev:server`, `vp run dev:web`. See [apps/mobile/README.md](../../apps/mobile/README.md) for mobile.
-- Pass flags directly after the task name (e.g. `vp run dev --home-dir /tmp/t3code-dev`, `--browser`).
-- **State and ports:** Linked worktrees default to `<worktree>/.t3/userdata` (outranking `T3CODE_HOME`) and seed on first start from a read-only snapshot of `~/.t3/userdata/statev2.sqlite` when it is at most 500 MiB (`--no-seed` or `T3CODE_DEV_SEED=0` skips; `vp run migrate-dev-db` refreshes manually). Plain clones and the main checkout default to `~/.t3/dev`. Never point a dev server at `~/.t3/userdata`. Read actual ports from `[dev-runner]` output (`T3CODE_PORT_OFFSET` / `T3CODE_DEV_INSTANCE` override).
+- Pass flags directly after the task name (e.g. `vp run dev --home-dir /tmp/z9code-dev`, `--browser`).
+- **State and ports:** Linked worktrees default to `<worktree>/.z9code/userdata` (outranking `Z9CODE_HOME`) and seed on first start from a read-only snapshot of `~/.z9code/userdata/statev2.sqlite` when it is at most 500 MiB (`--no-seed` or `Z9CODE_DEV_SEED=0` skips; `vp run migrate-dev-db` refreshes manually). Plain clones and the main checkout default to `~/.z9code/dev`. Never point a dev server at `~/.z9code/userdata`. Read actual ports from `[dev-runner]` output (`Z9CODE_PORT_OFFSET` / `Z9CODE_DEV_INSTANCE` override).
 - **Resource monitor:** First start builds `native/resource-monitor` via Cargo when missing; without Rust, dev starts without process telemetry.
 - **Sharing:** `vp run dev --share` exposes the web port over Tailscale and prints a pairing URL. Add `--built` to serve `apps/web/dist` via `vp build --watch` (no HMR, faster over slow links). Never set `VITE_HTTP_URL` or `VITE_WS_URL` in dev—Vite proxies `/api` and `/ws` single-origin.
-- **Startup profiling:** `vp run profile:startup` captures the first 20 s of Node processes under `.t3/startup-profiles/<timestamp>`.
+- **Startup profiling:** `vp run profile:startup` captures the first 20 s of Node processes under `.z9code/startup-profiles/<timestamp>`.
 
 ### Replay provider
 
@@ -55,7 +55,7 @@ Only use this on a hostname where you trust every service (browsers share cookie
 
 ```sh
 openssl rand -hex 32
-# Add to .env: T3CODE_DEV_AUTH_TOKEN=<value>
+# Add to .env: Z9CODE_DEV_AUTH_TOKEN=<value>
 ```
 
 Restart `vp run dev --share` and open its printed pairing URL once per browser profile. Never commit or publish the token or startup URLs. Desktop and non-dev servers ignore it; see [environment auth](../internals/04_environment-auth.md#reusable-dev-credential).
@@ -65,7 +65,7 @@ Restart `vp run dev --share` and open its printed pairing URL once per browser p
 - `vp run check:changed` — CI's fast checks for your branch (format, lint, knip, affected typechecks, nearby tests, and React Compiler coverage).
 - Focused iteration: `vp test run <files>`, `vp lint <files>`, `vp run --filter <pkg> typecheck`, `vp run knip:check`, `vp run lint:mobile`.
 - `apps/web` uses real Chromium (`*.browser.test.{ts,tsx}`) for DOM/React tests (no jsdom) and Node for `*.test.ts`.
-- Typechecking uses `effect-tsgo tsrs --noEmit` (`@effect/tsgo`), not `typescript` (except `apps/marketing` for Astro). On Windows, open the workspace through WSL for VS Code's `.vscode/tsdk/tsgo`.
+- Typechecking uses `effect-tsgo tsrs --noEmit` (`@effect/tsgo`), not `typescript`. On Windows, open the workspace through WSL for VS Code's `.vscode/tsdk/tsgo`.
 
 ## Desktop artifacts
 
@@ -111,4 +111,4 @@ Install Rust, Python 3, and Visual Studio Build Tools (**Desktop development wit
 rustup target add x86_64-pc-windows-msvc   # or aarch64-pc-windows-msvc
 ```
 
-WSL support also requires passing the Linux CLI archive via `--wsl-runtime`; see [release runbook](./03_release.md#windows-payload-topology-and-update-validation). For signing and macOS passkeys, see [release](./03_release.md) and [Connect setup](./02_connect-setup.md#desktop-passkeys).
+WSL support also requires passing the Linux CLI archive via `--wsl-runtime`; see [release runbook](./03_release.md#windows-payload-topology-and-update-validation). For signing and macOS passkeys, see [release](./03_release.md).

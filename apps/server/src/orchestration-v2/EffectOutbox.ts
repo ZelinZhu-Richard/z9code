@@ -15,9 +15,9 @@ import {
   RunId,
   RuntimeRequestId,
   ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Context from "effect/Context";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -274,7 +274,7 @@ export interface EffectOutboxV2Shape {
 }
 
 export class EffectOutboxV2 extends Context.Service<EffectOutboxV2, EffectOutboxV2Shape>()(
-  "t3/orchestration-v2/EffectOutbox/EffectOutboxV2",
+  "z9/orchestration-v2/EffectOutbox/EffectOutboxV2",
 ) {}
 
 type EffectRow = {

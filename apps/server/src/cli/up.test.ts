@@ -1,8 +1,8 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NetService from "@t3tools/shared/Net";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import * as NetService from "@z9code/shared/Net";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -16,107 +16,17 @@ import { Command } from "effect/cli";
 import { afterEach, vi } from "vite-plus/test";
 
 import packageJson from "../../package.json" with { type: "json" };
-import * as BootService from "../cloud/bootService.ts";
+import * as BootService from "../service/bootService.ts";
 import { upsertServiceEnv } from "./service.ts";
-import { connectEnabled, planRoutes, statusCommand, upCommand } from "./up.ts";
-
-const none = Option.none<boolean>();
-
-it.each([
-  {
-    label: "a new machine starts from T3 Connect and asks",
-    setup: { installed: false, connect: false, lan: false },
-    flags: { connect: none, lan: none },
-    expected: { routes: { connect: true, lan: false }, ask: ["connect", "lan"] },
-  },
-  {
-    label: "a build without T3 Connect never offers it",
-    setup: { installed: false, connect: null, lan: false },
-    flags: { connect: none, lan: none },
-    expected: { routes: { connect: false, lan: false }, ask: ["lan"] },
-  },
-  {
-    label: "a rerun starts from the current setup",
-    setup: { installed: true, connect: false, lan: true },
-    flags: { connect: none, lan: none },
-    expected: { routes: { connect: false, lan: true }, ask: ["connect", "lan"] },
-  },
-  {
-    label: "a route flag on a new machine turns on only that route",
-    setup: { installed: false, connect: false, lan: false },
-    flags: { connect: none, lan: Option.some(true) },
-    expected: { routes: { connect: false, lan: true }, ask: [] },
-  },
-  {
-    label: "a route flag asks nothing and keeps the other route",
-    setup: { installed: true, connect: true, lan: true },
-    flags: { connect: none, lan: Option.some(false) },
-    expected: { routes: { connect: true, lan: false }, ask: [] },
-  },
-])("$label", ({ setup, flags, expected }) => {
-  expect(planRoutes(setup, flags)).toEqual(expected);
-});
+import { statusCommand, upCommand } from "./up.ts";
 
 const SERVICE = {
   supported: true,
   installed: true,
   current: true,
-  unitPath: "/home/me/.config/systemd/user/t3code.service",
-  logPath: "/home/me/.t3/userdata/logs/boot-service.log",
+  unitPath: "/home/me/.config/systemd/user/z9code.service",
+  logPath: "/home/me/.z9code/userdata/logs/boot-service.log",
 } as const;
-
-it.each([
-  {
-    label: "a CLI managed link",
-    cliDesired: true,
-    cliMode: "managed",
-    managedTunnel: false,
-    revoked: false,
-    on: true,
-  },
-  {
-    label: "a link the app made",
-    cliDesired: false,
-    cliMode: "managed",
-    managedTunnel: true,
-    revoked: false,
-    on: true,
-  },
-  {
-    label: "a publish-only link",
-    cliDesired: true,
-    cliMode: "publish_only",
-    managedTunnel: false,
-    revoked: false,
-    on: false,
-  },
-  {
-    label: "a publish-only link with an old tunnel config",
-    cliDesired: true,
-    cliMode: "publish_only",
-    managedTunnel: true,
-    revoked: false,
-    on: false,
-  },
-  {
-    label: "a revoked link",
-    cliDesired: true,
-    cliMode: "managed",
-    managedTunnel: true,
-    revoked: true,
-    on: false,
-  },
-  {
-    label: "no link",
-    cliDesired: false,
-    cliMode: "managed",
-    managedTunnel: false,
-    revoked: false,
-    on: false,
-  },
-] as const)("T3 Connect is on for $label: $on", ({ label: _, on, ...link }) => {
-  expect(connectEnabled(link)).toBe(on);
-});
 
 // Prompts run only when both streams are terminals.
 const asTerminal = Effect.acquireRelease(
@@ -153,7 +63,7 @@ const answering = (text: string) =>
     display: () => Effect.void,
   });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))("t3 up", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))("z9 up", (it) => {
   afterEach(() => vi.restoreAllMocks());
 
   it.effect.each<{
@@ -179,21 +89,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
     {
       label: "nothing changed",
       installed: true,
-      env: "T3CODE_LAN=false\n",
+      env: "Z9CODE_LAN=false\n",
       args: ["--no-lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "Z9CODE_LAN=false\n",
     },
     {
       label: "the local network opens",
-      prints: ["Run `t3 pair --base-dir <baseDir>`."],
+      prints: ["Run `z9 pair --base-dir <baseDir>`."],
       installed: true,
-      env: "T3CODE_LAN=false\n",
+      env: "Z9CODE_LAN=false\n",
       args: ["--lan"],
       installs: 0,
       restarts: 1,
-      envAfter: "T3CODE_LAN=true\n",
+      envAfter: "Z9CODE_LAN=true\n",
     },
     {
       label: "a new service starts with its settings",
@@ -202,32 +112,32 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       args: ["--lan"],
       installs: 1,
       restarts: 0,
-      envAfter: "T3CODE_LAN=true\n",
+      envAfter: "Z9CODE_LAN=true\n",
     },
     {
       label: "a route turns off with no service to run",
-      prints: ["Run `t3 --base-dir <baseDir>` to use T3 Code here."],
+      prints: ["Run `z9 --base-dir <baseDir>` to use z9code here."],
       installed: false,
-      env: "T3CODE_LAN=true\n",
+      env: "Z9CODE_LAN=true\n",
       args: ["--no-lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "Z9CODE_LAN=false\n",
     },
     {
       label: "a stopped newer service starts as it is",
       installed: true,
       status: { current: false, installedVersion: "999.0.0", problems: ["service-stopped"] },
-      env: "T3CODE_LAN=false\n",
+      env: "Z9CODE_LAN=false\n",
       args: ["--yes"],
       installs: 0,
       restarts: 1,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "Z9CODE_LAN=false\n",
     },
     {
       label: "a failed update keeps service.env matching the old service",
       // The old service still runs, so no foreground server is offered.
-      prints: ["Fix that, then run `t3 up --base-dir <baseDir>` again."],
+      prints: ["Fix that, then run `z9 up --base-dir <baseDir>` again."],
       installed: true,
       status: { current: false },
       installFails: true,
@@ -241,22 +151,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       label: "a failed restart puts service.env back and restarts on it",
       installed: true,
       restartFails: true,
-      env: "T3CODE_LAN=false\n",
+      env: "Z9CODE_LAN=false\n",
       args: ["--lan"],
       installs: 0,
       restarts: 2,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "Z9CODE_LAN=false\n",
     },
     {
       label: "declining an update changes nothing",
       installed: true,
       status: { current: false },
       answer: "n",
-      env: "T3CODE_LAN=false\n",
+      env: "Z9CODE_LAN=false\n",
       args: ["--lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "Z9CODE_LAN=false\n",
     },
     {
       label: "a service for another home is refused without a restart",
@@ -264,11 +174,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       status: { current: false, otherBaseDir: "/srv/t3 home" },
       fails: true,
       answer: "y",
-      env: "T3CODE_LAN=false\n",
+      env: "Z9CODE_LAN=false\n",
       args: ["--lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=false\n",
+      envAfter: "Z9CODE_LAN=false\n",
     },
     {
       label: "another home's service supplies no local network default",
@@ -290,8 +200,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       installed: true,
       reportStatus: true,
       prints: [
-        "Turn it off: `t3 up --base-dir <baseDir> --no-lan`.",
-        "Change access: `t3 up --base-dir <baseDir>`.",
+        "Turn it off: `z9 up --base-dir <baseDir> --no-lan`.",
+        "Change access: `z9 up --base-dir <baseDir>`.",
       ],
       env: "",
       args: [],
@@ -303,13 +213,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       label: "a host override gets no --no-lan hint it would ignore",
       installed: true,
       reportStatus: true,
-      prints: ["overridden · T3CODE_HOST=0.0.0.0"],
+      prints: ["overridden · Z9CODE_HOST=0.0.0.0"],
       omits: "--no-lan",
-      env: "T3CODE_HOST=0.0.0.0\n",
+      env: "Z9CODE_HOST=0.0.0.0\n",
       args: [],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_HOST=0.0.0.0\n",
+      envAfter: "Z9CODE_HOST=0.0.0.0\n",
     },
     {
       label: "no service manager still records the choice",
@@ -319,7 +229,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       args: ["--lan"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=true\n",
+      envAfter: "Z9CODE_LAN=true\n",
     },
     {
       label: "the old default is kept",
@@ -328,7 +238,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
       args: ["--yes"],
       installs: 0,
       restarts: 0,
-      envAfter: "T3CODE_LAN=true\n",
+      envAfter: "Z9CODE_LAN=true\n",
     },
   ])("keeps service changes and access settings consistent: $label", (input) =>
     Effect.gen(function* () {
@@ -371,7 +281,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
                   : Effect.sync(() => {
                       installs++;
                       return {
-                        program: ["t3"],
+                        program: ["z9"],
                         baseDir,
                         unitPath: status.unitPath,
                         logPath: status.logPath,
@@ -424,23 +334,23 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, NetService.layer))
 });
 
 it("rewrites only the named service.env keys and keeps the user's lines", () => {
-  const before = ["# my settings", "T3CODE_PORT=4000", "export T3CODE_LAN=0", "T3CODE_LAN=1", ""];
-  expect(upsertServiceEnv(before.join("\n"), { T3CODE_LAN: "true", T3CODE_HOST: undefined })).toBe(
-    ["# my settings", "T3CODE_PORT=4000", "T3CODE_LAN=true", ""].join("\n"),
+  const before = ["# my settings", "Z9CODE_PORT=4000", "export Z9CODE_LAN=0", "Z9CODE_LAN=1", ""];
+  expect(upsertServiceEnv(before.join("\n"), { Z9CODE_LAN: "true", Z9CODE_HOST: undefined })).toBe(
+    ["# my settings", "Z9CODE_PORT=4000", "Z9CODE_LAN=true", ""].join("\n"),
   );
-  expect(upsertServiceEnv("", { T3CODE_LAN: "false" })).toBe("T3CODE_LAN=false\n");
+  expect(upsertServiceEnv("", { Z9CODE_LAN: "false" })).toBe("Z9CODE_LAN=false\n");
   expect(
-    upsertServiceEnv('T3CODE_LAN="a\nb"\nCUSTOM="x\nT3CODE_LAN=y"\nT3CODE_LAN=true\n', {
-      T3CODE_LAN: "false",
+    upsertServiceEnv('Z9CODE_LAN="a\nb"\nCUSTOM="x\nZ9CODE_LAN=y"\nZ9CODE_LAN=true\n', {
+      Z9CODE_LAN: "false",
     }),
-  ).toBe('T3CODE_LAN=false\nCUSTOM="x\nT3CODE_LAN=y"\n');
+  ).toBe('Z9CODE_LAN=false\nCUSTOM="x\nZ9CODE_LAN=y"\n');
   expect(
-    upsertServiceEnv('T3CODE_LAN=\u00a0"unused\nCUSTOM=keep\nEND="\nT3CODE_LAN=true\n', {
-      T3CODE_LAN: "false",
+    upsertServiceEnv('Z9CODE_LAN=\u00a0"unused\nCUSTOM=keep\nEND="\nZ9CODE_LAN=true\n', {
+      Z9CODE_LAN: "false",
     }),
-  ).toBe('T3CODE_LAN=false\nCUSTOM=keep\nEND="\n');
+  ).toBe('Z9CODE_LAN=false\nCUSTOM=keep\nEND="\n');
   const long = `CUSTOM="${"\n".repeat(130_000)}"\n`;
-  expect(upsertServiceEnv(`${long}T3CODE_LAN=true\n`, { T3CODE_LAN: "false" })).toBe(
-    `${long}T3CODE_LAN=false\n`,
+  expect(upsertServiceEnv(`${long}Z9CODE_LAN=true\n`, { Z9CODE_LAN: "false" })).toBe(
+    `${long}Z9CODE_LAN=false\n`,
   );
 });

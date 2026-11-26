@@ -2,7 +2,7 @@ import {
   normalizeProviderAccentColor,
   resolveProviderInstanceDisplayName,
   shouldShowInstanceBadge,
-} from "@t3tools/client-runtime/state/provider-instance-display";
+} from "@z9code/client-runtime/state/provider-instance-display";
 import { msg } from "gt-react-native";
 import { m } from "../i18n/messages";
 
@@ -11,19 +11,19 @@ import type {
   ModelSelection,
   ProjectId,
   RuntimeMode,
-  ServerConfig as T3ServerConfig,
-} from "@t3tools/contracts";
+  ServerConfig as Z9ServerConfig,
+} from "@z9code/contracts";
 import {
   isManagedDriverAllowed,
   isProviderDriverKind,
   resolveProjectProviderInstanceEnabled,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   buildExplicitProviderOptionSelectionsFromDescriptors,
   getProviderOptionDescriptors,
-} from "@t3tools/shared/model";
-import { resolveModelShortName } from "@t3tools/client-runtime/provider-clients";
-import { resolveProvidersForCwd } from "@t3tools/client-runtime/providerSkills";
+} from "@z9code/shared/model";
+import { resolveModelShortName } from "@z9code/client-runtime/provider-clients";
+import { resolveProvidersForCwd } from "@z9code/client-runtime/providerSkills";
 
 /** The contracts `disallowedProviderMessage` English, as translatable sentences. */
 function disallowedProviderText(organization: string | undefined, label: string): string {
@@ -59,11 +59,11 @@ export type ModelOption = {
   readonly capabilities: ModelCapabilities | null;
   readonly selection: ModelSelection;
   readonly providerUpdateRequired?: ProviderUpdateRequired;
-  readonly providerSubProviders?: T3ServerConfig["providers"][number]["subProviders"];
+  readonly providerSubProviders?: Z9ServerConfig["providers"][number]["subProviders"];
 };
 
 type ProviderUpdateRequired = Pick<
-  T3ServerConfig["providers"][number],
+  Z9ServerConfig["providers"][number],
   "driver" | "updateRequiredModels" | "versionAdvisory"
 >;
 
@@ -88,7 +88,7 @@ function providerDisplayLabel(provider: {
 }
 
 function isProviderEnabledForProject(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   provider:
     | { readonly instanceId: ModelSelection["instanceId"]; readonly enabled: boolean }
     | undefined,
@@ -103,7 +103,7 @@ function isProviderEnabledForProject(
 }
 
 function isProjectDisabledOverride(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   instanceId: ModelSelection["instanceId"],
   projectId: ProjectId | null,
 ): boolean {
@@ -117,7 +117,7 @@ function isProjectDisabledOverride(
 }
 
 function isDisabledForProject(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   provider:
     | { readonly instanceId: ModelSelection["instanceId"]; readonly enabled: boolean }
     | undefined,
@@ -131,7 +131,7 @@ function isDisabledForProject(
 }
 
 function selectionDriver(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   instanceId: ModelSelection["instanceId"],
 ): string | undefined {
   return (
@@ -141,7 +141,7 @@ function selectionDriver(
 }
 
 /** Whether the environment's managed policy leaves this driver out; the server refuses its turns. */
-function isDriverDisallowed(config: T3ServerConfig | null | undefined, driver: string | undefined) {
+function isDriverDisallowed(config: Z9ServerConfig | null | undefined, driver: string | undefined) {
   return (
     driver !== undefined &&
     isProviderDriverKind(driver) &&
@@ -175,7 +175,7 @@ function normalizeSelectionOptions(
 }
 
 /** The config as a project at `cwd` sees it, with that project's own provider models. */
-export function serverConfigForCwd<C extends T3ServerConfig | null | undefined>(
+export function serverConfigForCwd<C extends Z9ServerConfig | null | undefined>(
   config: C,
   cwd: string | null,
 ): C {
@@ -186,7 +186,7 @@ export function serverConfigForCwd<C extends T3ServerConfig | null | undefined>(
 
 /** Require explicit projectId or null so omissions cannot bypass project provider disablement. */
 export function isModelSelectionUnavailable(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   selection: ModelSelection | null | undefined,
   projectId: ProjectId | null,
 ): boolean {
@@ -199,23 +199,15 @@ export function isModelSelectionUnavailable(
   if (isDisabledForProject(config, provider, selection.instanceId, projectId)) {
     return true;
   }
+  // A driver this server no longer has stays listed as unavailable.
+  if (provider?.availability === "unavailable") return true;
   const driver =
     provider?.driver ?? config.settings?.providerInstances[selection.instanceId]?.driver;
-  if (isDriverDisallowed(config, driver)) {
-    return true;
-  }
-  return (
-    driver === "antigravity" &&
-    (!provider ||
-      !provider.installed ||
-      provider.auth.status === "unauthenticated" ||
-      provider.availability === "unavailable" ||
-      !provider.models.some((model) => model.slug === selection.model))
-  );
+  return isDriverDisallowed(config, driver);
 }
 
 export function describeUnavailableModelSelection(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   selection: ModelSelection,
   projectId: ProjectId | null,
 ): { readonly title: string; readonly detail: string } {
@@ -240,23 +232,23 @@ export function describeUnavailableModelSelection(
       ),
     };
   }
-  return isDisabledForProject(config, provider, selection.instanceId, projectId)
-    ? {
-        title: m(msg("Model turned off for this project")),
-        detail: m(msg("Turn it back on from web or desktop, or choose another model.")),
-      }
-    : {
-        title: m(msg("{provider} model unavailable", { provider: "Antigravity" })),
-        detail: m(
-          msg("Set up {provider} on web or desktop, or choose another model.", {
-            provider: "Antigravity",
-          }),
-        ),
-      };
+  if (
+    provider?.availability === "unavailable" &&
+    !isDisabledForProject(config, provider, selection.instanceId, projectId)
+  ) {
+    return {
+      title: m(msg("Provider unavailable")),
+      detail: m(msg("This server no longer offers this provider. Choose another model.")),
+    };
+  }
+  return {
+    title: m(msg("Model turned off for this project")),
+    detail: m(msg("Turn it back on from web or desktop, or choose another model.")),
+  };
 }
 
 export function resolveSelectableModelSelection(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   selection: ModelSelection | null,
   projectId: ProjectId | null,
 ): ModelSelection | null {
@@ -266,13 +258,9 @@ export function resolveSelectableModelSelection(
   const provider = config.providers.find(
     (candidate) => candidate.instanceId === selection.instanceId,
   );
-  const driver =
-    provider?.driver ?? config.settings?.providerInstances[selection.instanceId]?.driver;
-  if (driver === "antigravity") {
-    return isProjectDisabledOverride(config, selection.instanceId, projectId) ? null : selection;
-  }
   return provider &&
     isProviderEnabledForProject(config, provider, projectId) &&
+    provider.availability !== "unavailable" &&
     provider.installed &&
     provider.auth.status !== "unauthenticated"
     ? selection
@@ -280,7 +268,7 @@ export function resolveSelectableModelSelection(
 }
 
 export function resolveDefaultableModelSelection(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   selection: ModelSelection | null,
   projectId: ProjectId | null,
 ): ModelSelection | null {
@@ -290,7 +278,7 @@ export function resolveDefaultableModelSelection(
   }
   const provider = config.providers.find((candidate) => candidate.instanceId === usable.instanceId);
   const model = provider?.models.find((candidate) => candidate.slug === usable.model);
-  return provider?.driver !== "antigravity" && model?.isLegacy === true ? null : usable;
+  return model?.isLegacy === true ? null : usable;
 }
 
 export function resolveNewTaskModelSelection(input: {
@@ -326,7 +314,7 @@ export function withStoredThreadModelOptions(
 }
 
 export function buildModelOptions(
-  config: T3ServerConfig | null | undefined,
+  config: Z9ServerConfig | null | undefined,
   fallbackModelSelection: ModelSelection | null,
   providerInstanceId: ModelSelection["instanceId"] | undefined,
   projectId: ProjectId | null,
@@ -336,12 +324,12 @@ export function buildModelOptions(
   const lockedProvider = config?.providers.find(
     (provider) => provider.instanceId === providerInstanceId,
   );
-  const matchesLockedProvider = (provider: T3ServerConfig["providers"][number]) => {
+  const matchesLockedProvider = (provider: Z9ServerConfig["providers"][number]) => {
     if (providerInstanceId === undefined || provider.instanceId === providerInstanceId) return true;
     if (!lockedProvider || provider.driver !== lockedProvider.driver) return false;
     const groupKey = lockedProvider.continuation?.groupKey;
     if (groupKey) return provider.continuation?.groupKey === groupKey;
-    return provider.driver !== "antigravity";
+    return true;
   };
   const registryAgentId = (instanceId: ModelSelection["instanceId"]) => {
     const configValue = config?.settings?.providerInstances[instanceId]?.config;
@@ -392,7 +380,7 @@ export function buildModelOptions(
       !isProviderEnabledForProject(config, provider, projectId) ||
       !provider.installed ||
       provider.auth.status === "unauthenticated" ||
-      (provider.driver === "antigravity" && provider.availability === "unavailable")
+      provider.availability === "unavailable"
     ) {
       continue;
     }
@@ -464,10 +452,7 @@ export function buildModelOptions(
     if (existing) {
       options.set(key, {
         ...existing,
-        selection:
-          existing.providerDriver === "antigravity"
-            ? fallbackModelSelection
-            : normalizeSelectionOptions(fallbackModelSelection, existing.capabilities),
+        selection: normalizeSelectionOptions(fallbackModelSelection, existing.capabilities),
       });
     } else {
       const provider = config?.providers.find(

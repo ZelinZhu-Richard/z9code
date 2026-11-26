@@ -5,9 +5,9 @@ import {
   ProviderDriverKind,
   type ProviderInstanceId,
   type ServerProviderModel,
-} from "@t3tools/contracts";
-import { isReasoningControl } from "@t3tools/client-runtime/model-traits";
-import { type CustomModelDefinition, normalizeCustomModelSlug } from "@t3tools/shared/model";
+} from "@z9code/contracts";
+import { isReasoningControl } from "@z9code/client-runtime/model-traits";
+import { type CustomModelDefinition, normalizeCustomModelSlug } from "@z9code/shared/model";
 
 import { useStableCallback } from "../../hooks/useStableCallback";
 import type { MessageResolver } from "../../i18n/messages";
@@ -190,7 +190,7 @@ export function ProviderModelsSection({
     : displayModels;
 
   // A model added or moved lands in a later commit, so each commit looks for the pending row.
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- scrolls the pending model's DOM row into view once a later commit renders it
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- scrolls the pending model's DOM row into view once a later commit renders it
   useEffect(() => {
     const slug = scrollToSlugRef.current;
     if (slug === null) return;
@@ -208,7 +208,7 @@ export function ProviderModelsSection({
     builtInModels.length > 0 && builtInModels.every((model) => hiddenModels.includes(model.slug));
 
   const handleAdd = async () => {
-    if (!canManageCustomModels || driverKind === "antigravity" || isSaving) return;
+    if (!canManageCustomModels || isSaving) return;
     const normalized = normalizeCustomModelSlug(input);
     if (!normalized) {
       setError(gt("Enter a model slug."));
@@ -400,7 +400,7 @@ export function ProviderModelsSection({
               : ""}
           </span>
         </div>
-        {driverKind !== "antigravity" && !isAdding ? (
+        {!isAdding ? (
           <Button
             type="button"
             size="xs"
@@ -465,7 +465,7 @@ export function ProviderModelsSection({
         })}
       </div>
 
-      {driverKind === "antigravity" || !canManageCustomModels ? null : isAdding ? (
+      {!canManageCustomModels ? null : isAdding ? (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <Input
             id={`provider-instance-${instanceId}-custom-model`}
@@ -503,9 +503,7 @@ export function ProviderModelsSection({
         </div>
       ) : null}
 
-      {driverKind !== "antigravity" && error ? (
-        <p className="mt-2 text-xs text-destructive">{error}</p>
-      ) : null}
+      {error ? <p className="mt-2 text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
-import { parseT3ProjectFile, T3ProjectFileFromJson } from "./t3ProjectFile.ts";
+import { parseT3ProjectFile, Z9ProjectFileFromJson } from "./t3ProjectFile.ts";
 
-const decodeJson = Schema.decodeUnknownSync(T3ProjectFileFromJson);
+const decodeJson = Schema.decodeUnknownSync(Z9ProjectFileFromJson);
 
-describe("T3ProjectFileFromJson", () => {
+describe("Z9ProjectFileFromJson", () => {
   it("decodes lenient JSONC with comments and trailing commas", () => {
     const decoded = decodeJson(`{
       // team scripts
@@ -24,7 +24,7 @@ describe("parseT3ProjectFile", () => {
   it("reads project defaults from JSONC with a URL in a block comment", () => {
     expect(
       parseT3ProjectFile(`{
-        /* See https://t3.codes/schema/t3.json */
+        /* See https://github.com/ZelinZhu-Richard/z9code/blob/main/docs/user/project-settings.md */
         "defaultThreadEnvMode": "worktree"
       }`),
     ).toEqual({ defaultThreadEnvMode: "worktree" });

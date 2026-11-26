@@ -7,6 +7,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { it, describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
@@ -19,8 +20,8 @@ import * as KnownWorkspaces from "./KnownWorkspaces.ts";
 import * as WorkspaceEntries from "./WorkspaceEntries.ts";
 import * as WorkspaceFileSystem from "./WorkspaceFileSystem.ts";
 import * as WorkspacePaths from "./WorkspacePaths.ts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { symlinksSupported } from "@t3tools/shared/testing/symlinks";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { symlinksSupported } from "@z9code/shared/testing/symlinks";
 import { vi } from "vite-plus/test";
 
 vi.mock("node:fs/promises", async (importOriginal) => {
@@ -49,8 +50,9 @@ const whitespaceFilePaths =
     ? [" report.txt"]
     : [" report.txt", "report.txt ", "\treport.txt\t", " "];
 
-const UNKNOWN_WORKSPACE_PREFIX = "t3code-unknown-workspace-";
+const UNKNOWN_WORKSPACE_PREFIX = "z9code-unknown-workspace-";
 const layerKnownWorkspacesTest = Layer.mock(KnownWorkspaces.KnownWorkspaces)({
+  contains: () => Effect.succeed(false),
   assertContains: (cwd) =>
     cwd.includes(UNKNOWN_WORKSPACE_PREFIX)
       ? Effect.fail(new KnownWorkspaces.UnknownWorkspaceError({ cwd }))
@@ -79,7 +81,7 @@ const layerTest = Layer.empty.pipe(
 const makeTempDir = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   return yield* fileSystem.makeTempDirectoryScoped({
-    prefix: "t3code-workspace-files-",
+    prefix: "z9code-workspace-files-",
   });
 });
 
@@ -367,6 +369,41 @@ it.layer(layerTest, { excludeTestServices: true })("WorkspaceFileSystemLive", (i
             truncated: false,
           });
         }),
+    );
+
+    it.effect("never serves credential stores, by path, `~/` or through a project symlink", () =>
+      Effect.gen(function* () {
+        const workspaceFileSystem = yield* WorkspaceFileSystem.WorkspaceFileSystem;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const cwd = yield* makeTempDir;
+        const home = yield* makeTempDir;
+        yield* writeTextFile(home, ".ssh/id_ed25519", "PRIVATE KEY\n");
+        yield* writeTextFile(home, ".codex/auth.json", "{}\n");
+        yield* writeTextFile(home, ".codex/AGENTS.md", "# Agent notes\n");
+        yield* fs.symlink(path.join(home, ".ssh"), path.join(cwd, "keys"));
+        const read = (relativePath: string) =>
+          workspaceFileSystem
+            .readFile({ cwd, relativePath })
+            .pipe(Effect.provideService(HostProcess.HomeDirectory, home), Effect.exit);
+
+        for (const relativePath of [
+          path.join(home, ".ssh/id_ed25519"),
+          "~/.ssh/id_ed25519",
+          "~/.codex/auth.json",
+        ]) {
+          expect(Exit.isFailure(yield* read(relativePath))).toBe(true);
+        }
+        // The symlink stays inside the project lexically but resolves into ~/.ssh.
+        expect(Exit.isFailure(yield* read("keys/id_ed25519"))).toBe(true);
+        const notes = yield* read("~/.codex/AGENTS.md");
+        expect(Exit.isSuccess(notes)).toBe(true);
+
+        const metadata = yield* workspaceFileSystem
+          .getMetadata({ paths: [path.join(home, ".ssh/id_ed25519")] })
+          .pipe(Effect.provideService(HostProcess.HomeDirectory, home));
+        expect(metadata.entries).toEqual([null]);
+      }),
     );
 
     it.effect("does not read server state files", () =>

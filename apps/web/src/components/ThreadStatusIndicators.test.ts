@@ -1,5 +1,5 @@
-import { SourceControlProviderKind } from "@t3tools/contracts";
-import { ProjectId, type PullRequestSummary, type VcsStatusResult } from "@t3tools/contracts";
+import { SourceControlProviderKind } from "@z9code/contracts";
+import { ProjectId, type PullRequestSummary, type VcsStatusResult } from "@z9code/contracts";
 import { describe, expect, it } from "@effect/vitest";
 
 import {
@@ -49,7 +49,7 @@ function pullRequestSummary(
   return {
     provider: SourceControlProviderKind.make("github"),
     projectId: ProjectId.make("project-1"),
-    repository: "pingdotgg/t3code",
+    repository: "ZelinZhu-Richard/z9code",
     number: 42,
     title: "Feature PR",
     url: "https://github.com/pingdotgg/t3code/pull/42",
@@ -81,7 +81,7 @@ describe("resolveDisplayedThreadPr", () => {
   const mergedPr = mergedFeaturePr();
   const linkedPullRequest = {
     projectId: ProjectId.make("project-1"),
-    repository: "pingdotgg/t3code",
+    repository: "ZelinZhu-Richard/z9code",
     number: 42,
     url: "https://github.com/pingdotgg/t3code/pull/42",
   };

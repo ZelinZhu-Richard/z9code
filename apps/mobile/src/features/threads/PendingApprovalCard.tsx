@@ -3,11 +3,11 @@ import type {
   ProviderApprovalDecision,
   ProviderApprovalOption,
   RuntimeRequestId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   FULL_ACCESS_OVERRIDE_QUESTION,
   fullAccessOverrideExplanation,
-} from "@t3tools/client-runtime/state/thread-requests";
+} from "@z9code/client-runtime/state/thread-requests";
 import { T, useGT, useMessages } from "gt-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";

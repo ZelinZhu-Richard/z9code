@@ -2,14 +2,14 @@ import { useAtomValue } from "@effect/atom-react";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@t3tools/client-runtime/state/runtime";
+} from "@z9code/client-runtime/state/runtime";
 import {
   AuthOrchestrationOperateScope,
   type ChatAttachment,
   type GuestMessageId,
   type ScopedThreadRef,
   type ThreadGuestShare,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { msg, T, useGT } from "gt-react";
 import { CheckIcon, CopyIcon, UserIcon } from "lucide-react";
 import { useState } from "react";
@@ -19,7 +19,7 @@ import { useDeadlinePassed } from "~/hooks/useDeadline";
 import { appAtomRegistry } from "~/rpc/atomRegistry";
 import { useQuietThreadProjection } from "~/state/entities";
 import { serverEnvironment } from "~/state/server";
-import { useEnvironmentScope } from "~/state/session";
+import { readPreparedConnection, useEnvironmentScope } from "~/state/session";
 import { threadEnvironment } from "~/state/threads";
 import { useAtomCommand } from "~/state/use-atom-command";
 import { cn } from "~/lib/utils";
@@ -90,9 +90,15 @@ function GuestShareDialog({
 
   const create = async () => {
     setState({ status: "creating" });
+    // The link points at the address this client reaches the server at.
+    const origin = readPreparedConnection(threadRef.environmentId)?.httpBaseUrl;
+    if (origin === undefined) {
+      setState({ status: "failed", message: gt("Connect to this environment first.") });
+      return;
+    }
     const result = await createGuestShare({
       environmentId: threadRef.environmentId,
-      input: { threadId: threadRef.threadId },
+      input: { threadId: threadRef.threadId, origin },
     });
     if (result._tag === "Success") {
       setState({ status: "created", url: result.value.url });

@@ -177,7 +177,5 @@ const providerSource = `\nexport const PROVIDER_CHIP_ICONS: Readonly<\n  Record<
       ({ driverKind, tintsIcon, accent }) =>
         `  ${driverKind}: {\n    source: require("../../assets/context-chip-icons/provider-${driverKind}.png"),\n    tintsIcon: ${tintsIcon},\n${accent ? `    accent: "${accent}",\n` : ""}  },`,
     )
-    .join(
-      "\n",
-    )}\n  antigravity: {\n    source: require("../../assets/antigravity.png"),\n    tintsIcon: false,\n    accent: "#5b87bf",\n  },\n};\n`;
+    .join("\n")}\n};\n`;
 NodeFS.writeFileSync(generatedModulePath, generatedSource + providerSource);

@@ -4,10 +4,10 @@ import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 
-import type { ThreadId } from "@t3tools/contracts";
-import type * as ProviderEventLoggers from "@t3tools/provider-core/server/ProviderEventLoggers";
-import { makeAsyncRotatingFileSink } from "@t3tools/shared/logging";
-import { errorTag } from "@t3tools/shared/observability";
+import type { ThreadId } from "@z9code/contracts";
+import type * as ProviderEventLoggers from "@z9code/provider-core/server/ProviderEventLoggers";
+import { makeAsyncRotatingFileSink } from "@z9code/shared/logging";
+import { errorTag } from "@z9code/shared/observability";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -155,7 +155,7 @@ function logWarning(message: string, context: Record<string, unknown>): Effect.E
   return Effect.logWarning(message, context).pipe(Effect.annotateLogs({ scope: LOG_SCOPE }));
 }
 
-function resolveThreadSegment(raw: string | null | undefined): string {
+export function resolveThreadSegment(raw: string | null | undefined): string {
   if (typeof raw !== "string") return GLOBAL_THREAD_SEGMENT;
   const normalized = toSafeThreadAttachmentSegment(raw);
   if (normalized === null) return GLOBAL_THREAD_SEGMENT;

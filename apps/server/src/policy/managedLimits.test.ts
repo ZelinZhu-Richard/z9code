@@ -1,4 +1,4 @@
-import type { ManagedPolicyDocument } from "@t3tools/contracts";
+import type { ManagedPolicyDocument } from "@z9code/contracts";
 import { assert, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -8,7 +8,7 @@ import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import { ChildProcessSpawner } from "effect/process";
 
-import * as NetService from "@t3tools/shared/Net";
+import * as NetService from "@z9code/shared/Net";
 
 import * as EnvironmentAuthPolicy from "../auth/EnvironmentAuthPolicy.ts";
 import * as ManagedLimits from "./managedLimits.ts";
@@ -68,7 +68,7 @@ it.effect("binds only the loopback address it approved when remote clients are n
       tailscaleServeEnabled: false,
       privateNetworkOnly: true,
     }).pipe(Effect.flip);
-    assert.include(service.message, "set T3CODE_HOST=127.0.0.1 in its service.env");
+    assert.include(service.message, "set Z9CODE_HOST=127.0.0.1 in its service.env");
     assert.equal(yield* bind("localhost", { document: undefined }), "localhost");
     assert.equal(yield* bind(undefined, { document: undefined }), "127.0.0.1");
   }),
@@ -116,17 +116,12 @@ it.effect("allows the clients the policy lists", () =>
   }),
 );
 
-it.effect("tells clients Connect is off when the policy leaves out remote clients", () =>
+it.effect("tells clients which kinds of clients the policy accepts", () =>
   Effect.gen(function* () {
     const managed = yield* ManagedPolicy.fromDocument("/test/policy.json", {
       ...desktopAndLocal.document,
     });
-    assert.deepEqual(managed.summary?.limits, {
-      clients: ["desktop", "local-browser"],
-      connect: false,
-    });
-    assert.isTrue(ManagedLimits.allowsConnect(policy({ clients: ["remote"] })));
-    assert.isFalse(ManagedLimits.allowsConnect(policy({ connect: false })));
+    assert.deepEqual(managed.summary?.limits, { clients: ["desktop", "local-browser"] });
   }),
 );
 
@@ -330,8 +325,8 @@ it.effect(
             },
           },
           Services: {
-            "svc:t3": {
-              Web: { "t3:443": { Handlers: { "/t3": { Proxy: "http://127.0.0.1:3773" } } } },
+            "svc:z9": {
+              Web: { "z9:443": { Handlers: { "/z9": { Proxy: "http://127.0.0.1:3773" } } } },
             },
           },
         }),
@@ -343,7 +338,7 @@ it.effect(
       assert.include(owned.message, 'stop the "tailscale serve" command that runs it');
       assert.include(
         owned.message,
-        '"tailscale serve --service=svc:t3 --https=443 --set-path=/t3 off"',
+        '"tailscale serve --service=svc:z9 --https=443 --set-path=/z9 off"',
       );
       // An answer that cannot be read might hide a mapping, so the server does not start.
       const dialFailure = (reason: string) =>

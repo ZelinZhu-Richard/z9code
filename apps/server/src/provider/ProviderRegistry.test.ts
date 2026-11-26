@@ -40,14 +40,14 @@ import {
   type ServerProviderUpdateState,
   type ServerProviderVersionAdvisoryStatus,
   type ServerSettings as ContractServerSettings,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { WindowsShellEnvironment } from "@t3tools/shared/shell";
-import { deepMerge } from "@t3tools/shared/Struct";
-import { createModelCapabilities } from "@t3tools/shared/model";
-import { applyServerSettingsPatch } from "@t3tools/shared/serverSettings";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { WindowsShellEnvironment } from "@z9code/shared/shell";
+import { deepMerge } from "@z9code/shared/Struct";
+import { createModelCapabilities } from "@z9code/shared/model";
+import { applyServerSettingsPatch } from "@z9code/shared/serverSettings";
 
 import {
   checkCodexProviderStatus,
@@ -57,15 +57,14 @@ import {
 import { BUNDLED_CLAUDE_MODEL_CATALOG } from "./ClaudeModelCatalog.ts";
 import { checkClaudeProviderStatus } from "./ClaudeProvider.ts";
 import * as BackgroundPolicy from "../background/BackgroundPolicy.ts";
-import * as AntigravityInstallation from "./AntigravityInstallation.ts";
 import * as ModelManifest from "./ModelManifest.ts";
 import { applyProviderCompatibility } from "./providerCompatibility.ts";
 import * as ResetCreditCoordinator from "./resetCreditCoordinator.ts";
-import * as ProviderLatestVersions from "@t3tools/provider-core/server/ProviderLatestVersions";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
-import * as OpenCodeRuntime from "@t3tools/provider-opencode/server/OpenCodeRuntime";
-import * as OpenCodeServerLedger from "@t3tools/provider-opencode/server/OpenCodeServerLedger";
-import * as ProviderEventLoggers from "@t3tools/provider-core/server/ProviderEventLoggers";
+import * as ProviderLatestVersions from "@z9code/provider-core/server/ProviderLatestVersions";
+import * as McpProviderSessions from "@z9code/provider-core/server/McpProviderSessions";
+import * as OpenCodeRuntime from "@z9code/provider-opencode/server/OpenCodeRuntime";
+import * as OpenCodeServerLedger from "@z9code/provider-opencode/server/OpenCodeServerLedger";
+import * as ProviderEventLoggers from "@z9code/provider-core/server/ProviderEventLoggers";
 import * as ProviderInstallationGate from "./ProviderInstallationGate.ts";
 import * as ProviderInstanceRegistryHydration from "./ProviderInstanceRegistryHydration.ts";
 import * as PortScanner from "../preview/PortScanner.ts";
@@ -77,19 +76,19 @@ import {
   resolveProviderStatusCachePath,
   writeProviderStatusCache,
 } from "./providerStatusCache.ts";
-import { COMPACT_SLASH_COMMAND } from "@t3tools/provider-core/server/snapshotProbe";
+import { COMPACT_SLASH_COMMAND } from "@z9code/provider-core/server/snapshotProbe";
 import type {
   AnyProviderDriver,
   ProviderInstance,
   ProviderWorkspaceSnapshot,
-} from "@t3tools/provider-core/server/driver";
+} from "@z9code/provider-core/server/driver";
 import * as ProviderInstanceRegistry from "./ProviderInstanceRegistry.ts";
 import * as ProviderInstanceRegistryMutator from "./ProviderInstanceRegistryMutator.ts";
 import * as ProviderRegistry from "./ProviderRegistry.ts";
-import { ProviderDriverError } from "@t3tools/provider-core/server/errors";
-import { mergeProviderInstanceEnvironment } from "@t3tools/provider-core/server/instanceEnvironment";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@t3tools/provider-core/server/maintenanceResolver";
-import * as SecretResolver from "@t3tools/secret-provider-core/server/SecretResolver";
+import { ProviderDriverError } from "@z9code/provider-core/server/errors";
+import { mergeProviderInstanceEnvironment } from "@z9code/provider-core/server/instanceEnvironment";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@z9code/provider-core/server/maintenanceResolver";
+import * as SecretResolver from "@z9code/secret-provider-core/server/SecretResolver";
 import * as ProviderHostPathWatcher from "./ProviderHostPathWatcher.ts";
 import * as DesktopTelemetryReceiver from "../resourceTelemetry/DesktopTelemetryReceiver.ts";
 import { providerHostEnvironment } from "../policy/managedProviders.ts";
@@ -115,7 +114,7 @@ const defaultClaudeSettings: ClaudeSettings = Schema.decodeSync(ClaudeSettings)(
 const decodeCodexSettings = Schema.decodeSync(CodexSettings);
 const defaultCodexSettings: CodexSettings = Schema.decodeSync(CodexSettings)({});
 
-process.env.T3CODE_CURSOR_ENABLED = "1";
+process.env.Z9CODE_CURSOR_ENABLED = "1";
 
 const encoder = new TextEncoder();
 const TEST_EPOCH = DateTime.makeUnsafe("1970-01-01T00:00:00.000Z");
@@ -655,7 +654,7 @@ it.layer(
         const fiber = yield* checkCodexProviderStatus(
           defaultCodexSettings,
           () => Effect.sleep("22 seconds").pipe(Effect.as(makeCodexProbeSnapshot())),
-          { T3CODE_CODEX_PROBE_TIMEOUT_MS: "60000" },
+          { Z9CODE_CODEX_PROBE_TIMEOUT_MS: "60000" },
         ).pipe(Effect.forkChild);
         yield* TestClock.adjust("22 seconds");
         const status = yield* Fiber.join(fiber);
@@ -831,7 +830,7 @@ it.layer(
       Effect.gen(function* () {
         if ((yield* HostProcess.Platform) === "win32") return;
         const codexHome = yield* FileSystem.FileSystem.pipe(
-          Effect.flatMap((fs) => fs.makeTempDirectoryScoped({ prefix: "t3-codex-home-" })),
+          Effect.flatMap((fs) => fs.makeTempDirectoryScoped({ prefix: "z9codex-home-" })),
         );
         const { binaryPath } = yield* writeFakeCodexCli(
           [
@@ -1679,7 +1678,7 @@ it.layer(
         checkedAt: "2026-10-03T00:02:00.000Z",
         status: "ready",
         version: "1.0.0",
-        message: "Pi is available, but T3 Code could not refresh its models and commands.",
+        message: "Pi is available, but z9code could not refresh its models and commands.",
       } satisfies ServerProvider;
 
       it("retains Pi inventories during incomplete probes without restoring removed custom models", () => {
@@ -1816,7 +1815,7 @@ it.layer(
         // PATH. Installed instances may hold live sessions, so it must not be rebuilt.
         const failsEarly = mode === "installed error";
         const replay = mode === "replay" || failsEarly;
-        const host = { PATH: "/early/bin", T3CODE_CODEX_LAUNCH_ARGS: "hidden" };
+        const host = { PATH: "/early/bin", Z9CODE_CODEX_LAUNCH_ARGS: "hidden" };
         const environment = providerHostEnvironment(
           { organization: "PATH test", lockedSettings: [] },
           host,
@@ -2128,7 +2127,7 @@ it.layer(
         }).pipe(
           Effect.provide(
             ServerConfig.layerTest(process.cwd(), {
-              prefix: "t3-codex-retired-model-cache-",
+              prefix: "z9codex-retired-model-cache-",
             }).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
           ),
         ),
@@ -2206,84 +2205,27 @@ it.layer(
         }).pipe(
           Effect.provide(
             ServerConfig.layerTest(process.cwd(), {
-              prefix: "t3-codex-probed-before-boot-",
+              prefix: "z9codex-probed-before-boot-",
             }).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
           ),
         ),
       );
     });
 
-    describe("Antigravity model inventories", () => {
-      const previousProvider = {
-        instanceId: ProviderInstanceId.make("antigravity-personal"),
-        driver: ProviderDriverKind.make("antigravity"),
+    describe("provider workspace snapshots", () => {
+      const signedIn = {
+        instanceId: ProviderInstanceId.make("cursor-personal"),
+        driver: ProviderDriverKind.make("cursor"),
         status: "ready",
         enabled: true,
         installed: true,
         auth: { status: "authenticated" },
-        checkedAt: "2026-09-02T00:00:00.000Z",
-        version: "0.1.3",
-        models: [
-          {
-            slug: "gemini-3.1-pro-high",
-            name: "Gemini 3.1 Pro High",
-            isCustom: false,
-            capabilities: null,
-          },
-          {
-            slug: "gemini-3-flash",
-            name: "Gemini 3 Flash",
-            isCustom: false,
-            capabilities: null,
-          },
-        ],
-        slashCommands: [],
-        skills: [],
-      } as const satisfies ServerProvider;
-
-      it("clears models after sign-out, disable, uninstall, or an empty successful refresh", () => {
-        const emptyProvider = {
-          ...previousProvider,
-          checkedAt: "2026-09-02T00:01:00.000Z",
-          models: [],
-        } satisfies ServerProvider;
-        const clearedProviders = [
-          { ...emptyProvider, status: "warning", auth: { status: "unauthenticated" } },
-          { ...emptyProvider, status: "error", auth: { status: "unauthenticated" } },
-          { ...emptyProvider, status: "disabled", enabled: false },
-          { ...emptyProvider, status: "error", enabled: false },
-          { ...emptyProvider, status: "error", installed: false, auth: { status: "unknown" } },
-          emptyProvider,
-        ] satisfies ReadonlyArray<ServerProvider>;
-
-        for (const provider of clearedProviders) {
-          const afterRemoval = ProviderRegistry.mergeProviderSnapshot(previousProvider, provider);
-          assert.deepStrictEqual(afterRemoval.models, []);
-
-          const afterFailure = ProviderRegistry.mergeProviderSnapshot(afterRemoval, {
-            ...emptyProvider,
-            status: "error",
-            auth: { status: "unknown" },
-          });
-          assert.deepStrictEqual(afterFailure.models, []);
-        }
-      });
-    });
-
-    describe("Antigravity saved account", () => {
-      const signedIn = {
-        instanceId: ProviderInstanceId.make("antigravity-personal"),
-        driver: ProviderDriverKind.make("antigravity"),
-        status: "ready",
-        enabled: true,
-        installed: true,
-        auth: { status: "authenticated", type: "oauth-personal", label: "Google account" },
         checkedAt: "2026-09-05T00:00:00.000Z",
-        version: "1.5.12",
+        version: "2026.09.01",
         models: [
           {
-            slug: "gemini-3.7-flash-high",
-            name: "Gemini 3.7 Flash",
+            slug: "composer-2",
+            name: "Composer 2",
             isCustom: false,
             capabilities: null,
           },
@@ -2291,71 +2233,16 @@ it.layer(
         slashCommands: [{ name: "plan" }],
         skills: [],
       } as const satisfies ServerProvider;
-      const uncheckedMessage =
-        "Antigravity is installed. Google account access is not checked yet.";
       const restartProbe = {
         ...signedIn,
         status: "warning",
         auth: { status: "unknown" },
         checkedAt: "2026-09-05T00:01:00.000Z",
-        message: uncheckedMessage,
+        message: "Cursor is installed. Account access is not checked yet.",
         models: [],
       } as const satisfies ServerProvider;
 
-      it("keeps the saved Google account through restart health checks", () => {
-        const merged = ProviderRegistry.mergeProviderSnapshot(signedIn, restartProbe);
-        const { message: _uncheckedMessage, ...probeWithoutMessage } = restartProbe;
-        assert.deepStrictEqual(merged, {
-          ...probeWithoutMessage,
-          status: "ready",
-          auth: signedIn.auth,
-          models: signedIn.models,
-        });
-        assert.equal("message" in merged, false);
-        assert.deepStrictEqual(
-          ProviderRegistry.mergeProviderSnapshot(merged, restartProbe),
-          merged,
-        );
-      });
-
-      it("does not invent an account after sign-out, disable, uninstall, or for other providers", () => {
-        const untouched = [
-          { ...restartProbe, auth: { status: "unauthenticated" } },
-          { ...restartProbe, status: "disabled", enabled: false },
-          { ...restartProbe, status: "error", installed: false },
-          { ...restartProbe, driver: ProviderDriverKind.make("codex") },
-          { ...restartProbe, auth: { status: "unknown", type: "gemini-api-key" } },
-        ] satisfies ReadonlyArray<ServerProvider>;
-        for (const next of untouched) {
-          const merged = ProviderRegistry.mergeProviderSnapshot(signedIn, next);
-          assert.deepStrictEqual(merged.auth, next.auth);
-          assert.equal(merged.status, next.status);
-          assert.equal(merged.message, next.message);
-        }
-        assert.deepStrictEqual(
-          ProviderRegistry.mergeProviderSnapshot(
-            { ...signedIn, auth: { status: "unknown" } },
-            restartProbe,
-          ).auth,
-          { status: "unknown" },
-        );
-        assert.equal(
-          ProviderRegistry.mergeProviderSnapshot(
-            { ...signedIn, driver: ProviderDriverKind.make("codex") },
-            restartProbe,
-          ).auth.status,
-          "unknown",
-        );
-        assert.deepStrictEqual(
-          ProviderRegistry.mergeProviderSnapshot(signedIn, {
-            ...restartProbe,
-            auth: { status: "unknown", type: "oauth-personal" },
-          }).auth,
-          signedIn.auth,
-        );
-      });
-
-      it("keeps scanned folders through health checks until Antigravity cannot run", () => {
+      it("keeps scanned folders through health checks until the provider cannot run", () => {
         const scanned = ["/project", "/plain"].reduce<ServerProvider>(
           (provider, cwd) =>
             ProviderRegistry.upsertProviderWorkspaceSnapshot(provider, cwd, {
@@ -2864,13 +2751,13 @@ it.layer(
 
     it.effect("publishes a new label for an instance the registry kept live", () =>
       Effect.gen(function* () {
-        const driver = ProviderDriverKind.make("antigravity");
+        const driver = ProviderDriverKind.make("cursor");
         const instanceId = ProviderInstanceId.make("account-a");
         let displayName = "Account A";
         const instance: ProviderInstance = {
           instanceId,
           driverKind: driver,
-          continuationIdentity: { driverKind: driver, continuationKey: "antigravity:account-a" },
+          continuationIdentity: { driverKind: driver, continuationKey: "cursor:account-a" },
           get displayName() {
             return displayName;
           },
@@ -4019,7 +3906,7 @@ it.layer(
             status: "unchanged",
             finishedAt: "2026-04-14T00:01:30.000Z",
             message:
-              "Update command completed, but T3 Code still detects an outdated provider version.",
+              "Update command completed, but z9code still detects an outdated provider version.",
           } as const;
           yield* registry.setProviderMaintenanceActionState({
             instanceId: claudeInstanceId,
@@ -4350,8 +4237,8 @@ it.layer(
 
     it.effect("re-probes when settings change the codex binaryPath", () =>
       Effect.gen(function* () {
-        const firstMissing = `t3code_codex_first_`;
-        const secondMissing = `t3code_codex_second_`;
+        const firstMissing = `z9code_codex_first_`;
+        const secondMissing = `z9code_codex_second_`;
         const spawnedCommands: Array<string> = [];
         const secondProbeStarted = yield* Deferred.make<void>();
         const releaseSecondProbe = yield* Deferred.make<void>();
@@ -4392,7 +4279,6 @@ it.layer(
               ),
             ),
           ),
-          Layer.provideMerge(AntigravityInstallation.AntigravityInstallation.layer),
           Layer.provideMerge(
             Layer.succeed(ServerSettingsModule.ServerSettingsService, serverSettings),
           ),
@@ -4518,7 +4404,6 @@ it.layer(
               ),
             ),
           ),
-          Layer.provideMerge(AntigravityInstallation.AntigravityInstallation.layer),
           Layer.provideMerge(
             Layer.succeed(ServerSettingsModule.ServerSettingsService, serverSettings),
           ),
@@ -4573,7 +4458,6 @@ it.layer(
             "cursor",
             "grok",
             "opencode",
-            "antigravity",
             "pi",
             "muse",
           ),
@@ -4626,7 +4510,6 @@ it.layer(
       } satisfies ServerSettingsModule.ServerSettingsService["Service"];
       const dependencies = yield* Layer.build(
         Layer.mergeAll(
-          AntigravityInstallation.AntigravityInstallation.layer,
           ServerSecretStore.layer,
           OpenCodeRuntime.layer.pipe(Layer.provide(OpenCodeServerLedger.layerTest)),
         ).pipe(

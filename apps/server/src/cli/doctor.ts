@@ -1,4 +1,4 @@
-import { DATABASE_COMPACTION_RECOMMENDED_BYTES } from "@t3tools/contracts";
+import { DATABASE_COMPACTION_RECOMMENDED_BYTES } from "@z9code/contracts";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -6,7 +6,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import { Command, Flag, GlobalFlag, Prompt } from "effect/cli";
 
-import * as BootService from "../cloud/bootService.ts";
+import * as BootService from "../service/bootService.ts";
 import * as DatabaseMaintenance from "../persistence/DatabaseMaintenance.ts";
 import * as ServerOwnership from "../serverOwnership.ts";
 import { isProcessAlive, readPersistedServerRuntimeState } from "../serverRuntimeState.ts";
@@ -113,7 +113,7 @@ export const runDoctor = Effect.fn("runDoctor")(function* (
           {
             id: "legacy" as const,
             title: "Delete the database from before 0.1.0",
-            description: `Frees ${formatBytes(status.legacyDatabaseBytes)}.\n  Warning: after this, a T3 Code version before 0.1.0 starts with no threads or settings, so you can no longer roll back.`,
+            description: `Frees ${formatBytes(status.legacyDatabaseBytes)}.\n  Warning: after this, a z9code version before 0.1.0 starts with no threads or settings, so you can no longer roll back.`,
             recommended: false,
           },
         ]),
@@ -204,7 +204,7 @@ export const doctorCommand = Command.make("doctor", {
   ),
 }).pipe(
   Command.withDescription(
-    "Inspect this T3 Code data directory and repair it. Pauses and restarts the background service as needed.",
+    "Inspect this z9code data directory and repair it. Pauses and restarts the background service as needed.",
   ),
   Command.withHandler((flags) =>
     Effect.gen(function* () {

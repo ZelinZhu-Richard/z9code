@@ -1,4 +1,4 @@
-import type { ModelPreferences } from "@t3tools/contracts/settings";
+import type { ModelPreferences } from "@z9code/contracts/settings";
 import {
   DEFAULT_MODEL_BY_PROVIDER,
   DEFAULT_TEXT_GENERATION_MODEL,
@@ -23,7 +23,7 @@ import {
   ServerSettings,
   type ServerSettingsPatch,
   withIdleCompaction,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
@@ -69,7 +69,6 @@ const TEXT_GENERATION_FALLBACK_DRIVERS = [
   "muse",
   "pi",
   "opencode",
-  "antigravity",
 ].map((driver) => ProviderDriverKind.make(driver));
 
 /** Configured instances come after every default instance, so they only win when no default qualifies. */

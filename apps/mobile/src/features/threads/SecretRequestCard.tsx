@@ -11,17 +11,17 @@ import {
   type SecretRequestItem,
   type SecretRequestReply,
   type SecretRequestSource,
-} from "@t3tools/client-runtime/secret-request";
+} from "@z9code/client-runtime/secret-request";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@t3tools/client-runtime/state/runtime";
+} from "@z9code/client-runtime/state/runtime";
 import {
   AuthProvidersManageScope,
   type EnvironmentId,
   type OrchestrationV2ProjectedTurnItem,
   type SecretProviderId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { useGT, useMessages } from "gt-react-native";
 import { useRef, useState } from "react";

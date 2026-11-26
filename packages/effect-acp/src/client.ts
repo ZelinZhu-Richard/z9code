@@ -696,7 +696,7 @@ function toV2InitializeRequest(
   const capabilities = request.clientCapabilities;
   return {
     protocolVersion: 2,
-    info: request.clientInfo ?? { name: "t3-code", version: "unknown" },
+    info: request.clientInfo ?? { name: "z9code", version: "unknown" },
     capabilities: {
       ...(capabilities?.auth?.terminal === true ? { auth: { terminal: {} } } : {}),
       ...(capabilities?.elicitation == null ? {} : { elicitation: capabilities.elicitation }),
@@ -1107,7 +1107,7 @@ export const make = Effect.fn("effect-acp/AcpClient.make")(function* (
           ).pipe(
             Effect.map((response) => {
               // ACP v1 protocolVersion values were not generation identifiers in
-              // every shipped agent. Antigravity, for example, reports version 2
+              // every shipped agent. Some, for example, report version 2
               // with the v1 agentInfo/agentCapabilities response shape.
               const isV2 = isV2InitializeResponse(response);
               negotiatedProtocolGeneration = isV2 ? 2 : 1;

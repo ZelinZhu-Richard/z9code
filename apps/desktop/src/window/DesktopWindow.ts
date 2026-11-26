@@ -11,10 +11,9 @@ import * as Semaphore from "effect/Semaphore";
 import * as Electron from "electron";
 import { msg } from "gt-i18n";
 
-import { type DesktopSnapShotEvent, DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts";
+import { type DesktopSnapShotEvent, DEFAULT_CLIENT_SETTINGS } from "@z9code/contracts";
 
 import * as DesktopAssets from "../app/DesktopAssets.ts";
-import * as DesktopClerk from "../app/DesktopClerk.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
 import * as DesktopPrimaryPaste from "../app/DesktopPrimaryPaste.ts";
 import { makeComponentLogger } from "../app/DesktopObservability.ts";
@@ -148,7 +147,7 @@ export class DesktopWindow extends Context.Service<
     readonly runMainContentsCommand: (command: MainWindowContentsCommand) => Effect.Effect<void>;
     readonly syncAppearance: Effect.Effect<void>;
   }
->()("@t3tools/desktop/window/DesktopWindow") {}
+>()("@z9code/desktop/window/DesktopWindow") {}
 
 const { logInfo: logWindowInfo, logWarning: logWindowWarning } =
   makeComponentLogger("desktop-window");
@@ -1052,7 +1051,6 @@ export const make = Effect.gen(function* () {
       {
         desktopOrigin: getDesktopOrigin(environment.isDevelopment),
         mainWebContentsId: window.webContents.id,
-        clerkFrontendApiHostname: DesktopClerk.desktopClerkFrontendApiHostname,
         devServerOrigin: Option.getOrUndefined(
           Option.map(environment.devServerUrl, (url) => url.origin),
         ),

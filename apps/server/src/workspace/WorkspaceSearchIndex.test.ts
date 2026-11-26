@@ -8,8 +8,8 @@ import {
 } from "@ff-labs/fff-node";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, expect, it } from "@effect/vitest";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { PROJECT_FAVICON_EXTENSIONS, isProjectFaviconPath } from "@t3tools/shared/projectFavicon";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { PROJECT_FAVICON_EXTENSIONS, isProjectFaviconPath } from "@z9code/shared/projectFavicon";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import { ChildProcessSpawner } from "effect/process";
@@ -553,8 +553,8 @@ it.effect("reads symlinks again after the watcher reports a change", () =>
       if ((yield* HostProcess.Platform) === "win32") return;
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-symlink-watch-" });
-      const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-outside-" });
+      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-symlink-watch-" });
+      const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-outside-" });
       yield* fileSystem.writeFileString(path.join(cwd, "a.ts"), "");
       yield* fileSystem.symlink("a.ts", path.join(cwd, "old-link.ts"));
       const { directorySearch, notifyWatchers } = fakeSymlinkFinder([]);
@@ -594,7 +594,7 @@ it.effect("answers from the last symlink scan while a slow rescan runs", () =>
       if ((yield* HostProcess.Platform) === "win32") return;
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-symlink-stale-" });
+      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-symlink-stale-" });
       yield* fileSystem.writeFileString(path.join(cwd, "a.ts"), "");
       yield* fileSystem.symlink("a.ts", path.join(cwd, "old-link.ts"));
       const { notifyWatchers } = fakeSymlinkFinder([]);
@@ -632,7 +632,7 @@ it.effect("keeps symlinks once the watcher subscribes after starting late", () =
       if ((yield* HostProcess.Platform) === "win32") return;
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-symlink-watch-" });
+      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-symlink-watch-" });
       yield* fileSystem.writeFileString(path.join(cwd, "a.ts"), "");
       yield* fileSystem.symlink("a.ts", path.join(cwd, "link.ts"));
       const { directorySearch } = fakeSymlinkFinder([], { watchFailures: 2 });
@@ -660,8 +660,8 @@ it.effect(
         if ((yield* HostProcess.Platform) === "win32") return;
         const fileSystem = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-symlink-dupe-" });
-        const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-outside-" });
+        const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-symlink-dupe-" });
+        const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-outside-" });
         yield* fileSystem.makeDirectory(path.join(cwd, "src"));
         yield* fileSystem.symlink("src", path.join(cwd, "src-link"));
         // A link the scan rejects stays out even when the watcher indexed it.
@@ -702,7 +702,7 @@ it.effect("finds symlinks in folders past the first page of the index", () =>
       if ((yield* HostProcess.Platform) === "win32") return;
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-symlink-pages-" });
+      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-symlink-pages-" });
       yield* fileSystem.makeDirectory(path.join(cwd, "late"));
       yield* fileSystem.writeFileString(path.join(cwd, "late/a.ts"), "");
       yield* fileSystem.symlink("a.ts", path.join(cwd, "late/link.ts"));
@@ -727,7 +727,7 @@ it.effect("keeps symlinks Git does not ignore when a link's name looks like a gi
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const vcsProcess = yield* VcsProcess.VcsProcess;
-      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-symlink-pathspec-" });
+      const cwd = yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-symlink-pathspec-" });
       yield* vcsProcess.run({ operation: "test.gitInit", command: "git", args: ["init"], cwd });
       yield* fileSystem.writeFileString(path.join(cwd, ".gitignore"), "ignored-link\n");
       yield* fileSystem.writeFileString(path.join(cwd, "a.ts"), "");

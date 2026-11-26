@@ -13,10 +13,10 @@ const decodeUninstallResult = Schema.decodeUnknownSync(AcpRegistryManagedBinaryU
 
 describe("ACP Registry contracts", () => {
   it("accepts only official Registry icon URLs and safe agent IDs", () => {
-    expect(officialAcpRegistryIconUrlForAgentId("antigravity-acp")).toBe(
-      "https://cdn.agentclientprotocol.com/registry/v1/latest/antigravity-acp.svg",
+    expect(officialAcpRegistryIconUrlForAgentId("gemini")).toBe(
+      "https://cdn.agentclientprotocol.com/registry/v1/latest/gemini.svg",
     );
-    expect(officialAcpRegistryIconUrlForAgentId("../antigravity-acp")).toBeNull();
+    expect(officialAcpRegistryIconUrlForAgentId("../gemini")).toBeNull();
     expect(
       resolveOfficialAcpRegistryIconUrl(
         "https://cdn.agentclientprotocol.com/registry/v1/latest/pi-acp.svg",

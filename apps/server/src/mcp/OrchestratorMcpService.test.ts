@@ -29,9 +29,9 @@ import {
   type OrchestrationV2StoredEvent,
   type OrchestrationV2ThreadProjection,
   type ServerProvider,
-} from "@t3tools/contracts";
-import { checkpointWorkspace } from "@t3tools/provider-testing/replayWorkspace";
-import { formatThreadLink, hostedThreadLink } from "@t3tools/shared/threadLinks";
+} from "@z9code/contracts";
+import { checkpointWorkspace } from "@z9code/provider-testing/replayWorkspace";
+import { formatThreadLink } from "@z9code/shared/threadLinks";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -78,7 +78,7 @@ import { idleThreadProjection, liveThreadShell } from "./McpToolAccess.testkit.t
 import * as OrchestratorMcpService from "./OrchestratorMcpService.ts";
 import { resolveRuntimeMode } from "./delegatedTaskModes.ts";
 import type { ProjectionRecordFilter } from "../orchestration-v2/ProjectionStore.ts";
-import type * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
 
 const decodeTarget = Schema.decodeUnknownEffect(OrchestratorMcpTarget);
 
@@ -1569,7 +1569,7 @@ describe("OrchestratorMcpService provider resolution", () => {
   const taskId = NodeId.make("node:mcp-providers-task");
   const projectId = ProjectId.make("project:mcp-providers");
   const codexInstanceId = ProviderInstanceId.make("codex");
-  const antigravityInstanceId = ProviderInstanceId.make("antigravity");
+  const kiroInstanceId = ProviderInstanceId.make("kiro");
 
   const scope: McpInvocationScope = {
     environmentId: EnvironmentId.make("environment:mcp-providers"),
@@ -1597,7 +1597,7 @@ describe("OrchestratorMcpService provider resolution", () => {
     version: input.enabled === false ? null : "test",
     status: input.enabled === false ? "disabled" : "ready",
     auth: { status: input.enabled === false ? "unknown" : "authenticated" },
-    ...(input.enabled === false ? { message: "Provider is disabled in T3 Code settings." } : {}),
+    ...(input.enabled === false ? { message: "Provider is disabled in z9code settings." } : {}),
     checkedAt: "2026-09-13T00:00:00.000Z",
     models:
       input.model === undefined
@@ -2148,7 +2148,7 @@ describe("OrchestratorMcpService provider resolution", () => {
     "advertises orchestration capability from registered adapters rather than a driver allowlist",
     () =>
       Effect.gen(function* () {
-        const disabledAntigravityInstanceId = ProviderInstanceId.make("antigravity-alt");
+        const disabledKiroInstanceId = ProviderInstanceId.make("kiro-alt");
         const disabledWithoutAdapterInstanceId = ProviderInstanceId.make("codex-without-adapter");
         const projectDisabledInstanceId = ProviderInstanceId.make("codex-project-off");
         const forkOnlyInstanceId = ProviderInstanceId.make("forkOnly");
@@ -2180,14 +2180,14 @@ describe("OrchestratorMcpService provider resolution", () => {
             model: "acp-model",
           }),
           providerSnapshot({
-            instanceId: antigravityInstanceId,
-            driver: ProviderDriverKind.make("antigravity"),
-            model: "ant-model",
+            instanceId: kiroInstanceId,
+            driver: ProviderDriverKind.make("kiro"),
+            model: "kiro-model",
           }),
           providerSnapshot({
-            instanceId: disabledAntigravityInstanceId,
-            driver: ProviderDriverKind.make("antigravity"),
-            model: "ant-model",
+            instanceId: disabledKiroInstanceId,
+            driver: ProviderDriverKind.make("kiro"),
+            model: "kiro-model",
             enabled: false,
           }),
           providerSnapshot({
@@ -2219,8 +2219,8 @@ describe("OrchestratorMcpService provider resolution", () => {
                 driver: ProviderDriverKind.make("acpRegistry"),
                 enabled: true,
               },
-              [antigravityInstanceId]: {
-                driver: ProviderDriverKind.make("antigravity"),
+              [kiroInstanceId]: {
+                driver: ProviderDriverKind.make("kiro"),
                 enabled: true,
               },
               [projectDisabledInstanceId]: { driver: ProviderDriverKind.make("codex") },
@@ -2240,8 +2240,8 @@ describe("OrchestratorMcpService provider resolution", () => {
             ProviderInstanceId.make("claudeAgent"),
             ProviderInstanceId.make("pi"),
             ProviderInstanceId.make("acpRegistry"),
-            antigravityInstanceId,
-            disabledAntigravityInstanceId,
+            kiroInstanceId,
+            disabledKiroInstanceId,
           ]),
           Layer.mock(ProjectService.ProjectService)({ getById: () => Effect.succeedNone }),
           Layer.mock(SecretRequests.SecretRequests)({}),
@@ -2289,7 +2289,7 @@ describe("OrchestratorMcpService provider resolution", () => {
             ProviderInstanceId.make("claudeAgent"),
             ProviderInstanceId.make("pi"),
             ProviderInstanceId.make("acpRegistry"),
-            antigravityInstanceId,
+            kiroInstanceId,
           ]) {
             const entry = byId.get(instanceId);
             assert.isDefined(entry);
@@ -2301,7 +2301,7 @@ describe("OrchestratorMcpService provider resolution", () => {
             assert.deepEqual(entry!.constraints, []);
           }
 
-          const disabled = byId.get(disabledAntigravityInstanceId);
+          const disabled = byId.get(disabledKiroInstanceId);
           assert.isDefined(disabled);
           assert.isFalse(disabled!.canRunChildTask);
           assert.isFalse(disabled!.canRunCrossProviderChildTask);
@@ -4746,7 +4746,6 @@ describe("OrchestratorMcpService provider resolution", () => {
     () =>
       Effect.gen(function* () {
         const peerId = ProviderInstanceId.make("codex-subscription-2");
-        const antigravityId = ProviderInstanceId.make("antigravity");
         const driver = ProviderDriverKind.make("codex");
         const inherited = {
           instanceId: codexInstanceId,
@@ -4793,33 +4792,6 @@ describe("OrchestratorMcpService provider resolution", () => {
             name: "change provider with override",
             target: { providerInstanceId: peerId, options: { reasoningEffort: "max" } },
             expected: { instanceId: peerId, model: inherited.model, options: override },
-          },
-          {
-            name: "Antigravity model with a thinking suffix",
-            target: { providerInstanceId: antigravityId, model: "gemini-4-neon-high" },
-            expected: {
-              instanceId: antigravityId,
-              model: "gemini-4-neon",
-              options: [{ id: "thought_level", value: "high" }],
-            },
-          },
-          {
-            name: "explicit Antigravity thinking overrides the suffix",
-            target: {
-              providerInstanceId: antigravityId,
-              model: "gemini-4-neon-high",
-              options: { thought_level: "medium" },
-            },
-            expected: {
-              instanceId: antigravityId,
-              model: "gemini-4-neon",
-              options: [{ id: "thought_level", value: "medium" }],
-            },
-          },
-          {
-            name: "clear Antigravity suffix options",
-            target: { providerInstanceId: antigravityId, model: "gemini-4-neon-high", options: {} },
-            expected: { instanceId: antigravityId, model: "gemini-4-neon", options: [] },
           },
           {
             name: "old Ultracode effort level",
@@ -4908,35 +4880,8 @@ describe("OrchestratorMcpService provider resolution", () => {
                 ],
               },
               providerSnapshot({ instanceId: peerId, driver, model: inherited.model }),
-              {
-                ...providerSnapshot({
-                  instanceId: antigravityId,
-                  driver: ProviderDriverKind.make("antigravity"),
-                }),
-                models: [
-                  {
-                    slug: "gemini-4-neon",
-                    name: "Gemini 4 Neon",
-                    isCustom: false,
-                    capabilities: {
-                      optionDescriptors: [
-                        {
-                          id: "thought_level",
-                          role: "reasoning",
-                          label: "Thinking",
-                          type: "select",
-                          options: [
-                            { id: "medium", label: "Medium" },
-                            { id: "high", label: "High" },
-                          ],
-                        },
-                      ],
-                    },
-                  },
-                ],
-              },
             ]),
-            adapterRegistryLayer([codexInstanceId, peerId, antigravityId]),
+            adapterRegistryLayer([codexInstanceId, peerId]),
             Layer.mock(ProjectService.ProjectService)({ getById: () => Effect.succeedNone }),
             Layer.mock(SecretRequests.SecretRequests)({}),
             Layer.mock(RemoteDelegation.RemoteDelegation)({}),
@@ -4964,7 +4909,7 @@ describe("OrchestratorMcpService provider resolution", () => {
 
   it.effect("accepts the inherited options it reports back as a delegate target", () =>
     Effect.gen(function* () {
-      // t3_thread_launch keeps a model selection as given, so a thread can hold an option its model lacks.
+      // z9_thread_launch keeps a model selection as given, so a thread can hold an option its model lacks.
       const inherited = {
         instanceId: codexInstanceId,
         model: "gpt-5.4",
@@ -5252,7 +5197,6 @@ describe("OrchestratorMcpService thread lookup", () => {
         for (const link of [
           `t3-thread://v2/${ref.environmentId}/${ref.threadId}`,
           formatThreadLink(ref, "Delegated task"),
-          hostedThreadLink(ref),
         ]) {
           const read = yield* mcp
             .readThread(client, { threadId: ThreadId.make(link) })
@@ -5745,7 +5689,7 @@ describe("OrchestratorMcpService thread stop", () => {
       queued: true,
       stop: { reason: "Make room", message: "Stopped by an agent: Make room" },
     },
-  ])("t3_thread_interrupt stop reports the run it interrupted on $name", ({ queued, stop }) =>
+  ])("z9_thread_interrupt stop reports the run it interrupted on $name", ({ queued, stop }) =>
     Effect.gen(function* () {
       const cwd = yield* checkpointWorkspace("mcp-thread-stop");
       const layerAdapters = ProviderAdapterRegistry.layerSingle(liveAdapter(cwd));

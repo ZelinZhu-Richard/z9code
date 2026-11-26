@@ -1,4 +1,4 @@
-import { normalizeHost } from "@t3tools/source-control-core/server/pullRequestUtils";
+import { normalizeHost } from "@z9code/source-control-core/server/pullRequestUtils";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -12,15 +12,15 @@ import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 
-import * as SourceControlHost from "@t3tools/source-control-core/server/SourceControlHost";
-import { readSourceControlHostSettings } from "@t3tools/source-control-core/shared/definition";
+import * as SourceControlHost from "@z9code/source-control-core/server/SourceControlHost";
+import { readSourceControlHostSettings } from "@z9code/source-control-core/shared/definition";
 import {
   requireSettingsSecretLiteral,
   type ServerSettings,
   type SettingsSecretUnresolvedError,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 
 import * as GitHubClient from "../shared/definition.ts";
 import { makeGhProcess } from "./gitHubCliProcess.ts";
@@ -115,7 +115,7 @@ export class GitHubCredentials extends Context.Service<
     readonly fingerprint: (host: string, token: string) => Effect.Effect<string>;
     readonly invalidate: (host: string) => Effect.Effect<void>;
   }
->()("@t3tools/source-control-github/server/GitHubCredentials") {}
+>()("@z9code/source-control-github/server/GitHubCredentials") {}
 
 const HOSTNAME =
   /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*(?::\d{1,5})?$/;
@@ -125,21 +125,21 @@ export function isGitHubHost(host: string): boolean {
   return HOSTNAME.test(host);
 }
 
-function isGitHubDotCom(host: string): boolean {
-  return host === "github.com" || host.endsWith(".ghe.com");
-}
-
 /** Restrict GH_ENTERPRISE_TOKEN to GH_HOST to prevent remote URLs from leaking it. */
 export function environmentToken(
   host: string,
   env: Readonly<Record<string, string | undefined>>,
 ): string | null {
   if (!isGitHubHost(host)) return null;
-  const names = isGitHubDotCom(host)
-    ? ["GH_TOKEN", "GITHUB_TOKEN"]
-    : env.GH_HOST?.trim().toLowerCase() === host
-      ? ["GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"]
-      : [];
+  const pinnedHost = env.GH_HOST?.trim().toLowerCase() === host;
+  // Anyone can own a *.ghe.com tenant, so a repository remote there gets GH_TOKEN only when
+  // GH_HOST names that tenant; otherwise the user's github.com token could leak to it.
+  const names =
+    host === "github.com" || (host.endsWith(".ghe.com") && pinnedHost)
+      ? ["GH_TOKEN", "GITHUB_TOKEN"]
+      : pinnedHost
+        ? ["GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"]
+        : [];
   for (const name of names) {
     const value = env[name]?.trim();
     if (value) return value;

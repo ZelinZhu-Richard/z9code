@@ -1,13 +1,14 @@
 import { useAtomValue } from "@effect/atom-react";
 import { useNavigation, usePreventRemove, type StaticScreenProps } from "@react-navigation/native";
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { scopeThreadRef } from "@z9code/client-runtime/environment";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@t3tools/client-runtime/state/runtime";
-import type { EnvironmentId, ThreadGuestShare, ThreadId } from "@t3tools/contracts";
+} from "@z9code/client-runtime/state/runtime";
+import type { EnvironmentId, ThreadGuestShare, ThreadId } from "@z9code/contracts";
 import { msg, T, useGT, useMessages } from "gt-react-native";
 import * as DateTime from "effect/DateTime";
+import * as Option from "effect/Option";
 import { useMemo, useState } from "react";
 import { Platform, ScrollView, Share, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,6 +24,7 @@ import { useDeadlinePassed } from "../../lib/clock";
 import { tryCopyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 import { NativeStackScreenOptions } from "../../native/StackHeader";
 import { serverEnvironment } from "../../state/server";
+import { usePreparedConnection } from "../../state/session";
 import { environmentThreadDetails } from "../../state/threads";
 import { useAtomCommand } from "../../state/use-atom-command";
 import { useThreadGuestShare } from "./ThreadGuestShareBar";
@@ -68,6 +70,8 @@ export function ThreadGuestShareSheet({ route }: StaticScreenProps<GuestShareTar
   );
   const threadLoadError = useAtomValue(environmentThreadDetails.errorAtom(threadRef));
   const canCreate = useAtomValue(serverEnvironment.createGuestShare.permissionAtom(environmentId));
+  // The guest opens the address this phone reaches the environment at.
+  const origin = Option.getOrNull(usePreparedConnection(environmentId))?.httpBaseUrl ?? null;
   const createGuestShare = useAtomCommand(serverEnvironment.createGuestShare, {
     reportFailure: false,
   });
@@ -87,8 +91,12 @@ export function ThreadGuestShareSheet({ route }: StaticScreenProps<GuestShareTar
       Dialog.alert(gt("Guest messages are waiting"), m(PENDING_MESSAGES_NOTICE));
       return;
     }
+    if (origin === null) {
+      setState({ status: "failed", message: gt("Connect to this environment first.") });
+      return;
+    }
     setState({ status: "creating" });
-    const result = await createGuestShare({ environmentId, input: { threadId } });
+    const result = await createGuestShare({ environmentId, input: { threadId, origin } });
     if (result._tag === "Success") {
       setState({ status: "created", url: result.value.url, share: result.value.share });
       return;

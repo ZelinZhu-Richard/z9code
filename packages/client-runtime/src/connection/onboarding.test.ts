@@ -3,7 +3,7 @@ import {
   EnvironmentId,
   type AuthEnvironmentScope,
   ORCHESTRATION_PROTOCOL_VERSION,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { assert, describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -14,7 +14,7 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 
 import * as RpcHttp from "../rpc/http.ts";
 import * as ClientCapabilities from "../platform/capabilities.ts";
-import * as ManagedRelay from "../relay/managedRelay.ts";
+import * as DpopSigner from "../dpop/signer.ts";
 import * as Persistence from "../platform/persistence.ts";
 import { fetchRemoteSessionState } from "../authorization/remote.ts";
 import {
@@ -46,7 +46,7 @@ const layerClientPresentation = Layer.succeed(
   ClientCapabilities.ClientPresentation,
   ClientCapabilities.ClientPresentation.of({
     metadata: {
-      label: "T3 Code Test",
+      label: "z9code Test",
       deviceType: "desktop",
       os: "Test OS",
     },
@@ -149,7 +149,7 @@ function layerPairingHttp(
             policy: "remote-reachable",
             bootstrapMethods: ["one-time-token"],
             sessionMethods: ["bearer-access-token"],
-            sessionCookieName: "t3_session",
+            sessionCookieName: "z9_session",
           },
           scopes: sessionScopes,
           sessionMethod: "bearer-access-token",
@@ -279,7 +279,7 @@ describe("connection onboarding", () => {
       const tokenParams = new URLSearchParams(tokenBody);
       expect(tokenParams.get("subject_token")).toBe("pairing-token");
       expect(tokenParams.has("scope")).toBe(false);
-      expect(tokenParams.get("client_label")).toBe("T3 Code Test");
+      expect(tokenParams.get("client_label")).toBe("z9code Test");
       expect(tokenParams.get("client_device_type")).toBe("desktop");
       expect(tokenParams.get("client_os")).toBe("Test OS");
     }),
@@ -588,8 +588,8 @@ describe("connection onboarding", () => {
           layerPairingOnboarding({ accessTokenRenewal: renews }),
           signer
             ? Layer.succeed(
-                ManagedRelay.ManagedRelayDpopSigner,
-                ManagedRelay.ManagedRelayDpopSigner.of({
+                DpopSigner.DpopSigner,
+                DpopSigner.DpopSigner.of({
                   thumbprint: Effect.succeed("device-key"),
                   createProof: (proof) => Effect.succeed(`proof:${proof.url}`),
                 }),

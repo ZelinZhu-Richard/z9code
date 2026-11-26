@@ -1,4 +1,4 @@
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -56,7 +56,7 @@ export class ResourceMonitorBinary extends Context.Service<
   {
     readonly resolve: Effect.Effect<string, ResourceMonitorBinaryError>;
   }
->()("t3/resourceTelemetry/ResourceMonitorBinary") {}
+>()("z9/resourceTelemetry/ResourceMonitorBinary") {}
 
 function binaryName(platform: NodeJS.Platform): string {
   return platform === "win32" ? "t3-resource-monitor.exe" : "t3-resource-monitor";
@@ -119,7 +119,7 @@ export const make = Effect.fn("resourceTelemetry.resourceMonitorBinary.make")(fu
   const platformKey = resourceMonitorPlatformKey(platform, architecture);
   const rustTarget = resourceMonitorRustTarget(platform, architecture, linuxLibc);
   const overrideCandidates = [
-    environment.T3CODE_RESOURCE_MONITOR_PATH,
+    environment.Z9CODE_RESOURCE_MONITOR_PATH,
     config.resourceMonitorPath,
   ].filter((candidate): candidate is string => Boolean(candidate));
   const cargoOutputDirectories =
@@ -145,7 +145,9 @@ export const make = Effect.fn("resourceTelemetry.resourceMonitorBinary.make")(fu
           path.resolve(import.meta.dirname, "../resource-monitor", executableName),
           ...sourceCandidates,
         ];
-  if (overrideCandidates.length === 0 && bundledCandidates.length === 0) {
+  // An opt-out for machines where even sampling the server's own process tree is unwanted.
+  const disabled = /^(?:1|true|yes)$/i.test(environment.Z9CODE_RESOURCE_MONITOR_DISABLED ?? "");
+  if (disabled || (overrideCandidates.length === 0 && bundledCandidates.length === 0)) {
     return ResourceMonitorBinary.of({
       resolve: Effect.fail(
         new ResourceMonitorBinaryUnsupported({

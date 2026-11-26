@@ -1,9 +1,9 @@
 import type {
   EnvironmentPresentation,
   PreparedConnection,
-} from "@t3tools/client-runtime/connection";
-import { connectionCatalogDisplayUrl } from "@t3tools/client-runtime/connection";
-import type { EnvironmentId, ServerConfig } from "@t3tools/contracts";
+} from "@z9code/client-runtime/connection";
+import { connectionCatalogDisplayUrl } from "@z9code/client-runtime/connection";
+import type { EnvironmentId, ServerConfig } from "@z9code/contracts";
 import * as Option from "effect/Option";
 import { Atom } from "effect/reactivity";
 
@@ -51,11 +51,8 @@ export function createRemoteEnvironmentProjectionAtoms(input: {
             ? displayUrl.replace(/^https:/, "wss:")
             : displayUrl.replace(/^http:/, "ws:")
           : new URL(socketUrl).origin;
-      const authorization = prepared?.httpAuthorization ?? null;
       // Credentials follow the route in use, which may not be the preferred one.
-      const relayManaged = prepared
-        ? prepared.target._tag === "RelayConnectionTarget"
-        : presentation.entry.target._tag === "RelayConnectionTarget";
+      const authorization = prepared?.httpAuthorization ?? null;
 
       previousEntry = presentation.entry;
       previousPrepared = prepared;
@@ -67,14 +64,8 @@ export function createRemoteEnvironmentProjectionAtoms(input: {
         httpBaseUrl,
         wsBaseUrl,
         bearerToken: authorization?._tag === "Bearer" ? authorization.token : null,
-        ...(relayManaged
-          ? {
-              authenticationMethod: "dpop" as const,
-              relayManaged: true as const,
-              ...(authorization?._tag === "Dpop"
-                ? { dpopAccessToken: authorization.accessToken }
-                : {}),
-            }
+        ...(authorization?._tag === "Dpop"
+          ? { authenticationMethod: "dpop" as const, dpopAccessToken: authorization.accessToken }
           : { authenticationMethod: "bearer" as const }),
       };
       return previous;
@@ -103,7 +94,6 @@ export function createRemoteEnvironmentProjectionAtoms(input: {
         connection.error === previousConnection?.error &&
         connection.i18nError === previousConnection?.i18nError &&
         connection.traceId === previousConnection?.traceId &&
-        connection.awaitingApproval === previousConnection?.awaitingApproval &&
         serverConfig === previousServerConfig
       ) {
         return previous;
@@ -118,7 +108,6 @@ export function createRemoteEnvironmentProjectionAtoms(input: {
           ? { i18nConnectionError: connection.i18nError }
           : {}),
         connectionErrorTraceId: connection.traceId,
-        ...(connection.awaitingApproval ? { connectionAwaitingApproval: true as const } : {}),
         serverConfig,
       };
       return previous;

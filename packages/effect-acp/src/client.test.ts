@@ -31,7 +31,19 @@ import {
 } from "./_internal/shared.ts";
 import { makeInMemoryStdio } from "./_internal/stdio.ts";
 
-import antigravityInitialize from "../test/fixtures/antigravity-initialize.json" with { type: "json" };
+// A shipped agent's v1-shaped initialize response that reports protocol version 2.
+const LEGACY_INITIALIZE_RESPONSE = {
+  protocolVersion: 2,
+  agentCapabilities: {
+    loadSession: true,
+    promptCapabilities: { image: true, audio: true, embeddedContext: true },
+    mcpCapabilities: { http: true, sse: true },
+    sessionCapabilities: { list: {}, resume: {} },
+    auth: { logout: {} },
+  },
+  authMethods: [{ id: "api-key", name: "API key", description: "Use an API key" }],
+  agentInfo: { name: "legacy-acp", title: "Legacy ACP agent", version: "1.1.1" },
+};
 
 const InitializeRequest = jsonRpcRequest("initialize", AcpSchema.InitializeRequest);
 const InitializeResponse = jsonRpcResponse(AcpSchema.InitializeResponse);
@@ -819,14 +831,14 @@ it.layer(NodeServices.layer)("effect-acp client", (it) => {
           jsonrpc: "2.0",
           id: initializeRequest.id,
           result: {
-            ...antigravityInitialize,
+            ...LEGACY_INITIALIZE_RESPONSE,
             protocolVersion,
           },
         }),
       );
       const initialized = yield* Fiber.join(initializeFiber);
       assert.equal(initialized.protocolVersion, protocolVersion);
-      assert.equal(initialized.agentInfo?.name, "antigravity-acp");
+      assert.equal(initialized.agentInfo?.name, "legacy-acp");
 
       const exchange = <A, E>(effect: Effect.Effect<A, E>, method: string) =>
         Effect.gen(function* () {

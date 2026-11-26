@@ -1,5 +1,5 @@
-import type { ThreadPullRequestLink } from "@t3tools/contracts";
-import { ProjectId } from "@t3tools/contracts";
+import type { ThreadPullRequestLink } from "@z9code/contracts";
+import { ProjectId } from "@z9code/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import { savedPullRequestStack, pullRequestStackView } from "./pullRequestStackSnapshot";
 

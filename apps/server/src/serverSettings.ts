@@ -20,8 +20,10 @@ import {
   globalIdleCompaction,
   isSecretReference,
   type SecretReference,
+  UsageLimitSourceConfig,
+  UsageLimitSourceId,
   withIdleCompaction,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Cache from "effect/Cache";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -29,7 +31,7 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Equal from "effect/Equal";
 import * as Effect from "effect/Effect";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
+import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -43,17 +45,17 @@ import * as Semaphore from "effect/Semaphore";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as SqlClient from "effect/sql/SqlClient";
-import { writeFileStringAtomically } from "@t3tools/shared/atomicWrite";
-import { resolveSymlinkTarget } from "@t3tools/shared/symlink";
+import { writeFileStringAtomically } from "@z9code/shared/atomicWrite";
+import { resolveSymlinkTarget } from "@z9code/shared/symlink";
 import * as ServerConfig from "./config.ts";
-import { type DeepPartial, deepMerge } from "@t3tools/shared/Struct";
-import { fromJsonStringPretty, fromLenientJson } from "@t3tools/shared/schemaJson";
+import { type DeepPartial, deepMerge } from "@z9code/shared/Struct";
+import { fromJsonStringPretty, fromLenientJson } from "@z9code/shared/schemaJson";
 import {
   applyServerSettingsPatch,
   deriveLegacyProjectOverrides,
   fallbackTextGenerationModelSelection,
   isModelSelectionProviderEnabled,
-} from "@t3tools/shared/serverSettings";
+} from "@z9code/shared/serverSettings";
 import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
 import * as ManagedPolicy from "./policy/ManagedPolicy.ts";
 import { secretProviderDefinitions } from "./secrets/secretProviderDefinitions.ts";
@@ -75,7 +77,7 @@ import {
 export {
   resolveReviewGuideModelSelection,
   resolveSourceControlWriterModelSelection,
-} from "@t3tools/shared/serverSettings";
+} from "@z9code/shared/serverSettings";
 
 const encodeServerSettings = Schema.encodeEffect(ServerSettings);
 const encodeServerSettingsJson = Schema.encodeUnknownEffect(fromJsonStringPretty(ServerSettings));
@@ -164,14 +166,8 @@ export function redactServerSettingsForClient(
   return {
     ...shaped,
     secretProviders: withoutUnknownSecretProviderConfigs(shaped),
-    // Older clients decode only "cliproxy" sources and reject the whole settings payload otherwise.
-    usageLimitSources: client.httpUsageLimitSources
-      ? shaped.usageLimitSources
-      : Object.fromEntries(
-          Object.entries(shaped.usageLimitSources).filter(
-            ([, source]) => source.kind === "cliproxy",
-          ),
-        ),
+    // Older clients reject "http" sources, the only kind left, and the whole settings payload with them.
+    usageLimitSources: client.httpUsageLimitSources ? shaped.usageLimitSources : {},
   };
 }
 
@@ -298,7 +294,7 @@ export class ServerSettingsService extends Context.Service<
     /** Subscribe before reading a snapshot to retain changes before lazy stream startup. */
     readonly subscribeChanges: Effect.Effect<Stream.Stream<ServerSettings>, never, Scope.Scope>;
   }
->()("t3/serverSettings/ServerSettingsService") {
+>()("z9/serverSettings/ServerSettingsService") {
   static readonly layerTest = (
     overrides: DeepPartial<ServerSettings> = {},
     managedPolicy?: ManagedPolicySummary,
@@ -380,8 +376,30 @@ const PersistedResponseStreamingMode = Schema.Union([
     }),
   ),
 );
+// Accept retired usage limit source kinds only on load, dropping them, so one cannot reset all settings.
+const UsageLimitSources = Schema.Record(UsageLimitSourceId, UsageLimitSourceConfig);
+const PersistedUsageLimitSources = Schema.Record(Schema.String, Schema.Unknown).pipe(
+  Schema.decodeTo(
+    UsageLimitSources,
+    SchemaTransformation.transform<typeof UsageLimitSources.Encoded, Record<string, unknown>>({
+      decode: (sources) =>
+        Object.fromEntries(
+          Object.entries(sources).filter(
+            ([, source]) =>
+              typeof source !== "object" ||
+              source === null ||
+              (source as { readonly kind?: unknown }).kind === "http",
+          ),
+        ) as typeof UsageLimitSources.Encoded,
+      encode: (sources) => sources,
+    }),
+  ),
+);
 const PersistedServerSettings = Schema.Struct({
   ...ServerSettings.fields,
+  usageLimitSources: PersistedUsageLimitSources.pipe(
+    Schema.withDecodingDefault(Effect.succeed({})),
+  ),
   responseStreamingMode: PersistedResponseStreamingMode.pipe(
     Schema.withDecodingDefault(Effect.succeed("paragraph" as const)),
   ),
@@ -447,7 +465,6 @@ function decodeSettingsFile(
           ...managed.defaults,
           continueThreadsAfterServerUpdate: false,
           usageHistoryRetentionDays: "unlimited",
-          requireConnectDeviceApproval: true,
           enablePreviewTunnel: false,
           enableAgentBrowserAccess: false,
           defaultRuntimeMode: "approval-required",

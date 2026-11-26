@@ -7,7 +7,7 @@ import {
   pullRequestRoutingConnectionKey,
   pullRequestRoutingPermissionFor,
   type PullRequestRoutingPermission,
-} from "@t3tools/client-runtime/connection";
+} from "@z9code/client-runtime/connection";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -75,7 +75,7 @@ export function PullRequestRoutingSettings() {
                     {entry.target.label}
                   </Text>
                   <Text className="text-xs text-foreground-muted" numberOfLines={1}>
-                    {connectionCatalogDisplayUrl(entry) ?? "T3 Connect"}
+                    {connectionCatalogDisplayUrl(entry) ?? ""}
                   </Text>
                 </View>
                 <Text className="text-sm text-foreground-muted">

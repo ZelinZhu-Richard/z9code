@@ -1,8 +1,8 @@
 import { mFallback, msg } from "gt-i18n";
 import type { MFunctionType } from "gt-i18n/types";
-import type { T3McpToolSummaryAction } from "@t3tools/shared/t3McpToolPresentation";
+import type { Z9McpToolSummaryAction } from "@z9code/shared/t3McpToolPresentation";
 
-export interface T3ToolSummaryCall {
+export interface Z9ToolSummaryCall {
   readonly input: unknown;
   readonly output: unknown;
   readonly outcome: "completed" | "failed" | "unfinished";
@@ -97,8 +97,8 @@ function pullRequestCount(
 }
 
 export function summarizeT3ToolCalls(
-  action: T3McpToolSummaryAction,
-  calls: ReadonlyArray<T3ToolSummaryCall>,
+  action: Z9McpToolSummaryAction,
+  calls: ReadonlyArray<Z9ToolSummaryCall>,
   resolve: MFunctionType = mFallback,
 ): { label: string; failedCount: number } {
   const results = calls.map((call) => {

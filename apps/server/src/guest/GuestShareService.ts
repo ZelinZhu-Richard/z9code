@@ -19,9 +19,9 @@ import {
   type OrchestrationV2TurnItem,
   ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
-import { chatMarkdownImageSources } from "@t3tools/shared/markdownPipeline";
-import { htmlRenderFromToolItem } from "@t3tools/shared/toolOutput";
+} from "@z9code/contracts";
+import { chatMarkdownImageSources } from "@z9code/shared/markdownPipeline";
+import { htmlRenderFromToolItem } from "@z9code/shared/toolOutput";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
@@ -44,7 +44,7 @@ import {
   threadHtmlRenderAttachmentIds,
 } from "../attachmentStore.ts";
 import * as ServerConfig from "../config.ts";
-import { CloudManagedEndpointRuntime } from "../cloud/ManagedEndpointRuntime.ts";
+import { isLocalLoopbackHost } from "@z9code/shared/hostClassification";
 import * as CommandOutputHub from "../orchestration-v2/CommandOutputHub.ts";
 import { GUEST_FAILURE } from "../orchestration-v2/GuestShareDecider.ts";
 import * as Orchestrator from "../orchestration-v2/Orchestrator.ts";
@@ -57,7 +57,6 @@ import {
 import * as DocumentText from "../provider/DocumentText.ts";
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
-import * as AnalyticsService from "../telemetry/AnalyticsService.ts";
 import { guestShareView, guestThreadModel } from "./guestView.ts";
 import {
   classifyGuestUploads,
@@ -196,7 +195,7 @@ export class GuestShareService extends Context.Service<
       path: string,
     ) => Effect.Effect<{ readonly path: string; readonly mimeType: string }, GuestShareAccessError>;
   }
->()("t3/guest/GuestShareService") {}
+>()("z9/guest/GuestShareService") {}
 
 /** A reply a guest's stream sent, with its image sources once a media request parsed them. */
 interface SentReply {
@@ -227,16 +226,29 @@ const rowWithoutFileText = <Row extends { readonly item: OrchestrationV2TurnItem
   row: Row,
 ): Row => ({ ...row, item: withoutFileText(row.item) });
 
+/** The address a guest opens: an http(s) origin other machines can reach, so never loopback. */
+const guestOrigin = (value: string): URL | null => {
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") &&
+      url.username === "" &&
+      url.password === "" &&
+      !isLocalLoopbackHost(url.hostname)
+      ? url
+      : null;
+  } catch {
+    return null;
+  }
+};
+
 const make = Effect.gen(function* () {
   const orchestrator = yield* Orchestrator.OrchestratorV2;
   const commandOutputs = yield* CommandOutputHub.CommandOutputHub;
   const providerRegistry = yield* ProviderRegistry.ProviderRegistry;
   const serverSettings = yield* ServerSettings.ServerSettingsService;
-  const managedEndpoint = yield* CloudManagedEndpointRuntime;
   const { attachmentsDir } = yield* ServerConfig.ServerConfig;
   const fileSystem = yield* FileSystem.FileSystem;
   const random = yield* SecureRandom.SecureRandom;
-  const analytics = yield* AnalyticsService.AnalyticsService;
   const documents = yield* DocumentText.DocumentText;
   const signer = yield* PayloadSigner.make(SIGNING_SECRET_NAME);
   /** A truncated HMAC keeps invite links short. 128 bits is still far beyond guessing range. */
@@ -290,9 +302,6 @@ const make = Effect.gen(function* () {
     return decodeSessionClaims(base64UrlDecodeUtf8(parts.payload));
   });
 
-  const connectHostname = managedEndpoint.inspectConnector.pipe(
-    Effect.map((facts) => facts?.hostname ?? null),
-  );
   // A beta: while it is off, no link opens and every guest request is refused.
   const sharingEnabled = serverSettings.getSettings.pipe(
     Effect.map((settings) => settings.guestSharingEnabled),
@@ -317,7 +326,7 @@ const make = Effect.gen(function* () {
       Effect.orDie,
     );
 
-  /** Checks a token against the live share: same id, not expired, and Connect still serving it. */
+  /** Checks a token against the live share: same id and not expired. */
   const authorize = Effect.fn("GuestShareService.authorize")(function* (
     token: string,
     kind: "invite" | "session",
@@ -338,8 +347,7 @@ const make = Effect.gen(function* () {
       thread.archivedAt !== null ||
       thread.deletedAt !== null ||
       DateTime.toEpochMillis(now) >= Date.parse(share.expiresAt) ||
-      (kind === "session" && share.guestName === null) ||
-      (yield* connectHostname) !== share.host
+      (kind === "session" && share.guestName === null)
     ) {
       return yield* inactive;
     }
@@ -350,10 +358,11 @@ const make = Effect.gen(function* () {
     if (!(yield* sharingEnabled)) {
       return yield* new GuestShareCreateError({ reason: "disabled" });
     }
-    const host = yield* connectHostname;
-    if (host === null) {
-      return yield* new GuestShareCreateError({ reason: "connect_unavailable" });
+    const origin = guestOrigin(input.origin);
+    if (origin === null) {
+      return yield* new GuestShareCreateError({ reason: "unreachable_origin" });
     }
+    const host = origin.host;
     const shareId = GuestShareId.make(base64UrlEncode(yield* random.randomBytes(SHARE_ID_BYTES)));
     const now = yield* DateTime.now;
     const expiresAt = DateTime.formatIso(DateTime.add(now, { milliseconds: GUEST_SHARE_TTL_MS }));
@@ -374,7 +383,7 @@ const make = Effect.gen(function* () {
       return yield* new GuestShareCreateError({ reason: "changed" });
     }
     const credential = yield* signInvite(shareId);
-    return { url: `https://${host}/guest#${credential}`, share: thread.guestShare };
+    return { url: `${origin.origin}/guest#${credential}`, share: thread.guestShare };
   });
 
   const redeem = Effect.fn("GuestShareService.redeem")(function* (request: GuestRedeemRequest) {
@@ -386,8 +395,6 @@ const make = Effect.gen(function* () {
       shareId: share.id,
       guestName: request.name,
     });
-    // Guests have no client connection, so their events carry no surface.
-    yield* analytics.record("feature.used", { feature: "guest_share.join" });
     const token = yield* signSession({ kind: "session", threadId: thread.id, shareId: share.id });
     return { token, shareId: share.id };
   });
@@ -484,10 +491,6 @@ const make = Effect.gen(function* () {
       text: request.text,
       ...(attachments.length === 0 ? {} : { attachments }),
     }).pipe(Effect.onError(() => removeStored(attachments)));
-    yield* analytics.record("feature.used", {
-      feature: "guest_message.submit",
-      variant: attachments.length === 0 ? "text_only" : "with_files",
-    });
   });
 
   /** Completes once the session no longer opens its share, so open reads end with it. */
@@ -615,14 +618,12 @@ const make = Effect.gen(function* () {
         }),
       ),
       Stream.takeUntil((event) => event.type === "ended"),
-      // Unlinking T3 Connect closes it quietly, so a tunnel that comes back on the same host
-      // keeps the guest in. Turning the beta off closes it the same way. Closing and expiry end
-      // it above, with `ended`.
+      // Turning the beta off closes it quietly. Closing and expiry end it above, with `ended`.
       Stream.interruptWhen(
-        Effect.all([connectHostname, sharingEnabled]).pipe(
+        sharingEnabled.pipe(
           Effect.repeat({
             schedule: Schedule.spaced(ACCESS_RECHECK_INTERVAL),
-            until: ([host, enabled]) => host !== share.host || !enabled,
+            until: (enabled) => !enabled,
           }),
         ),
       ),

@@ -2,11 +2,11 @@
 import * as NodeHttp from "node:http";
 import * as NodePath from "node:path";
 
-import { ProviderDriverKind, ProviderInstanceId } from "@t3tools/contracts";
+import { ProviderDriverKind, ProviderInstanceId } from "@z9code/contracts";
 import { expect } from "e2e";
 import * as Effect from "effect/Effect";
 
-import { T3_HOME } from "../e2e.config.ts";
+import { Z9_HOME } from "../e2e.config.ts";
 import { rpcClient, runPromise, test, WEB } from "./t3.ts";
 
 const SESSION_TITLE = "Native draft to delete";
@@ -86,7 +86,7 @@ test(
       const project = await t3.project("demo", { "session-agent.mjs": ACP });
       await runPromise(
         Effect.gen(function* () {
-          const client = yield* rpcClient(T3_HOME, app.baseUrl ?? "");
+          const client = yield* rpcClient(Z9_HOME, app.baseUrl ?? "");
           yield* client["server.updateSettings"]({
             patch: {},
             providerInstanceMutation: {

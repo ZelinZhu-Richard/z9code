@@ -1,4 +1,4 @@
-import { AuthStandardClientScopes, type ManagedPolicyDocument } from "@t3tools/contracts";
+import { AuthStandardClientScopes, type ManagedPolicyDocument } from "@z9code/contracts";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, expect, it } from "@effect/vitest";
@@ -102,7 +102,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))(
       }).pipe(Effect.provide(layerEnvironmentAuth())),
     );
 
-    it.effect("revokes only T3 Connect clients when the policy keeps remote clients", () =>
+    it.effect("revokes leftover T3 Connect sessions at startup and keeps paired clients", () =>
       Effect.gen(function* () {
         const sessions = yield* SessionStore.SessionStore;
         const phone = yield* sessions.issue({ subject: "one-time-token" });
@@ -114,7 +114,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))(
               ManagedPolicy.layerTest({
                 schemaVersion: 1,
                 organization: "Example Corp",
-                limits: { connect: false },
+                limits: {},
               }),
               layerServerConfig(),
             ),

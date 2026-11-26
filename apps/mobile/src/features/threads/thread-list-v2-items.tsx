@@ -20,21 +20,21 @@ import type { ThreadMoveDestination } from "./threadOrder";
 import type {
   EnvironmentProject,
   EnvironmentThreadShell,
-} from "@t3tools/client-runtime/state/shell";
-import type { EnvironmentThreadSearchMatch } from "@t3tools/client-runtime/state/thread-search";
+} from "@z9code/client-runtime/state/shell";
+import type { EnvironmentThreadSearchMatch } from "@z9code/client-runtime/state/thread-search";
 import {
   formatWorkingDurationLabel,
   resolveThreadWorkingStartedAt,
-} from "@t3tools/client-runtime/state/models";
+} from "@z9code/client-runtime/state/models";
 import {
   AuthOrchestrationOperateScope,
   type EnvironmentId,
   type EnvironmentMachineKind,
-} from "@t3tools/contracts";
-import { toServerClock } from "@t3tools/client-runtime/clock";
-import type { SnoozePresetSetting } from "@t3tools/contracts/settings";
-import { canSnooze } from "@t3tools/client-runtime/state/thread-settled";
-import { threadChipCopyTarget } from "@t3tools/client-runtime/thread-reference";
+} from "@z9code/contracts";
+import { toServerClock } from "@z9code/client-runtime/clock";
+import type { SnoozePresetSetting } from "@z9code/contracts/settings";
+import { canSnooze } from "@z9code/client-runtime/state/thread-settled";
+import { threadChipCopyTarget } from "@z9code/client-runtime/thread-reference";
 import type { MenuAction } from "@react-native-menu/menu";
 import { useNavigation } from "@react-navigation/native";
 import { msg, T, useGT, useMessages } from "gt-react-native";
@@ -1246,7 +1246,6 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         const target = threadChipCopyTarget(
           { environmentId: thread.environmentId, threadId: thread.id },
           thread.title,
-          undefined,
           m,
         );
         void copyThreadReference(target).then((didCopy) => {

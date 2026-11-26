@@ -9,7 +9,7 @@ import * as NodeStream from "node:stream";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderSessionId, ThreadId } from "@t3tools/contracts";
+import { ProviderSessionId, ThreadId } from "@z9code/contracts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Deferred from "effect/Deferred";
@@ -22,11 +22,11 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as TestClock from "effect/testing/TestClock";
 import { vi } from "vite-plus/test";
 
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { AgentScope } from "@t3tools/shared/AgentScope";
-import { ProviderEventLoggers } from "@t3tools/provider-core/server/ProviderEventLoggers";
-import { makeProviderFailure } from "@t3tools/provider-core/server/failure";
-import { signalProcessGroup } from "@t3tools/provider-core/server/processGroup";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { AgentScope } from "@z9code/shared/AgentScope";
+import { ProviderEventLoggers } from "@z9code/provider-core/server/ProviderEventLoggers";
+import { makeProviderFailure } from "@z9code/provider-core/server/failure";
+import { signalProcessGroup } from "@z9code/provider-core/server/processGroup";
 import * as PortScanner from "../../preview/PortScanner.ts";
 import {
   ClaudeAgentSdkQueryRunner,
@@ -224,7 +224,7 @@ const resumedMcpQueryInput = {
     tools: [],
     permissionMode: "default",
     mcpServers: {
-      "t3-code": {
+      z9code: {
         type: "http",
         url: "http://localhost:3773/mcp",
         headers: { Authorization: "Bearer test-mcp-credential" },
@@ -275,7 +275,7 @@ it.effect("reopens a stalled MCP registration before delivering the resumed prom
       return new Promise<ClaudeSdk.McpSetServersResult>(() => {});
     });
     const secondRegistration = vi.fn(async () => ({
-      added: ["t3-code"],
+      added: ["z9code"],
       removed: [],
       errors: {},
     }));
@@ -392,7 +392,7 @@ it.effect.each([true, false])("only retries after confirmed process exit: %s", (
           registrationStarted.resolve();
           return first
             ? new Promise<ClaudeSdk.McpSetServersResult>(() => {})
-            : Promise.resolve({ added: ["t3-code"], removed: [], errors: {} });
+            : Promise.resolve({ added: ["z9code"], removed: [], errors: {} });
         },
         close: vi.fn(),
         [Symbol.asyncDispose]: disposed,
@@ -507,7 +507,7 @@ it.effect("reports MCP startup after the CLI boots, while it registers the serve
           },
           setMcpServers: async () => {
             steps.push("registered");
-            return { added: ["t3-code"], removed: [], errors: {} };
+            return { added: ["z9code"], removed: [], errors: {} };
           },
           close: vi.fn(),
           [Symbol.asyncDispose]: async () => {},
@@ -539,7 +539,7 @@ it.effect("retries a fresh session once after MCP registration times out", () =>
           registrationStarted.resolve();
           return first
             ? new Promise<ClaudeSdk.McpSetServersResult>(() => {})
-            : Promise.resolve({ added: ["t3-code"], removed: [], errors: {} });
+            : Promise.resolve({ added: ["z9code"], removed: [], errors: {} });
         },
         close: vi.fn(),
         [Symbol.asyncDispose]: disposed,
@@ -590,7 +590,7 @@ it.effect.each([
         setMcpServers: async () => {
           waiting.resolve();
           await booted.promise;
-          return { added: ["t3-code"], removed: [], errors: {} };
+          return { added: ["z9code"], removed: [], errors: {} };
         },
         close: vi.fn(),
         [Symbol.asyncDispose]: async () => {},
@@ -682,7 +682,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() === "win32")("Claude CLI pro
               Layer.succeed(AgentScope, {
                 ...AgentScope.defaultValue(),
                 wrap: ({ command, args }) =>
-                  Effect.succeed({ command, args, unit: "t3code-claude-test.scope" }),
+                  Effect.succeed({ command, args, unit: "z9code-claude-test.scope" }),
                 stop: (unit) => Deferred.succeed(stopped, unit).pipe(Effect.asVoid),
               }),
             ),
@@ -692,7 +692,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() === "win32")("Claude CLI pro
       yield* Effect.promise(() => leftoverStarted);
       yield* session.close;
       yield* Effect.promise(() => leftoverStopped);
-      assert.strictEqual(yield* Deferred.await(stopped), "t3code-claude-test.scope");
+      assert.strictEqual(yield* Deferred.await(stopped), "z9code-claude-test.scope");
     }),
   );
 

@@ -1,10 +1,10 @@
 import { isClientHostEnvironment } from "./clientHostEnvironment";
 import {
+  BearerConnectionTarget,
   PrimaryConnectionTarget,
   SshConnectionTarget,
-  RelayConnectionTarget,
-} from "@t3tools/client-runtime/connection";
-import { EnvironmentId } from "@t3tools/contracts";
+} from "@z9code/client-runtime/connection";
+import { EnvironmentId } from "@z9code/contracts";
 import { Atom, AtomRegistry } from "effect/reactivity";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -34,7 +34,7 @@ describe("localEnvironmentIdAtom", () => {
     ).toBe(PRIMARY);
   });
 
-  it("uses the connected background service sharing the app's T3 home when there is no primary", () => {
+  it("uses the connected background service sharing the app's z9code home when there is no primary", () => {
     expect(localEnvironmentId({ primary: null, host: "service", catalog: [REMOTE, SERVICE] })).toBe(
       SERVICE,
     );
@@ -64,7 +64,11 @@ it("recognizes the desktop host service and direct browser loopback, excluding r
   expect(isClientHostEnvironment(REMOTE, null, null, true)).toBe(false);
   for (const target of [
     new SshConnectionTarget({ environmentId: REMOTE, label: "SSH", connectionId: "ssh-1" }),
-    new RelayConnectionTarget({ environmentId: REMOTE, label: "Relay" }),
+    new BearerConnectionTarget({
+      environmentId: REMOTE,
+      label: "Remote",
+      connectionId: "remote-1",
+    }),
   ]) {
     expect(isClientHostEnvironment(REMOTE, "service", target, true)).toBe(false);
   }

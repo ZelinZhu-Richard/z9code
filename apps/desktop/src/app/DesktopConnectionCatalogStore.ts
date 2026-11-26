@@ -2,16 +2,15 @@ import {
   BearerConnectionCredential,
   BearerConnectionProfile,
   BearerConnectionTarget,
-  RelayConnectionTarget,
   SshConnectionProfile,
   SshConnectionTarget,
-} from "@t3tools/client-runtime/connection";
+} from "@z9code/client-runtime/connection";
 import {
   ConnectionCatalogDocument as RuntimeConnectionCatalogDocument,
   type ConnectionCatalogDocument as RuntimeConnectionCatalogDocumentType,
-} from "@t3tools/client-runtime/platform";
-import type { PersistedSavedEnvironmentRecord } from "@t3tools/contracts";
-import { fromLenientJson } from "@t3tools/shared/schemaJson";
+} from "@z9code/client-runtime/platform";
+import type { PersistedSavedEnvironmentRecord } from "@z9code/contracts";
+import { fromLenientJson } from "@z9code/shared/schemaJson";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
@@ -169,7 +168,7 @@ export class DesktopConnectionCatalogStore extends Context.Service<
       DesktopConnectionCatalogStoreWriteError | DesktopConnectionCatalogStoreProtectionError
     >;
   }
->()("@t3tools/desktop/app/DesktopConnectionCatalogStore") {}
+>()("@z9code/desktop/app/DesktopConnectionCatalogStore") {}
 
 function decodeSecretBytes(
   catalogPath: string,
@@ -221,6 +220,10 @@ const readDocument = (
     ),
   );
 
+// Saved bearer tokens and SSH profiles; only the user may read them, whatever the umask.
+const CATALOG_FILE_MODE = 0o600;
+const CATALOG_DIRECTORY_MODE = 0o700;
+
 const writeDocument = Effect.fn("desktop.connectionCatalogStore.writeDocument")(function* (input: {
   readonly fileSystem: FileSystem.FileSystem;
   readonly path: Path.Path;
@@ -240,27 +243,33 @@ const writeDocument = Effect.fn("desktop.connectionCatalogStore.writeDocument")(
         }),
     ),
   );
-  yield* input.fileSystem.makeDirectory(directory, { recursive: true }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new DesktopConnectionCatalogStoreWriteError({
-          operation: "create-directory",
-          path: directory,
-          cause,
-        }),
-    ),
-  );
-  yield* Effect.gen(function* () {
-    yield* input.fileSystem.writeFileString(tempPath, `${encoded}\n`).pipe(
+  yield* input.fileSystem
+    .makeDirectory(directory, { recursive: true, mode: CATALOG_DIRECTORY_MODE })
+    .pipe(
       Effect.mapError(
         (cause) =>
           new DesktopConnectionCatalogStoreWriteError({
-            operation: "write-temporary-file",
-            path: tempPath,
+            operation: "create-directory",
+            path: directory,
             cause,
           }),
       ),
     );
+  yield* Effect.gen(function* () {
+    yield* input.fileSystem
+      .writeFileString(tempPath, `${encoded}\n`, { mode: CATALOG_FILE_MODE })
+      .pipe(
+        Effect.mapError(
+          (cause) =>
+            new DesktopConnectionCatalogStoreWriteError({
+              operation: "write-temporary-file",
+              path: tempPath,
+              cause,
+            }),
+        ),
+      );
+    // The mode only applies when the file is created; tighten one left by an older run.
+    yield* input.fileSystem.chmod(tempPath, CATALOG_FILE_MODE).pipe(Effect.ignore);
     yield* input.fileSystem.rename(tempPath, input.catalogPath).pipe(
       Effect.mapError(
         (cause) =>
@@ -304,16 +313,6 @@ const migrateSavedEnvironmentRecords = Effect.fn(
   const credentials: Array<RuntimeConnectionCatalogDocumentType["credentials"][number]> = [];
 
   for (const record of records) {
-    if (record.relayManaged !== undefined) {
-      targets.push(
-        new RelayConnectionTarget({
-          environmentId: record.environmentId,
-          label: record.label,
-        }),
-      );
-      continue;
-    }
-
     if (record.desktopSsh !== undefined) {
       const id = connectionId("ssh", record.environmentId);
       targets.push(
@@ -375,7 +374,6 @@ const migrateSavedEnvironmentRecords = Effect.fn(
     targets,
     profiles,
     credentials,
-    remoteDpopTokens: [],
     disabledEnvironmentIds: [],
   };
 });
@@ -446,6 +444,7 @@ export const make = Effect.gen(function* () {
           }),
       ),
     );
+    yield* fileSystem.chmod(keptPath, CATALOG_FILE_MODE).pipe(Effect.ignore);
     yield* Effect.logWarning("Kept an unreadable connection catalog before replacing it.", {
       keptPath,
     });

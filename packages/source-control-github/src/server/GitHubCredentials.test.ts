@@ -7,10 +7,10 @@ import * as Redacted from "effect/Redacted";
 import { HttpClient } from "effect/http";
 import { ChildProcessSpawner } from "effect/process";
 
-import { DEFAULT_SERVER_SETTINGS, SecretProviderId, SecretProviderKind } from "@t3tools/contracts";
-import type * as SourceControlHost from "@t3tools/source-control-core/server/SourceControlHost";
-import { applyServerSettingsPatch } from "@t3tools/shared/serverSettings";
-import * as TestSourceControlHost from "@t3tools/source-control-testing/TestSourceControlHost";
+import { DEFAULT_SERVER_SETTINGS, SecretProviderId, SecretProviderKind } from "@z9code/contracts";
+import type * as SourceControlHost from "@z9code/source-control-core/server/SourceControlHost";
+import { applyServerSettingsPatch } from "@z9code/shared/serverSettings";
+import * as TestSourceControlHost from "@z9code/source-control-testing/TestSourceControlHost";
 import * as GitHubCredentials from "./GitHubCredentials.ts";
 
 const TOKEN_VARIABLES = [
@@ -213,6 +213,22 @@ describe("GitHubCredentials", () => {
       }).pipe(Effect.provide(layer));
     },
   );
+
+  it("gives GH_TOKEN to a *.ghe.com tenant only when GH_HOST names it", () => {
+    const env = { GH_TOKEN: "dotcom-token", GH_ENTERPRISE_TOKEN: "enterprise-token" };
+    expect(GitHubCredentials.environmentToken("github.com", env)).toBe("dotcom-token");
+    // Anyone can create a tenant, so a repository remote must not pull the token there.
+    expect(GitHubCredentials.environmentToken("attacker.ghe.com", env)).toBeNull();
+    expect(
+      GitHubCredentials.environmentToken("acme.ghe.com", { ...env, GH_HOST: "acme.ghe.com" }),
+    ).toBe("dotcom-token");
+    expect(
+      GitHubCredentials.environmentToken("git.acme.internal", {
+        ...env,
+        GH_HOST: "git.acme.internal",
+      }),
+    ).toBe("enterprise-token");
+  });
 
   it.effect("never hands a token to a host that is not a plain hostname", () => {
     vi.stubEnv("GH_TOKEN", "env-token");

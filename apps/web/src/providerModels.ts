@@ -7,8 +7,8 @@ import {
   type ProviderInstanceId,
   type ServerProvider,
   type ServerProviderModel,
-} from "@t3tools/contracts";
-import { createModelCapabilities, resolveSelectableModel } from "@t3tools/shared/model";
+} from "@z9code/contracts";
+import { createModelCapabilities, resolveSelectableModel } from "@z9code/shared/model";
 
 const EMPTY_CAPABILITIES: ModelCapabilities = createModelCapabilities({
   optionDescriptors: [],
@@ -16,7 +16,6 @@ const EMPTY_CAPABILITIES: ModelCapabilities = createModelCapabilities({
 const DEFAULT_DRIVER_KIND = ProviderDriverKind.make("codex");
 const RUNTIME_MODEL_CATALOG_DRIVERS: ReadonlySet<string> = new Set([
   "opencode",
-  "antigravity",
   "cursor",
   "pi",
   "acpRegistry",
@@ -32,22 +31,14 @@ export function isRuntimeModelDefaultAlias(
   provider: ProviderDriverKind,
   model: string | null | undefined,
 ): boolean {
-  return (
-    (provider === "antigravity" || provider === "acpRegistry") &&
-    model === DEFAULT_MODEL_BY_PROVIDER[provider]
-  );
+  return provider === "acpRegistry" && model === DEFAULT_MODEL_BY_PROVIDER[provider];
 }
 
-// Antigravity lists its default model only as an alias, which a slug lookup would call missing.
 export function keepsUnavailableModelOptions(
   provider: ProviderDriverKind,
   model: string | null | undefined,
 ): boolean {
-  return (
-    provider !== "antigravity" &&
-    !isRuntimeModelDefaultAlias(provider, model) &&
-    hasRuntimeModelCatalog(provider)
-  );
+  return !isRuntimeModelDefaultAlias(provider, model) && hasRuntimeModelCatalog(provider);
 }
 
 export function formatProviderDriverKindLabel(provider: ProviderDriverKind): string {

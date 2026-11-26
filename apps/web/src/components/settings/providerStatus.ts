@@ -2,7 +2,7 @@ import type {
   ServerProvider,
   ServerProviderVersionAdvisory,
   ServerProviderCompatibilityAdvisory,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { msg } from "gt-react";
 
 import { m, type MessageResolver } from "../../i18n/messages";
@@ -36,23 +36,8 @@ export function providerAuthLabel(
   return auth.label ?? auth.type;
 }
 
-// Antigravity's local health check verifies installation, not Google sign-in.
-// API-key and Agent Platform warnings still need attention.
-function isAntigravitySignInUnchecked(provider: ServerProvider): boolean {
-  return (
-    provider.driver === "antigravity" &&
-    provider.installed &&
-    provider.status === "warning" &&
-    provider.auth.status === "unknown" &&
-    (provider.auth.type === undefined ||
-      provider.auth.type === "oauth-personal" ||
-      provider.auth.type === "oauth-business")
-  );
-}
-
 export function getProviderStatusKey(provider: ServerProvider | undefined): ProviderStatusKey {
   if (provider && !provider.enabled) return "disabled";
-  if (provider && isAntigravitySignInUnchecked(provider)) return "neutral";
   return provider?.status ?? "warning";
 }
 
@@ -73,7 +58,7 @@ export function getProviderSummary(
       headline: resolve(msg("Disabled", { $context: "provider status" })),
       detail:
         provider.message ??
-        resolve(msg("This provider is installed but disabled for new sessions in T3 Code.")),
+        resolve(msg("This provider is installed but disabled for new sessions in z9code.")),
     };
   }
   if (!provider.installed) {
@@ -88,12 +73,6 @@ export function getProviderSummary(
       headline: authLabel
         ? resolve(msg("Not authenticated · {method}", { method: authLabel }))
         : resolve(msg("Not authenticated")),
-      detail: provider.message ?? null,
-    };
-  }
-  if (isAntigravitySignInUnchecked(provider)) {
-    return {
-      headline: resolve(msg("Installed · Sign-in not checked")),
       detail: provider.message ?? null,
     };
   }
@@ -128,9 +107,10 @@ export function getProviderSummary(
 
 export function getProviderVersionLabel(version: string | null | undefined) {
   if (!version) return null;
-  const antigravity = /^agy_acp_server_(\d{4})(\d{2})(\d{2})_\d+(?:_(\w+))?$/.exec(version);
-  if (antigravity) {
-    const [, year, month, day, candidate] = antigravity;
+  // agy reports dated build tags such as agy_acp_server_20261101_3_rc.
+  const agyBuild = /^agy_acp_server_(\d{4})(\d{2})(\d{2})_\d+(?:_(\w+))?$/.exec(version);
+  if (agyBuild) {
+    const [, year, month, day, candidate] = agyBuild;
     return `${year}-${month}-${day}${candidate ? ` ${candidate}` : ""}`;
   }
   return /^\d/.test(version) ? `v${version}` : version;

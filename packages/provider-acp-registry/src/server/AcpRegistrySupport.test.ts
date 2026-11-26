@@ -2,14 +2,10 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import {
-  DEFAULT_SERVER_SETTINGS,
-  ProviderDriverKind,
-  ProviderInstanceId,
-} from "@t3tools/contracts";
+import { DEFAULT_SERVER_SETTINGS, ProviderDriverKind, ProviderInstanceId } from "@z9code/contracts";
 import { AcpRegistrySettings } from "../settings.ts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { SpawnExecutableResolution } from "@t3tools/shared/shell";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { SpawnExecutableResolution } from "@z9code/shared/shell";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -25,7 +21,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import * as AcpRegistrySupport from "./AcpRegistrySupport.ts";
 import { prefersHttpMcpTransport } from "./mcpTransport.ts";
-import * as TestProviderHost from "@t3tools/provider-testing/TestProviderHost";
+import * as TestProviderHost from "@z9code/provider-testing/TestProviderHost";
 
 const registryUrl = "https://registry.test/registry.json";
 const archiveUrl = "https://registry.test/example-agent.bin";
@@ -408,7 +404,7 @@ describe("AcpRegistrySupport", () => {
         source: "local",
         commandPath: "node.exe",
         commandArgs: [
-          "C:\\Users\\me\\.t3\\bin\\cmdcode\\node_modules\\command-code\\dist\\index.mjs",
+          "C:\\Users\\me\\.z9code\\bin\\cmdcode\\node_modules\\command-code\\dist\\index.mjs",
           "acp",
         ],
       });
@@ -523,7 +519,7 @@ describe("AcpRegistrySupport", () => {
     );
   });
 
-  it.effect("installs into T3 home a package and launches its exposed command", () => {
+  it.effect("installs into z9code home a package and launches its exposed command", () => {
     const agent = makeAgent({
       npx: { package: "@example/acp@V1.2.3", args: ["--stdio"] },
     });
@@ -853,54 +849,59 @@ describe("AcpRegistrySupport", () => {
     );
   });
 
-  it.effect("gives Antigravity a T3-owned temp directory that is removed with the process", () => {
-    const agent = {
-      ...makeAgent({ binary: { "linux-x86_64": { archive: archiveUrl, cmd: "./agy" } } }),
-      id: "antigravity-acp",
-    };
-    return Effect.gen(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const cacheDir = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "t3-acp-registry-runtime-temp-",
-      });
-      const runtimeTempDir = `${cacheDir}/antigravity-tmp/acp-registry`;
-      yield* fileSystem.makeDirectory(`${runtimeTempDir}/run-killed/_MEI123`, { recursive: true });
-      const resolver = yield* AcpRegistrySupport.makeAcpRegistryCatalog({
-        cacheDir,
-        toolsDir: `${cacheDir}/tools`,
-        runtimeTempDir,
-        registryUrl,
-      });
-      expect(yield* fileSystem.exists(`${runtimeTempDir}/run-killed`)).toBe(false);
+  it.effect(
+    "gives an unpacking agent a z9code-owned temp directory that is removed with the process",
+    () => {
+      const agent = {
+        ...makeAgent({ binary: { "linux-x86_64": { archive: archiveUrl, cmd: "./agy" } } }),
+        id: "antigravity-acp",
+      };
+      return Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const cacheDir = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "t3-acp-registry-runtime-temp-",
+        });
+        const runtimeTempDir = `${cacheDir}/acp-tmp/registry`;
+        yield* fileSystem.makeDirectory(`${runtimeTempDir}/run-killed/_MEI123`, {
+          recursive: true,
+        });
+        const resolver = yield* AcpRegistrySupport.makeAcpRegistryCatalog({
+          cacheDir,
+          toolsDir: `${cacheDir}/tools`,
+          runtimeTempDir,
+          registryUrl,
+        });
+        expect(yield* fileSystem.exists(`${runtimeTempDir}/run-killed`)).toBe(false);
 
-      const temp = yield* Effect.scoped(
-        Effect.gen(function* () {
-          const resolved = yield* resolver.resolve(
-            settings({ agentId: "antigravity-acp" }),
-            "/workspace",
-            { TMPDIR: "/tmp" },
-          );
-          const directory = resolved.spawn.env?.TMPDIR ?? "";
-          expect(directory.startsWith(`${runtimeTempDir}/run-`)).toBe(true);
-          expect(yield* fileSystem.exists(directory)).toBe(true);
-          return directory;
-        }),
-      );
-      expect(yield* fileSystem.exists(temp)).toBe(false);
-    }).pipe(
-      Effect.scoped,
-      Effect.provide(
-        layerResolver((request) =>
-          Effect.succeed(
-            HttpClientResponse.fromWeb(
-              request,
-              new Response(request.url === registryUrl ? makeRegistry(agent) : "#!/bin/sh\n"),
+        const temp = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const resolved = yield* resolver.resolve(
+              settings({ agentId: "antigravity-acp" }),
+              "/workspace",
+              { TMPDIR: "/tmp" },
+            );
+            const directory = resolved.spawn.env?.TMPDIR ?? "";
+            expect(directory.startsWith(`${runtimeTempDir}/run-`)).toBe(true);
+            expect(yield* fileSystem.exists(directory)).toBe(true);
+            return directory;
+          }),
+        );
+        expect(yield* fileSystem.exists(temp)).toBe(false);
+      }).pipe(
+        Effect.scoped,
+        Effect.provide(
+          layerResolver((request) =>
+            Effect.succeed(
+              HttpClientResponse.fromWeb(
+                request,
+                new Response(request.url === registryUrl ? makeRegistry(agent) : "#!/bin/sh\n"),
+              ),
             ),
           ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 
   it.effect("installs a contained binary whose name starts with two dots", () => {
     const agent = makeAgent({

@@ -1,17 +1,17 @@
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
-import { isAttachmentOnlyBootstrapPrompt } from "@t3tools/shared/composerContextReferences";
+import { thrownErrorMessage } from "@z9code/client-runtime/errors";
+import type { EnvironmentProject } from "@z9code/client-runtime/state/shell";
+import { isAttachmentOnlyBootstrapPrompt } from "@z9code/shared/composerContextReferences";
 import {
   type ModelSelection,
   repositoryGroupingKeyOf,
   type ServerProvider,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   buildNewThreadLink,
   parsePromptLinkRepository,
   PROMPT_LINK_MAX_PROMPT_LENGTH,
   type PromptLinkRepository,
-} from "@t3tools/shared/promptLinks";
+} from "@z9code/shared/promptLinks";
 
 import { type ComposerThreadTarget, useComposerDraftStore } from "~/composerDraftStore";
 import { writeTextToClipboard } from "~/hooks/useCopyToClipboard";
@@ -22,7 +22,10 @@ import { stackedThreadToast, toastManager } from "../ui/toast";
 import { msg } from "gt-react";
 import { m } from "~/i18n/messages";
 
-/** A shareable link to a prompt on the hosted app, or null when the prompt cannot fit in one. */
+/**
+ * A shareable link to a prompt: on this build's web app when it has one, else the installed
+ * app's own link. Null when the prompt cannot fit in one.
+ */
 export function promptLinkFor(
   prompt: string,
   context?: {
@@ -33,7 +36,12 @@ export function promptLinkFor(
 ): string | null {
   const trimmed = isAttachmentOnlyBootstrapPrompt(prompt) ? "" : prompt.trim();
   if (trimmed.length === 0 || trimmed.length > PROMPT_LINK_MAX_PROMPT_LENGTH) return null;
-  return buildNewThreadLink({ prompt: trimmed, ...context, origin: configuredHostedAppUrl() });
+  const origin = configuredHostedAppUrl();
+  return buildNewThreadLink({
+    prompt: trimmed,
+    ...context,
+    ...(origin === null ? {} : { origin }),
+  });
 }
 
 export function promptLinkRepositoryOf(

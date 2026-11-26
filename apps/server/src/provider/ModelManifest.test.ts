@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { ProviderDriverKind } from "@t3tools/contracts";
-import * as ModelCatalog from "@t3tools/provider-core/server/ModelCatalog";
+import { ProviderDriverKind } from "@z9code/contracts";
+import * as ModelCatalog from "@z9code/provider-core/server/ModelCatalog";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -261,7 +261,10 @@ const layerService = (input: {
 }) =>
   ServerConfig.layerTest(process.cwd(), { prefix: input.prefix }).pipe(
     Layer.provideMerge(NodeServices.layer),
-    Layer.provideMerge(ServerSettings.layerTest(input.settings ?? {})),
+    // Remote refresh is opt-in; these tests exercise it.
+    Layer.provideMerge(
+      ServerSettings.layerTest({ enableProviderUpdateChecks: true, ...input.settings }),
+    ),
     Layer.provideMerge(layerHttpClient(input.response)),
   );
 
@@ -377,7 +380,7 @@ describe("ModelManifest service", () => {
       for (const stale of [
         undatedManifest,
         { ...REMOTE_MANIFEST, updatedAt: "2000-01-01T00:00:00Z" },
-        // The last bundle before Antigravity below 1.5 became broken.
+        // A bundle older than the one this build ships.
         { ...REMOTE_MANIFEST, updatedAt: "2026-11-14T15:58:47Z" },
       ]) {
         yield* fs.writeFileString(

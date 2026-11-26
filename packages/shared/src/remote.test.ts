@@ -147,13 +147,13 @@ describe("remote", () => {
   it("round-trips pairing urls through app links on every channel scheme", () => {
     const pairingUrl = "https://vps.example.com/pair#token=ABC123";
     const appLink = buildPairingAppLink(pairingUrl);
-    expect(appLink.startsWith("t3code://pair?")).toBe(true);
+    expect(appLink.startsWith("z9code://pair?")).toBe(true);
     expect(readPairingAppLink(appLink)).toBe(pairingUrl);
-    expect(readPairingAppLink(appLink.replace("t3code:", "t3code-dev:"))).toBe(pairingUrl);
-    expect(readPairingAppLink("t3code://pair")).toBeNull();
+    expect(readPairingAppLink(appLink.replace("z9code:", "z9code-dev:"))).toBe(pairingUrl);
+    expect(readPairingAppLink("z9code://pair")).toBeNull();
     expect(readPairingAppLink(appLink.replace("//pair?", "//pair/other?"))).toBeNull();
     expect(
-      readPairingAppLink(`t3code://threads?pairingUrl=${encodeURIComponent(pairingUrl)}`),
+      readPairingAppLink(`z9code://threads?pairingUrl=${encodeURIComponent(pairingUrl)}`),
     ).toBeNull();
     expect(
       readPairingAppLink(`https://pair?pairingUrl=${encodeURIComponent(pairingUrl)}`),

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { canShareWithGuest } from "./guestShareAvailability";
 
 describe("mobile guest sharing availability", () => {
-  it("requires permission and the beta, and respects the environment's Connect policy", () => {
+  it("requires permission and the beta, and respects the environment's remote-clients policy", () => {
     const enabled = { settings: { guestSharingEnabled: true } };
     expect(canShareWithGuest(true, enabled)).toBe(true);
     expect(canShareWithGuest(false, enabled)).toBe(false);
@@ -15,7 +15,7 @@ describe("mobile guest sharing availability", () => {
         managedPolicy: {
           organization: "Example",
           lockedSettings: [],
-          limits: { connect: false },
+          limits: { clients: ["desktop"] },
         },
       }),
     ).toBe(false);

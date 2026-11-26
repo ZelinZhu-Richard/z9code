@@ -9,8 +9,8 @@ import {
   type PreviewAdjustInput,
   type PreviewSessionSnapshot,
   type PreviewViewportSetting,
-} from "@t3tools/contracts";
-import { PREVIEW_VIEWPORT_PRESETS } from "@t3tools/shared/previewViewport";
+} from "@z9code/contracts";
+import { PREVIEW_VIEWPORT_PRESETS } from "@z9code/shared/previewViewport";
 import { msg, useGT, useMessages } from "gt-react-native";
 
 import { ControlPill } from "../../components/ui/ControlPill";

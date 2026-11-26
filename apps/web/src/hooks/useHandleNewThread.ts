@@ -2,13 +2,13 @@ import {
   scopedProjectKey,
   scopeProjectRef,
   scopeThreadRef,
-} from "@t3tools/client-runtime/environment";
+} from "@z9code/client-runtime/environment";
 import {
   DEFAULT_SERVER_SETTINGS,
   type ScopedProjectRef,
-  type T3ProjectFile,
+  type Z9ProjectFile,
   type ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { type AnyRouter, useRouter } from "@tanstack/react-router";
 import { flushSync } from "react-dom";
 import {
@@ -28,8 +28,8 @@ import {
   resolveGroupDefaultProject,
   selectProjectGroupingSettings,
   type ProjectGroupingSettings,
-} from "@t3tools/client-runtime/state/project-grouping";
-import { resolveNewThreadEnvMode, resolveProjectSettings } from "@t3tools/shared/projectSettings";
+} from "@z9code/client-runtime/state/project-grouping";
+import { resolveNewThreadEnvMode, resolveProjectSettings } from "@z9code/shared/projectSettings";
 import {
   readProjects,
   readThreadShell,
@@ -44,7 +44,7 @@ import {
   resolveNewThreadModelSelectionOverride,
   threadHasStarted,
 } from "../lib/chatThreadActions";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
+import type { EnvironmentProject } from "@z9code/client-runtime/state/shell";
 import { peekT3ProjectFile, readT3ProjectFile } from "../lib/t3ProjectFileDefaults";
 import { appAtomRegistry } from "../rpc/atomRegistry";
 import { environmentSummaries } from "../state/presentation";
@@ -59,9 +59,9 @@ import { defaultProjectFallbackReadyAtom } from "../state/projects";
 import { useThreadRouteTarget } from "./useThreadRouteTarget";
 import { readUnloadedThreadCount } from "../state/olderSettledShelf";
 import { resolveProjectDefaultProviderModelSelection } from "../providerInstances";
-import { resolveNewThreadModelSelection } from "@t3tools/shared/usageLimits";
+import { resolveNewThreadModelSelection } from "@z9code/shared/usageLimits";
 
-export const LAST_USED_PROJECT_STORAGE_KEY = "t3code:last-used-project:v1";
+export const LAST_USED_PROJECT_STORAGE_KEY = "z9code:last-used-project:v1";
 export const lastUsedProjectKeySchema = Schema.NullOr(Schema.String);
 
 export function readLastUsedProjectKey(): string | null {
@@ -234,7 +234,7 @@ export function createNewThreadHandler(router: AnyRouter) {
           currentRouteTarget?.kind === "draft" ? currentRouteTarget.draftId : null,
         destinationDraftId,
       });
-    const envModeFor = (projectFile: T3ProjectFile | null): DraftThreadEnvMode =>
+    const envModeFor = (projectFile: Z9ProjectFile | null): DraftThreadEnvMode =>
       resolveNewThreadEnvMode({
         projectSettings: resolveProjectSettings(
           targetServerSettings,

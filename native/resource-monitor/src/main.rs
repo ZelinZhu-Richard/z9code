@@ -508,6 +508,26 @@ impl Collector {
         } else {
             None
         };
+        // Without the two-stage refresh, discovery reads no command lines, so only the tracked
+        // processes have theirs read here, never every process on the machine.
+        let command_details = if !TWO_STAGE_PROCESS_REFRESH && !tracked.is_empty() {
+            let pids = tracked
+                .iter()
+                .copied()
+                .map(Pid::from_u32)
+                .collect::<Vec<_>>();
+            let mut commands = System::new();
+            commands.refresh_processes_specifics(
+                ProcessesToUpdate::Some(&pids),
+                true,
+                ProcessRefreshKind::nothing()
+                    .with_cmd(UpdateKind::Always)
+                    .without_tasks(),
+            );
+            Some(commands)
+        } else {
+            None
+        };
         let sample_details = process_details
             .as_ref()
             .map_or(&self.system, |(details, _)| details);
@@ -527,15 +547,20 @@ impl Collector {
                     return None;
                 }
                 let disk_usage = details.disk_usage();
-                let command = if details.cmd().is_empty() {
+                let command_process = command_details
+                    .as_ref()
+                    .and_then(|commands| commands.process(Pid::from_u32(pid)))
+                    .unwrap_or(details);
+                let command = if command_process.cmd().is_empty() {
                     process.name().to_string_lossy().into_owned()
                 } else {
-                    details
-                        .cmd()
-                        .iter()
-                        .map(|part| part.to_string_lossy())
-                        .collect::<Vec<_>>()
-                        .join(" ")
+                    redact_command_parts(
+                        command_process
+                            .cmd()
+                            .iter()
+                            .map(|part| part.to_string_lossy().into_owned())
+                            .collect(),
+                    )
                 };
 
                 Some(ProcessSample {
@@ -563,6 +588,7 @@ impl Collector {
             })
             .collect::<Vec<_>>();
         drop(process_details);
+        drop(command_details);
         processes.sort_by_key(|process| process.pid);
         self.sequence = self.sequence.saturating_add(1);
 
@@ -590,8 +616,85 @@ fn process_discovery_refresh_kind() -> ProcessRefreshKind {
     if TWO_STAGE_PROCESS_REFRESH {
         ProcessRefreshKind::nothing().with_cpu().without_tasks()
     } else {
-        process_refresh_kind()
+        process_refresh_kind().with_cmd(UpdateKind::Never)
     }
+}
+
+const REDACTED: &str = "[REDACTED]";
+
+fn is_secret_name(name: &str) -> bool {
+    let name = name
+        .trim_start_matches('-')
+        .to_ascii_lowercase()
+        .replace('-', "_");
+    [
+        "token",
+        "secret",
+        "password",
+        "passwd",
+        "pwd",
+        "apikey",
+        "api_key",
+        "auth",
+        "credential",
+        "private_key",
+        "access_key",
+        "session",
+    ]
+    .iter()
+    .any(|marker| name.contains(marker))
+        || name.ends_with("_key")
+        || name == "key"
+}
+
+fn redact_url_userinfo(part: &str) -> Option<String> {
+    let scheme_end = part.find("://")? + 3;
+    let rest = &part[scheme_end..];
+    let at = rest.find('@')?;
+    let authority_end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    if at > authority_end || !rest[..at].contains(':') {
+        return None;
+    }
+    Some(format!(
+        "{}{}@{}",
+        &part[..scheme_end],
+        REDACTED,
+        &rest[at + 1..]
+    ))
+}
+
+/// Command lines can carry API keys, passwords and bearer tokens; their values never leave
+/// this process.
+fn redact_command_parts(parts: Vec<String>) -> String {
+    let mut redacted = Vec::with_capacity(parts.len());
+    let mut redact_next = false;
+    for part in parts {
+        if redact_next {
+            redact_next = false;
+            redacted.push(REDACTED.to_string());
+            continue;
+        }
+        if let Some((name, _)) = part.split_once('=')
+            && !name.is_empty()
+            && !name.contains('/')
+            && is_secret_name(name)
+        {
+            redacted.push(format!("{name}={REDACTED}"));
+            continue;
+        }
+        if part.starts_with('-') && !part.contains('=') && is_secret_name(&part) {
+            redact_next = true;
+            redacted.push(part);
+            continue;
+        }
+        if part.eq_ignore_ascii_case("bearer") || part.eq_ignore_ascii_case("basic") {
+            redact_next = true;
+            redacted.push(part);
+            continue;
+        }
+        redacted.push(redact_url_userinfo(&part).unwrap_or(part));
+    }
+    redacted.join(" ")
 }
 
 fn process_refresh_kind() -> ProcessRefreshKind {
@@ -1455,6 +1558,47 @@ mod tests {
         assert_eq!(own.ppid, expected.parent().map(Pid::as_u32).unwrap_or(0));
         assert_eq!(own.name, expected.name().to_string_lossy());
         assert!(table.windows(2).all(|pair| pair[0].pid < pair[1].pid));
+    }
+
+    #[test]
+    fn redacts_secrets_from_command_lines() {
+        let parts = [
+            "node",
+            "server.js",
+            "--api-key",
+            "sk-live-123",
+            "--token=ghp_abc",
+            "OPENAI_API_KEY=sk-proj-1",
+            "DB_PASSWORD=hunter2",
+            "-H",
+            "Authorization: Bearer",
+            "Bearer",
+            "eyJhbGci",
+            "https://user:pass@example.com/repo.git",
+            "--port=3000",
+            "src/key.ts",
+        ]
+        .map(String::from)
+        .to_vec();
+        let command = redact_command_parts(parts);
+        for secret in [
+            "sk-live-123",
+            "ghp_abc",
+            "sk-proj-1",
+            "hunter2",
+            "eyJhbGci",
+            "user:pass",
+        ] {
+            assert!(!command.contains(secret), "{secret} leaked in {command}");
+        }
+        assert!(command.contains("--port=3000"));
+        assert!(command.contains("src/key.ts"));
+        assert!(command.contains("https://[REDACTED]@example.com/repo.git"));
+    }
+
+    #[test]
+    fn discovery_never_reads_command_lines() {
+        assert_eq!(process_discovery_refresh_kind().cmd(), UpdateKind::Never);
     }
 
     #[test]

@@ -10,7 +10,7 @@ import {
   PREVIEW_STREAM_HOST_SETUP_CLOSE_CODE,
   PreviewStreamHostSetup,
   type AuthEnvironmentScope,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -401,13 +401,13 @@ const decodeHostSetup = Schema.decodeUnknownEffect(Schema.fromJsonString(Preview
 it.effect.each([
   {
     error: new PreviewBrowserHost.PreviewBrowserSandboxError({
-      setupCommand: "sudo t3 browser setup",
+      setupCommand: "sudo z9 browser setup",
     }),
     need: "sandbox",
   },
   {
     error: new PreviewBrowserHost.PreviewBrowserLibrariesError({
-      setupCommand: "sudo t3 browser setup",
+      setupCommand: "sudo z9 browser setup",
       libraries: ["libnss3.so"],
     }),
     need: "libraries",
@@ -452,7 +452,7 @@ it.effect.each([
     expect(code).toBe(PREVIEW_STREAM_HOST_SETUP_CLOSE_CODE);
     expect(yield* decodeHostSetup(reason)).toEqual({
       need,
-      command: "sudo t3 browser setup",
+      command: "sudo z9 browser setup",
     });
   }),
 );

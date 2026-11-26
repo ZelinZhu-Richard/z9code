@@ -1,24 +1,24 @@
 import type {
   ThreadPendingApproval,
   ThreadPendingUserInput,
-} from "@t3tools/client-runtime/state/thread-requests";
-import { linkRequestTargetName } from "@t3tools/client-runtime/link-request";
-import { turnItemIsWorkspacePreparation } from "@t3tools/client-runtime/state/turn-item-presentation";
-import { formatSubagentDisplayTitle } from "@t3tools/client-runtime/state/subagent-display";
+} from "@z9code/client-runtime/state/thread-requests";
+import { linkRequestTargetName } from "@z9code/client-runtime/link-request";
+import { turnItemIsWorkspacePreparation } from "@z9code/client-runtime/state/turn-item-presentation";
+import { formatSubagentDisplayTitle } from "@z9code/client-runtime/state/subagent-display";
 import {
   isLiveSubagentTurnItem,
   waitingOnSubagentsLabel,
-} from "@t3tools/client-runtime/state/subagentRuntime";
-import { extractToolActivityPresentation } from "@t3tools/client-runtime/work-log/tool-presentation";
+} from "@z9code/client-runtime/state/subagentRuntime";
+import { extractToolActivityPresentation } from "@z9code/client-runtime/work-log/tool-presentation";
 import {
   turnItemDetailRevision,
   turnItemHasDetail,
   turnItemNeedsDetailFetch,
-} from "@t3tools/client-runtime/work-log/item-detail";
+} from "@z9code/client-runtime/work-log/item-detail";
 import {
   commandDisplayText,
   commandProgramName,
-} from "@t3tools/client-runtime/work-log/command-label";
+} from "@z9code/client-runtime/work-log/command-label";
 import {
   commandlessCommandLabel,
   contextCompactionLabel,
@@ -35,14 +35,14 @@ import {
   type WorkLogPresentationEntry,
   type WorkLogToolLifecycleStatus,
   workEntryHiddenByToolCallVisibility,
-} from "@t3tools/client-runtime/work-log/presentation";
-import type { ToolCallVisibility } from "@t3tools/contracts/settings";
+} from "@z9code/client-runtime/work-log/presentation";
+import type { ToolCallVisibility } from "@z9code/contracts/settings";
 import {
   resolveT3McpToolDefinition,
-  type T3McpToolLogo,
-  type T3McpToolPresentation,
-} from "@t3tools/shared/t3McpToolPresentation";
-import { resolveT3McpToolPresentation } from "@t3tools/shared/t3McpToolPresentationCopy";
+  type Z9McpToolLogo,
+  type Z9McpToolPresentation,
+} from "@z9code/shared/t3McpToolPresentation";
+import { resolveT3McpToolPresentation } from "@z9code/shared/t3McpToolPresentationCopy";
 import type {
   ChatAttachment,
   MessageId,
@@ -58,36 +58,36 @@ import type {
   RunAttemptId,
   ScheduledTaskId,
   TurnItemId,
-} from "@t3tools/contracts";
-import { idleCompactionOf, isCompactionCommandMessage, RunId, ThreadId } from "@t3tools/contracts";
+} from "@z9code/contracts";
+import { idleCompactionOf, isCompactionCommandMessage, RunId, ThreadId } from "@z9code/contracts";
 import {
   classifyToolActivity,
   collectToolFilePaths,
   isJavaScriptReplTool,
-} from "@t3tools/shared/toolActivity";
+} from "@z9code/shared/toolActivity";
 import {
   dynamicToolTitle,
   formatReadToolLabel,
   formatSearchToolLabel,
-} from "@t3tools/shared/toolActivityCopy";
-import { claudeResumeCompactionAge } from "@t3tools/shared/claudeCompaction";
-import { formatDuration } from "@t3tools/shared/orchestrationTimingCopy";
-import { truncate } from "@t3tools/shared/String";
-import type { HtmlRenderReference } from "@t3tools/shared/htmlRender";
-import type { McpAppReference } from "@t3tools/shared/mcpApp";
+} from "@z9code/shared/toolActivityCopy";
+import { claudeResumeCompactionAge } from "@z9code/shared/claudeCompaction";
+import { formatDuration } from "@z9code/shared/orchestrationTimingCopy";
+import { truncate } from "@z9code/shared/String";
+import type { HtmlRenderReference } from "@z9code/shared/htmlRender";
+import type { McpAppReference } from "@z9code/shared/mcpApp";
 import {
   compactDynamicToolOutput,
   htmlRenderFromToolItem,
   sentMessageFromToolItem,
   mcpAppFromToolItem,
-} from "@t3tools/shared/toolOutput";
+} from "@z9code/shared/toolOutput";
 import * as DateTime from "effect/DateTime";
 import { msg } from "gt-react-native";
 import { m, type MessageResolver } from "../i18n/messages";
 import {
   IDLE_COMPACTION_TITLES,
   IDLE_COMPACTING_LABELS,
-} from "@t3tools/client-runtime/user-message";
+} from "@z9code/client-runtime/user-message";
 
 export type PendingApproval = ThreadPendingApproval;
 export type PendingUserInput = ThreadPendingUserInput;
@@ -122,7 +122,7 @@ export interface ThreadFeedActivity {
     | "warning"
     | "wrench"
     | "zap";
-  readonly logo: T3McpToolLogo | null;
+  readonly logo: Z9McpToolLogo | null;
   readonly toolLike: boolean;
   readonly prominent: boolean;
   readonly status: "success" | "failure" | "neutral" | null;
@@ -136,7 +136,7 @@ export interface ThreadFeedActivity {
 }
 
 export interface ThreadFeedMessage {
-  readonly context?: import("@t3tools/contracts").OrchestrationMessageContext | undefined;
+  readonly context?: import("@z9code/contracts").OrchestrationMessageContext | undefined;
   readonly id: MessageId;
   readonly role: "user" | "assistant";
   readonly text: string;
@@ -148,8 +148,8 @@ export interface ThreadFeedMessage {
   readonly creationSource?: OrchestrationV2CreationSource;
   readonly scheduledTaskId?: ScheduledTaskId;
   readonly senderThreadId?: ThreadId;
-  readonly linkedSender?: import("@t3tools/contracts").OrchestrationV2LinkedSender;
-  readonly idleCompaction?: import("@t3tools/contracts").OrchestrationV2IdleCompaction;
+  readonly linkedSender?: import("@z9code/contracts").OrchestrationV2LinkedSender;
+  readonly idleCompaction?: import("@z9code/contracts").OrchestrationV2IdleCompaction;
   readonly visibility: OrchestrationV2ProjectedTurnItem["visibility"];
   readonly sourceThreadId: ThreadId;
   readonly createdAt: string;
@@ -233,7 +233,7 @@ type ThreadFeedEntryContent =
       readonly summaryKind: ToolGroupSummaryKind;
       readonly toolSurface?: WorkLogPresentationEntry["toolSurface"];
       readonly toolIcon?: WorkLogPresentationEntry["toolIcon"];
-      readonly summaryToolIcon?: "browser" | "device" | "t3-code" | "pull-request";
+      readonly summaryToolIcon?: "browser" | "device" | "z9code" | "pull-request";
       readonly hasFailure: boolean;
       readonly live: boolean;
       readonly shimmer: boolean;
@@ -639,7 +639,7 @@ function itemIcon(item: OrchestrationV2TurnItem): ThreadFeedActivity["icon"] {
 function itemToolPresentation(
   item: OrchestrationV2TurnItem,
   resolve: MessageResolver,
-): T3McpToolPresentation | null {
+): Z9McpToolPresentation | null {
   if (item.type !== "dynamic_tool") {
     return null;
   }
@@ -651,7 +651,7 @@ function itemToolPresentation(
 
 function itemSummary(
   item: OrchestrationV2TurnItem,
-  toolPresentation: T3McpToolPresentation | null,
+  toolPresentation: Z9McpToolPresentation | null,
   resolve: MessageResolver,
 ): string {
   if (item.type === "notification") return item.summary;
@@ -706,7 +706,7 @@ function itemSummary(
     case "secret_request":
       return item.label;
     case "feedback_request":
-      return resolve(msg("Feedback for the T3 team"));
+      return resolve(msg("Feedback for the z9code team"));
     case "link_request":
       return resolve(msg("Link {target}", { target: linkRequestTargetName(item, resolve) }));
     case "dynamic_tool": {

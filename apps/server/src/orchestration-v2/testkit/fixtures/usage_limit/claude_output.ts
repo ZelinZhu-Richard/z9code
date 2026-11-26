@@ -1,11 +1,11 @@
 import { assert } from "@effect/vitest";
-import type { ProviderReplayTranscript } from "@t3tools/contracts";
+import type { ProviderReplayTranscript } from "@z9code/contracts";
 
 import type { OrchestratorV2ScenarioResult } from "../../OrchestratorScenario.ts";
 import { assertBaseProjection, projectionFor } from "../shared.ts";
 
-/** The usage-limit failure Claude reports through a CLIProxyAPI hub with every account spent. */
-export function claudeUsageLimitFailure(
+/** The usage-limit failure Claude reports through a credential-pooling gateway with every account spent. */
+function claudeUsageLimitFailure(
   result: OrchestratorV2ScenarioResult,
   transcript: ProviderReplayTranscript,
 ) {
@@ -23,6 +23,6 @@ export function assertClaudeUsageLimitOutput(
   result: OrchestratorV2ScenarioResult,
   transcript: ProviderReplayTranscript,
 ) {
-  // The hub drops the upstream rate-limit headers, so the CLI reports no reset time.
+  // The gateway drops the upstream rate-limit headers, so the CLI reports no reset time.
   assert.isNull(claudeUsageLimitFailure(result, transcript).resetAt);
 }

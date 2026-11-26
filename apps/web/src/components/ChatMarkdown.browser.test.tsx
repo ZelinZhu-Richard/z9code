@@ -1,5 +1,5 @@
-import { MISSING_FILE_ACCESS_MESSAGE } from "@t3tools/client-runtime/state/assets";
-import { EnvironmentId, ThreadId } from "@t3tools/contracts";
+import { MISSING_FILE_ACCESS_MESSAGE } from "@z9code/client-runtime/state/assets";
+import { EnvironmentId, ThreadId } from "@z9code/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { type ReactElement } from "react";
 import { describe, expect, it, vi } from "vite-plus/test";
@@ -15,7 +15,7 @@ import {
   useRightPanelStore,
 } from "../rightPanelStore";
 import type { MarkdownExtensions } from "../markdown/wordsHast";
-import { setMarkdownTaskChecked } from "@t3tools/shared/markdownTaskEdits";
+import { setMarkdownTaskChecked } from "@z9code/shared/markdownTaskEdits";
 import { HostImageUrlContext } from "./chat/hostImageUrl";
 import { getSyntaxHighlighterPromise } from "~/lib/syntaxHighlighting";
 
@@ -79,7 +79,7 @@ vi.mock(import("../state/server"), async (original) => {
   };
 });
 vi.mock(import("../state/session"), async (original) => {
-  const { AuthStandardClientScopes } = await import("@t3tools/contracts");
+  const { AuthStandardClientScopes } = await import("@z9code/contracts");
   const granted = new Set<string>(AuthStandardClientScopes);
   const hasScope = (environmentId: unknown, scope: string) =>
     environmentId !== null && granted.has(scope);
@@ -369,23 +369,22 @@ it("highlights a code block's own source when an earlier block of the same lengt
 });
 
 describe("ChatMarkdown favicon privacy", () => {
-  it("suppresses private link images while preserving public links across updates", async () => {
+  it("never requests a favicon for any link, public or private", async () => {
     setup();
     const markdown = (url: string) => <ChatMarkdown cwd="/tmp/project" text={`[Link](${url})`} />;
     await using screen = await render(markdown("https://example.com"));
     const { container, rerender } = screen;
-    expect([...container.querySelectorAll("img")].map((image) => image.src)).toEqual([
-      "https://www.google.com/s2/favicons?domain=example.com&sz=32",
-    ]);
-    for (const url of ["http://192.168.1.10:8080", "http://localhost:3000", "http://home.arpa"]) {
-      await rerender(markdown(url));
-      expect(container.querySelectorAll("img")).toHaveLength(0);
-    }
-    await rerender(markdown("https://example.com"));
-    expect(container.querySelectorAll("img")).toHaveLength(1);
-    await rerender(markdown("https://github.com/pingdotgg/t3code/pull/1"));
     expect(container.querySelectorAll("img")).toHaveLength(0);
     expect(container.querySelector("a svg")).not.toBeNull();
+    for (const url of [
+      "http://192.168.1.10:8080",
+      "http://localhost:3000",
+      "https://github.com/acme/app/pull/1",
+    ]) {
+      await rerender(markdown(url));
+      expect(container.querySelectorAll("img")).toHaveLength(0);
+      expect(container.querySelector("a svg")).not.toBeNull();
+    }
   });
 });
 

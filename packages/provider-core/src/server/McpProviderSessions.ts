@@ -1,9 +1,9 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Pure synchronous hashing keeps page matching bounded without a runtime dependency.
 import * as NodeCrypto from "node:crypto";
-import type { ThreadId } from "@t3tools/contracts";
-import type { HtmlRenderReference } from "@t3tools/shared/htmlRender";
-import { stableStringify } from "@t3tools/shared/relaySigning";
-import { resolveT3McpToolId } from "@t3tools/shared/t3McpToolPresentation";
+import type { ThreadId } from "@z9code/contracts";
+import type { HtmlRenderReference } from "@z9code/shared/htmlRender";
+import { stableStringify } from "@z9code/shared/relaySigning";
+import { resolveT3McpToolId } from "@z9code/shared/t3McpToolPresentation";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -16,7 +16,7 @@ import type { McpProviderSessionConfig } from "./mcpSession.ts";
 const MAX_KEPT_HTML_RENDERS = 64;
 const MAX_KEPT_TOOL_RESULTS = 64;
 
-// Antigravity truncates long HTML arguments to a marked tail of at most 8,000 characters.
+// Some agents truncate long HTML arguments to a marked tail of at most 8,000 characters.
 const BOUNDED_TEXT_MARKER = "[Earlier output truncated]\n\n";
 const KEPT_HTML_END_LENGTH = 8_000;
 
@@ -93,7 +93,7 @@ export class McpProviderSessions extends Context.Service<
     ) => Effect.Effect<Record<string, unknown> | undefined>;
     readonly clearToolResults: (threadId: ThreadId) => Effect.Effect<void>;
   }
->()("@t3tools/provider-core/server/McpProviderSessions") {}
+>()("@z9code/provider-core/server/McpProviderSessions") {}
 
 interface PageInput {
   readonly html?: unknown;

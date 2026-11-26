@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { DESKTOP_UPDATE_IN_PROGRESS_TTL_MS } from "@t3tools/contracts";
+import { DESKTOP_UPDATE_IN_PROGRESS_TTL_MS } from "@z9code/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -138,7 +138,7 @@ function layerPool(
           runningUnderArm64Translation: false,
         }).pipe(
           Layer.provide(
-            Layer.mergeAll(Path.layer, DesktopConfig.layerTest({ T3CODE_HOME: "/test-home" })),
+            Layer.mergeAll(Path.layer, DesktopConfig.layerTest({ Z9CODE_HOME: "/test-home" })),
           ),
           Layer.orDie,
         ),

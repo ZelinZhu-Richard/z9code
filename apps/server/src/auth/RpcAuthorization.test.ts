@@ -25,7 +25,7 @@ import {
   RunId,
   WS_METHODS,
   WsRpcGroup,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -400,7 +400,10 @@ it.effect("hands out a link code or a guest link only within what the session it
       ),
     ).toMatchObject({ requiredPermission: AuthOrchestrationReadScope });
     expect(
-      yield* manager[WS_METHODS.guestShareCreate]({ threadId }).pipe(Effect.flip),
+      yield* manager[WS_METHODS.guestShareCreate]({
+        threadId,
+        origin: "http://192.168.1.10:3773",
+      }).pipe(Effect.flip),
     ).toMatchObject({ requiredPermission: AuthOrchestrationReadScope });
 
     const supervisor = yield* clientWith([
@@ -420,7 +423,10 @@ it.effect("hands out a link code or a guest link only within what the session it
       (yield* supervisor[WS_METHODS.peerLinksPairLink]({ environmentId, access: "auto" })).type,
     ).toBe("unsupported");
     expect(handled).toBe(1);
-    yield* supervisor[WS_METHODS.guestShareCreate]({ threadId }).pipe(Effect.exit);
+    yield* supervisor[WS_METHODS.guestShareCreate]({
+      threadId,
+      origin: "http://192.168.1.10:3773",
+    }).pipe(Effect.exit);
     expect(handled).toBe(2);
   }).pipe(Effect.scoped),
 );
@@ -580,7 +586,7 @@ describe("settings mutation authorization", () => {
         ).toMatchObject({ requiredPermission: AuthProvidersManageScope });
         expect(
           yield* client[WS_METHODS.serverUpdateSettings]({
-            patch: { requireConnectDeviceApproval: false },
+            patch: { enablePreviewTunnel: false },
           }).pipe(Effect.flip),
         ).toMatchObject({ requiredPermission: AuthAccessWriteScope });
         // A reference names any secret the store holds, and the host entry names where it goes.

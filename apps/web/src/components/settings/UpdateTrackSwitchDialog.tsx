@@ -1,10 +1,10 @@
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
+import { thrownErrorMessage } from "@z9code/client-runtime/errors";
 import { m as resolveMessage } from "~/i18n/messages";
 import { useAtomValue } from "@effect/atom-react";
-import { settlePromise, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
-import type { DesktopUpdateChannel } from "@t3tools/contracts";
-import { acceptsTrackSwitchRelease, desktopUpdateChannelOf } from "@t3tools/shared/cliRelease";
-import { isMacPlatform } from "@t3tools/shared/keybindings";
+import { settlePromise, squashAtomCommandFailure } from "@z9code/client-runtime/state/runtime";
+import type { DesktopUpdateChannel } from "@z9code/contracts";
+import { acceptsTrackSwitchRelease, desktopUpdateChannelOf } from "@z9code/shared/cliRelease";
+import { isMacPlatform } from "@z9code/shared/keybindings";
 import { T, useGT, useMessages, Var } from "gt-react";
 import { useState } from "react";
 import { AsyncResult } from "effect/reactivity";
@@ -13,7 +13,7 @@ import { APP_VERSION } from "~/branding";
 import { isLocalEnvironmentDisabled } from "~/localEnvironment";
 import { useDesktopUpdateState } from "~/state/desktopUpdate";
 import { useEnvironments } from "~/state/environments";
-import { npmReleaseAtom, npmReleaseFailureMessage } from "~/state/npmRelease";
+import { cliReleaseAtom, cliReleaseFailureMessage } from "~/state/cliRelease";
 import { downloadLocalUpdate, installLocalUpdate } from "../sidebar/SidebarUpdatePill";
 import { UpdateEverythingDialog } from "../sidebar/UpdateEverythingDialog";
 import {
@@ -49,8 +49,7 @@ export function UpdateTrackSwitchDialog({
 }) {
   const gt = useGT();
   const m = useMessages();
-  // npm dist-tags match the desktop channel names.
-  const release = useAtomValue(npmReleaseAtom(channel));
+  const release = useAtomValue(cliReleaseAtom(channel));
   if (AsyncResult.isSuccess(release) && release.value !== null) {
     return <SwitchPlan release={{ channel, ...release.value }} onClose={onClose} />;
   }
@@ -66,14 +65,11 @@ export function UpdateTrackSwitchDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {AsyncResult.isFailure(release)
-              ? npmReleaseFailureMessage(release.cause, m)
+              ? cliReleaseFailureMessage(release.cause, m)
               : AsyncResult.isSuccess(release)
-                ? gt(
-                    "Could not find the latest {label} release in this environment's npm registry.",
-                    {
-                      label,
-                    },
-                  )
+                ? gt("Could not find the latest {label} release in z9code's GitHub releases.", {
+                    label,
+                  })
                 : gt("Checking releases…")}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -214,7 +210,7 @@ function SwitchPlan({
           ? [gt("This app's updates are off here, so reinstall it yourself to switch.")]
           : []),
         ...(switchesLocal && isMacPlatform(navigator.platform)
-          ? [gt("If T3 Code does not reopen after it restarts, open it again.")]
+          ? [gt("If z9code does not reopen after it restarts, open it again.")]
           : []),
       ]}
       restarts={everything.restarts}

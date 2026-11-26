@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // The app command of e2e.config.ts: starts the dev stack of the checkout it runs in on a fresh
-// T3 home. e2e stops it with a signal, which ends the scope and the processes it started.
+// z9code home. e2e stops it with a signal, which ends the scope and the processes it started.
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NetService from "@t3tools/shared/Net";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import * as NetService from "@z9code/shared/Net";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -27,25 +27,16 @@ const REPLAY = { instanceId: "devReplay", model: "showcase" };
 // first enabled real provider, else its default, Codex. So every provider it could fall back to
 // is off and Codex is a command that only fails: no run reaches a paid model.
 // Mirror of TEXT_GENERATION_FALLBACK_DRIVERS in shared/serverSettings.
-const REAL_PROVIDERS = [
-  "codex",
-  "claudeAgent",
-  "cursor",
-  "grok",
-  "muse",
-  "pi",
-  "opencode",
-  "antigravity",
-];
+const REAL_PROVIDERS = ["codex", "claudeAgent", "cursor", "grok", "muse", "pi", "opencode"];
 
 /** Captures must not depend on, or show, the machine that made them. */
 /** Where a scenario serves a fake Linear API; nothing listens there unless one does. */
 export const SCENARIO_LINEAR_PORT = 13_997;
 
 export const SCENARIO_MACHINE_ENV = {
-  T3CODE_ENVIRONMENT_LABEL: "Scenario",
-  T3CODE_ENVIRONMENT_MACHINE_KIND: "laptop",
-  T3CODE_LINEAR_API_URL: `http://127.0.0.1:${SCENARIO_LINEAR_PORT}/graphql`,
+  Z9CODE_ENVIRONMENT_LABEL: "Scenario",
+  Z9CODE_ENVIRONMENT_MACHINE_KIND: "laptop",
+  Z9CODE_LINEAR_API_URL: `http://127.0.0.1:${SCENARIO_LINEAR_PORT}/graphql`,
 };
 
 const encodeSettings = Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown));
@@ -129,7 +120,7 @@ const startApp = Effect.fn("startApp")(function* (input: {
   const env = {
     ...hostEnvironment,
     PATH: `${path.join(input.home, "bin")}:${hostEnvironment.PATH ?? ""}`,
-    T3CODE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
+    Z9CODE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
     ...SCENARIO_MACHINE_ENV,
   };
   const devRunner = (mode: string, args: ReadonlyArray<string>) => [
@@ -154,15 +145,15 @@ const startApp = Effect.fn("startApp")(function* (input: {
       mode: 0o600,
     });
     const ports = ["--port", serverPort, "--dev-url", origin];
-    const webEnv = { ...env, T3CODE_PORT_OFFSET: String(Number(webPort) - BASE_WEB_PORT) };
+    const webEnv = { ...env, Z9CODE_PORT_OFFSET: String(Number(webPort) - BASE_WEB_PORT) };
     const server = yield* start({
       cwd: checkout,
       command: node,
       args: devRunner("dev:server", ports),
       env: {
         ...webEnv,
-        T3CODE_DEV_ALLOWED_ORIGINS: origin,
-        T3CODE_DEV_AUTH_TOKEN: credential,
+        Z9CODE_DEV_ALLOWED_ORIGINS: origin,
+        Z9CODE_DEV_AUTH_TOKEN: credential,
       },
       onLine: (line) => (line.includes("pairingUrl:") ? Effect.void : Console.log(line)),
     });
@@ -214,7 +205,7 @@ const startApp = Effect.fn("startApp")(function* (input: {
   const metro = yield* start({
     cwd: path.join(checkout, "apps/mobile"),
     command: "npx",
-    args: ["expo", "start", "--dev-client", "--scheme", "t3code-dev", "--lan", "--port", metroPort],
+    args: ["expo", "start", "--dev-client", "--scheme", "z9code-dev", "--lan", "--port", metroPort],
     env: {
       ...env,
       APP_VARIANT: "development",
@@ -236,7 +227,7 @@ const command = Command.make(
         "web: server and Vite. mobile: server on every interface and Metro.",
       ),
     ),
-    home: Argument.String("t3-home").pipe(Argument.withDescription("T3 home to recreate.")),
+    home: Argument.String("t3-home").pipe(Argument.withDescription("z9code home to recreate.")),
     ports: Argument.String("port").pipe(
       Argument.withDescription(
         "web: <host> <web-port>. mobile: <server-port> <metro-port> <host>.",

@@ -9,12 +9,12 @@ import {
 describe("buildRuntimeInstructions", () => {
   it("leaves PR linking to a session that already carries it, and keeps runtime identity", () => {
     const instructions = buildRuntimeInstructions({
-      harness: "Antigravity",
+      harness: "Gemini CLI",
       model: "gemini-3.8-flash",
       pullRequestLinking: false,
     });
 
-    assert.include(instructions, "through the Antigravity harness, as gemini-3.8-flash.");
+    assert.include(instructions, "through the Gemini CLI harness, as gemini-3.8-flash.");
     assert.notInclude(instructions, "<pull_request_linking>");
   });
 
@@ -59,10 +59,10 @@ describe("buildRuntimeInstructions", () => {
   });
 
   it("carries the feedback line of the agent feedback mode, and none while it is off", () => {
-    assert.notInclude(buildRuntimeInstructions({ harness: "Codex" }), "t3_feedback");
+    assert.notInclude(buildRuntimeInstructions({ harness: "Codex" }), "z9_feedback");
     assert.notInclude(
       buildRuntimeInstructions({ harness: "Codex", agentFeedback: "off" }),
-      "t3_feedback",
+      "z9_feedback",
     );
     for (const agentFeedback of ["on-request", "auto"] as const) {
       for (const pullRequestLinking of [true, false]) {

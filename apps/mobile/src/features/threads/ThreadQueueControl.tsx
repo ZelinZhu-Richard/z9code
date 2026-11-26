@@ -1,17 +1,17 @@
 import { type StaticScreenProps, useNavigation } from "@react-navigation/native";
-import { errorDisplayMessage } from "@t3tools/client-runtime/errors";
+import { errorDisplayMessage } from "@z9code/client-runtime/errors";
 import { useAtomValue } from "@effect/atom-react";
 import {
   makeQueuedRunsAtom,
   queuedRunEditBlockedReason,
-} from "@t3tools/client-runtime/queued-run-edit";
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
+} from "@z9code/client-runtime/queued-run-edit";
+import { scopeThreadRef } from "@z9code/client-runtime/environment";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@t3tools/client-runtime/state/runtime";
-import { resolveUserMessagePresentation } from "@t3tools/client-runtime/user-message";
-import type { ChatAttachment, EnvironmentId, RunId, ThreadId } from "@t3tools/contracts";
+} from "@z9code/client-runtime/state/runtime";
+import { resolveUserMessagePresentation } from "@z9code/client-runtime/user-message";
+import type { ChatAttachment, EnvironmentId, RunId, ThreadId } from "@z9code/contracts";
 import { Atom } from "effect/reactivity";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
@@ -103,8 +103,8 @@ function QueuedRunSender(props: {
             icon: "bubble.left.and.bubble.right" as const,
             label: senderShell?.title.trim() || linkedSender?.title.trim() || gt("Agent"),
           }
-        : attribution === "t3code"
-          ? { icon: null, label: gt("Sent by T3 Code") }
+        : attribution === "z9code"
+          ? { icon: null, label: gt("Sent by z9code") }
           : null;
   if (sender === null) return null;
   return (
@@ -159,7 +159,7 @@ export function ThreadQueueSheet({ route }: StaticScreenProps<QueueTarget>) {
   const queuedRuns = workflow?.queuedRuns ?? [];
 
   const hadQueuedRuns = useRef(queuedRuns.length > 0);
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- pops the navigator once the server-side queue empties after it had runs
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- pops the navigator once the server-side queue empties after it had runs
   useEffect(() => {
     if (queuedRuns.length > 0) {
       hadQueuedRuns.current = true;

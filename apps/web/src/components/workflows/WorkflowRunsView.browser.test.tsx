@@ -6,7 +6,7 @@ import {
   type WorkflowRunReference,
   type WorkflowRunsSnapshot,
   type WorkflowStep,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { page as browserPage, userEvent } from "vite-plus/test/browser";
 
@@ -475,7 +475,7 @@ describe("WorkflowRunsView", () => {
     await expect.element(runs).toMatchTextContent("Has not run yet.");
   });
 
-  const KIND_KEY = "t3code:workflows:question-kind";
+  const KIND_KEY = "z9code:workflows:question-kind";
   const asked = (runId: string, kind?: string): WorkflowQuestion => ({
     ...question,
     runId,

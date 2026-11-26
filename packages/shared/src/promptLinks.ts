@@ -1,4 +1,3 @@
-import { DEFAULT_HOSTED_APP_URL } from "./connectAuth.ts";
 import { parseUrl } from "./url.ts";
 
 export const PROMPT_LINK_MAX_PROMPT_LENGTH = 8_000;
@@ -112,15 +111,15 @@ export type PromptLinkError =
 function englishPromptLinkError(error: PromptLinkError): string {
   switch (error) {
     case "prompt-too-long":
-      return `This prompt is longer than ${PROMPT_LINK_MAX_PROMPT_LENGTH.toLocaleString("en-US")} characters, so T3 Code did not open it.`;
+      return `This prompt is longer than ${PROMPT_LINK_MAX_PROMPT_LENGTH.toLocaleString("en-US")} characters, so z9code did not open it.`;
     case "prompt-only-hidden":
-      return "This prompt had only hidden characters, so it may be malicious. T3 Code did not open it.";
+      return "This prompt had only hidden characters, so it may be malicious. z9code did not open it.";
     case "unreadable-pull-request":
-      return "This link names a pull request T3 Code cannot read.";
+      return "This link names a pull request z9code cannot read.";
     case "missing-prompt":
       return "This link has no prompt.";
     case "unreadable-repository":
-      return "This link names a repository T3 Code cannot read.";
+      return "This link names a repository z9code cannot read.";
   }
 }
 
@@ -194,9 +193,10 @@ export function buildNewThreadLink(input: {
   readonly repository?: PromptLinkRepository | null;
   readonly provider?: string | null;
   readonly model?: string | null;
+  /** A web app origin; without one, the link opens the installed app. */
   readonly origin?: string;
 }): string {
-  const url = new URL("/new", input.origin ?? DEFAULT_HOSTED_APP_URL);
+  const url = input.origin === undefined ? new URL("z9code://new") : new URL("/new", input.origin);
   url.searchParams.set("prompt", input.prompt);
   if (input.repository) {
     url.searchParams.set("repo", `${input.repository.owner}/${input.repository.name}`);
@@ -206,13 +206,11 @@ export function buildNewThreadLink(input: {
   return url.toString();
 }
 
-const APP_SCHEME = /^t3code(?:-[a-z]+)?:$/;
+const APP_SCHEME = /^z9code(?:-[a-z]+)?:$/;
 const THREAD_PATH = /^\/([^/]+)\/([^/]+)\/?$/;
 
-export function promptLinkAppPath(
-  value: string,
-  hostedAppUrl: string = DEFAULT_HOSTED_APP_URL,
-): string | null {
+/** `webAppUrl` is a web app origin whose own `/new` and thread links count too. */
+export function promptLinkAppPath(value: string, webAppUrl?: string): string | null {
   const url = parseUrl(value);
   if (!url) return null;
   if (APP_SCHEME.test(url.protocol)) {
@@ -222,7 +220,7 @@ export function promptLinkAppPath(
     const thread = url.host === "threads" ? THREAD_PATH.exec(url.pathname) : null;
     return thread ? `/${thread[1]}/${thread[2]}${url.search}` : null;
   }
-  if (url.origin !== parseUrl(hostedAppUrl)?.origin) return null;
+  if (webAppUrl === undefined || url.origin !== parseUrl(webAppUrl)?.origin) return null;
   if (url.pathname === "/new") return `/new${url.search}`;
   // The web app's own thread route is a link only with a prompt, so reloading a tab never asks.
   const thread = url.pathname.startsWith("/threads/")
@@ -233,7 +231,7 @@ export function promptLinkAppPath(
   return thread ? `/${thread[1]}/${thread[2]}${url.search}` : null;
 }
 
-export function promptLinkDeepLink(appPath: string, scheme = "t3code"): string {
+export function promptLinkDeepLink(appPath: string, scheme = "z9code"): string {
   const url = new URL(appPath, "https://app.invalid");
   const host = url.pathname === "/new" ? "new" : `threads${url.pathname}`;
   return `${scheme}://${host}${url.search}`;

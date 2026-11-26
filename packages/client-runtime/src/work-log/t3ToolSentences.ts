@@ -1,20 +1,20 @@
 import { msg } from "gt-i18n";
 
 /**
- * Whole sentences for each T3 MCP tool row, keyed by the tool's labels from
- * `@t3tools/shared/t3McpToolPresentation`. Resolve with `{ status }`, and for
+ * Whole sentences for each z9code MCP tool row, keyed by the tool's labels from
+ * `@z9code/shared/t3McpToolPresentation`. Resolve with `{ status }`, and for
  * `changeRequest` also `{ changeRequest, number }`.
  */
-export interface T3ToolSentence {
+export interface Z9ToolSentence {
   readonly detail: string;
   readonly changeRequest?: string;
 }
 
-export function t3ToolSentence(labels: ReadonlyArray<string>): T3ToolSentence | undefined {
-  return T3_TOOL_SENTENCES.get(labels.join("\n"));
+export function t3ToolSentence(labels: ReadonlyArray<string>): Z9ToolSentence | undefined {
+  return Z9_TOOL_SENTENCES.get(labels.join("\n"));
 }
 
-const T3_TOOL_SENTENCES: ReadonlyMap<string, T3ToolSentence> = new Map<string, T3ToolSentence>([
+const Z9_TOOL_SENTENCES: ReadonlyMap<string, Z9ToolSentence> = new Map<string, Z9ToolSentence>([
   [
     "Link\nLinking\nLinked\na pull request",
     {
@@ -245,15 +245,15 @@ const T3_TOOL_SENTENCES: ReadonlyMap<string, T3ToolSentence> = new Map<string, T
     "Create\nCreating\nCreated\nT3 threads",
     {
       detail: msg(
-        "{status, select, inProgress {Creating T3 threads} completed {Created T3 threads} failed {Failed to create T3 threads} declined {Declined to create T3 threads} stopped {Stopped creating T3 threads} other {Creating T3 threads}}",
+        "{status, select, inProgress {Creating z9code threads} completed {Created z9code threads} failed {Failed to create z9code threads} declined {Declined to create z9code threads} stopped {Stopped creating z9code threads} other {Creating z9code threads}}",
       ),
     },
   ],
   [
-    "Start\nStarting\nStarted\na T3 thread",
+    "Start\nStarting\nStarted\na z9code thread",
     {
       detail: msg(
-        "{status, select, inProgress {Starting a T3 thread} completed {Started a T3 thread} failed {Failed to start a T3 thread} declined {Declined to start a T3 thread} stopped {Stopped starting a T3 thread} other {Starting a T3 thread}}",
+        "{status, select, inProgress {Starting a z9code thread} completed {Started a z9code thread} failed {Failed to start a z9code thread} declined {Declined to start a z9code thread} stopped {Stopped starting a z9code thread} other {Starting a z9code thread}}",
       ),
     },
   ],
@@ -261,31 +261,31 @@ const T3_TOOL_SENTENCES: ReadonlyMap<string, T3ToolSentence> = new Map<string, T
     "List\nListing\nListed\nT3 threads",
     {
       detail: msg(
-        "{status, select, inProgress {Listing T3 threads} completed {Listed T3 threads} failed {Failed to list T3 threads} declined {Declined to list T3 threads} stopped {Stopped listing T3 threads} other {Listing T3 threads}}",
+        "{status, select, inProgress {Listing z9code threads} completed {Listed z9code threads} failed {Failed to list z9code threads} declined {Declined to list z9code threads} stopped {Stopped listing z9code threads} other {Listing z9code threads}}",
       ),
     },
   ],
   [
-    "Read\nReading\nRead\na T3 thread",
+    "Read\nReading\nRead\na z9code thread",
     {
       detail: msg(
-        "{status, select, inProgress {Reading a T3 thread} completed {Read a T3 thread} failed {Failed to read a T3 thread} declined {Declined to read a T3 thread} stopped {Stopped reading a T3 thread} other {Reading a T3 thread}}",
+        "{status, select, inProgress {Reading a z9code thread} completed {Read a z9code thread} failed {Failed to read a z9code thread} declined {Declined to read a z9code thread} stopped {Stopped reading a z9code thread} other {Reading a z9code thread}}",
       ),
     },
   ],
   [
-    "Send\nSending\nSent\nto a T3 thread",
+    "Send\nSending\nSent\nto a z9code thread",
     {
       detail: msg(
-        "{status, select, inProgress {Sending to a T3 thread} completed {Sent to a T3 thread} failed {Failed to send to a T3 thread} declined {Declined to send to a T3 thread} stopped {Stopped sending to a T3 thread} other {Sending to a T3 thread}}",
+        "{status, select, inProgress {Sending to a z9code thread} completed {Sent to a z9code thread} failed {Failed to send to a z9code thread} declined {Declined to send to a z9code thread} stopped {Stopped sending to a z9code thread} other {Sending to a z9code thread}}",
       ),
     },
   ],
   [
-    "Wait\nWaiting\nWaited\nfor a T3 thread",
+    "Wait\nWaiting\nWaited\nfor a z9code thread",
     {
       detail: msg(
-        "{status, select, inProgress {Waiting for a T3 thread} completed {Waited for a T3 thread} failed {Failed to wait for a T3 thread} declined {Declined to wait for a T3 thread} stopped {Stopped waiting for a T3 thread} other {Waiting for a T3 thread}}",
+        "{status, select, inProgress {Waiting for a z9code thread} completed {Waited for a z9code thread} failed {Failed to wait for a z9code thread} declined {Declined to wait for a z9code thread} stopped {Stopped waiting for a z9code thread} other {Waiting for a z9code thread}}",
       ),
     },
   ],
@@ -306,10 +306,10 @@ const T3_TOOL_SENTENCES: ReadonlyMap<string, T3ToolSentence> = new Map<string, T
     },
   ],
   [
-    "Interrupt\nInterrupting\nRequested an interrupt of\na T3 thread",
+    "Interrupt\nInterrupting\nRequested an interrupt of\na z9code thread",
     {
       detail: msg(
-        "{status, select, inProgress {Interrupting a T3 thread} completed {Requested an interrupt of a T3 thread} failed {Failed to interrupt a T3 thread} declined {Declined to interrupt a T3 thread} stopped {Stopped interrupting a T3 thread} other {Interrupting a T3 thread}}",
+        "{status, select, inProgress {Interrupting a z9code thread} completed {Requested an interrupt of a z9code thread} failed {Failed to interrupt a z9code thread} declined {Declined to interrupt a z9code thread} stopped {Stopped interrupting a z9code thread} other {Interrupting a z9code thread}}",
       ),
     },
   ],
@@ -685,7 +685,7 @@ const T3_TOOL_SENTENCES: ReadonlyMap<string, T3ToolSentence> = new Map<string, T
     "Update\nUpdating\nUpdated\nT3 thread metadata",
     {
       detail: msg(
-        "{status, select, inProgress {Updating T3 thread metadata} completed {Updated T3 thread metadata} failed {Failed to update T3 thread metadata} declined {Declined to update T3 thread metadata} stopped {Stopped updating T3 thread metadata} other {Updating T3 thread metadata}}",
+        "{status, select, inProgress {Updating z9code thread metadata} completed {Updated z9code thread metadata} failed {Failed to update z9code thread metadata} declined {Declined to update z9code thread metadata} stopped {Stopped updating z9code thread metadata} other {Updating z9code thread metadata}}",
       ),
     },
   ],

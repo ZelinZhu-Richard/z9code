@@ -4,7 +4,7 @@ import {
   EnvironmentAuthInvalidError,
   type PullRequestDiffInput,
   type PullRequestDiffResult,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -14,7 +14,7 @@ import { HttpClient } from "effect/http";
 
 import * as RemoteEnvironmentAuthorization from "../authorization/service.ts";
 import type { PreparedConnection } from "../connection/model.ts";
-import * as ManagedRelay from "../relay/managedRelay.ts";
+import * as DpopSigner from "../dpop/signer.ts";
 import { type RemoteEnvironmentRequestError } from "../rpc/http.ts";
 import { executeAuthenticatedEnvironmentHttpRequest } from "./environmentHttpAuth.ts";
 
@@ -36,7 +36,7 @@ export class PullRequestDiffCredentialRejectedError extends Schema.TaggedError<P
   get i18nMessage(): MarkedText {
     return [
       msg(
-        "This environment session is no longer valid (invalid_credential). Refresh the page or quit and reopen T3 Code.",
+        "This environment session is no longer valid (invalid_credential). Refresh the page or quit and reopen z9code.",
       ),
     ];
   }
@@ -51,7 +51,7 @@ export const fetchEnvironmentPullRequestDiff = Effect.fn(
 )(function* (input: {
   readonly prepared: PreparedConnection;
   readonly diff: PullRequestDiffInput;
-  readonly signer: Option.Option<ManagedRelay.ManagedRelayDpopSigner["Service"]>;
+  readonly signer: Option.Option<DpopSigner.DpopSigner["Service"]>;
   readonly remoteAuthorization?: Option.Option<
     RemoteEnvironmentAuthorization.RemoteEnvironmentAuthorization["Service"]
   >;
@@ -86,13 +86,13 @@ export class PullRequestDiffLoader extends Context.Service<
       input: PullRequestDiffInput,
     ) => Effect.Effect<PullRequestDiffResult, PullRequestDiffLoadError>;
   }
->()("@t3tools/client-runtime/state/pullRequestDiffHttp/PullRequestDiffLoader") {}
+>()("@z9code/client-runtime/state/pullRequestDiffHttp/PullRequestDiffLoader") {}
 
 export const layer: Layer.Layer<PullRequestDiffLoader, never, HttpClient.HttpClient> = Layer.effect(
   PullRequestDiffLoader,
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
-    const signer = yield* Effect.serviceOption(ManagedRelay.ManagedRelayDpopSigner);
+    const signer = yield* Effect.serviceOption(DpopSigner.DpopSigner);
     const remoteAuthorization = yield* Effect.serviceOption(
       RemoteEnvironmentAuthorization.RemoteEnvironmentAuthorization,
     );

@@ -1,4 +1,4 @@
-import { EnvironmentId, ThreadId, ScheduledTaskId, type ScheduledTask } from "@t3tools/contracts";
+import { EnvironmentId, ThreadId, ScheduledTaskId, type ScheduledTask } from "@z9code/contracts";
 import { expect, it, vi } from "vite-plus/test";
 
 const state = vi.hoisted(() => ({ allowed: true, toggle: vi.fn(), run: vi.fn() }));

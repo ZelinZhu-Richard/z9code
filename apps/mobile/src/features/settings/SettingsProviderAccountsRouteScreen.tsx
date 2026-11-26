@@ -1,17 +1,17 @@
-import { errorDisplayMessage } from "@t3tools/client-runtime/errors";
+import { errorDisplayMessage } from "@z9code/client-runtime/errors";
 import { T, useGT, Var } from "gt-react-native";
 import * as Dialog from "../../components/ui/Dialog";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
   type AtomCommandResult,
-} from "@t3tools/client-runtime/state/runtime";
+} from "@z9code/client-runtime/state/runtime";
 import {
   AuthProvidersManageScope,
   isManagedDriverAllowed,
   type ProviderAuthResponse,
   type ServerProvider,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, TextInput, useWindowDimensions, View } from "react-native";
@@ -257,9 +257,6 @@ function ProviderAccount({
     !active && signedIn && (provider.auth.canLogout ?? provider.setup?.canAuthenticate);
   const showCallback =
     Boolean(url) && (interaction?.type === "browser" ? interaction.acceptsCallback : !interaction);
-  const usesCredentials =
-    provider.driver === "antigravity" &&
-    (provider.auth.type === "gemini-api-key" || provider.auth.type === "agent-platform");
   const status =
     active || state?.phase === "failed" || state?.phase === "cancelled"
       ? state.message
@@ -273,9 +270,7 @@ function ProviderAccount({
               ? gt("No in-app sign-in advertised. Follow the provider's docs to finish setup.")
               : !provider.installed
                 ? gt("Not installed")
-                : usesCredentials
-                  ? gt("Connect to load models")
-                  : gt("Not signed in");
+                : gt("Not signed in");
   // A provider with several sign-in methods picks one from a menu on the same control.
   const methodActions: MenuAction[] = methods.map((method) => ({
     id: `method:${method.id}`,
@@ -417,12 +412,8 @@ function ProviderAccount({
   ) : canSignIn && !signedIn ? (
     <ControlPill
       variant="primary"
-      label={usesCredentials ? gt("Connect") : gt("Sign in")}
-      accessibilityLabel={
-        usesCredentials
-          ? gt("Connect to {provider}", { provider: name })
-          : gt("Sign in to {provider}", { provider: name })
-      }
+      label={gt("Sign in")}
+      accessibilityLabel={gt("Sign in to {provider}", { provider: name })}
       disabled={signInDisabled}
       onPress={() => startSignIn()}
     />

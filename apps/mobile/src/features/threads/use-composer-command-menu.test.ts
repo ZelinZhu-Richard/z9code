@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@t3tools/contracts";
+import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@z9code/contracts";
 
 vi.mock("react-native", () => ({ Alert: { alert: vi.fn() } }));
 
@@ -70,8 +70,8 @@ describe("mobile slash commands", () => {
       atMessageStart: true,
       hasThread: true,
       selectedProviderStatus: {
-        driver: ProviderDriverKind.make("antigravity"),
-        slashCommands: [{ name: "plan", description: "Plan with Antigravity" }],
+        driver: ProviderDriverKind.make("kiro"),
+        slashCommands: [{ name: "plan", description: "Plan with Kiro" }],
       },
     });
 
@@ -88,7 +88,7 @@ describe("mobile slash commands", () => {
     ).toEqual({ text: "/plan ", cursor: 6 });
   });
 
-  it("offers T3's /clear in place of the provider's, only at the message start", () => {
+  it("offers z9code's /clear in place of the provider's, only at the message start", () => {
     const claude = {
       driver: ProviderDriverKind.make("claudeAgent"),
       slashCommands: [{ name: "clear", description: "Clear conversation history" }],

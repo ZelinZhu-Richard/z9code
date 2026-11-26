@@ -9,10 +9,17 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-import { awaitCliNotarization, signMacArchiveContents } from "./build-cli-archive.ts";
+import { CLI_RELEASE_MANIFEST_FILE, parseCliReleaseManifest } from "@z9code/shared/cliRelease";
+
+import {
+  awaitCliNotarization,
+  latestServerMigrationId,
+  signMacArchiveContents,
+  writeCliReleaseManifest,
+} from "./build-cli-archive.ts";
 
 const signedEnv = {
-  T3CODE_CLI_MAC_SIGN_IDENTITY: "Developer ID Application: Test (TEAM)",
+  Z9CODE_CLI_MAC_SIGN_IDENTITY: "Developer ID Application: Test (TEAM)",
   APPLE_API_KEY: "/tmp/AuthKey_TEST.p8",
   APPLE_API_KEY_ID: "TEST",
   APPLE_API_ISSUER: "issuer",
@@ -64,8 +71,8 @@ const makeContent = Effect.fn("test.makeContent")(function* () {
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "t3-cli-notary-" });
   const contentDir = path.join(root, "content");
   yield* fs.makeDirectory(contentDir);
-  const executablePath = path.join(contentDir, "t3");
-  yield* fs.writeFileString(executablePath, "t3");
+  const executablePath = path.join(contentDir, "z9");
+  yield* fs.writeFileString(executablePath, "z9");
   return { root, contentDir, executablePath, submissionFile: path.join(root, "submission") };
 });
 
@@ -166,7 +173,7 @@ it.layer(NodeServices.layer)("build-cli-archive notarization", (it) => {
         {
           name: "submission without credentials",
           wait: { exitCode: 0, stdout: '{"id":"sub","status":"Accepted"}' },
-          env: { T3CODE_CLI_MAC_SIGN_IDENTITY: signedEnv.T3CODE_CLI_MAC_SIGN_IDENTITY },
+          env: { Z9CODE_CLI_MAC_SIGN_IDENTITY: signedEnv.Z9CODE_CLI_MAC_SIGN_IDENTITY },
           error: "CliArchiveInputMissingError",
         },
         {
@@ -212,5 +219,26 @@ it.layer(NodeServices.layer)("build-cli-archive notarization", (it) => {
       assert.equal(error._tag, "CliArchiveNotarizationRejectedError");
       assert.isTrue(notarySubcommands(stub.calls)[0]?.includes("--wait"));
     }).pipe(Effect.scoped),
+  );
+});
+
+it.layer(NodeServices.layer)("build-cli-archive release manifest", (it) => {
+  it.effect("writes release.json with the newest server migration for the track switch check", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outputDir = path.join(
+        yield* fs.makeTempDirectoryScoped({ prefix: "t3-cli-manifest-" }),
+        "release-cli",
+      );
+      const manifestPath = yield* writeCliReleaseManifest({ version: "1.2.3", outputDir });
+      assert.equal(path.basename(manifestPath), CLI_RELEASE_MANIFEST_FILE);
+      const manifest = parseCliReleaseManifest(yield* fs.readFileString(manifestPath));
+      assert.deepStrictEqual(manifest, {
+        version: "1.2.3",
+        databaseMigration: yield* latestServerMigrationId(),
+      });
+      assert.isAbove(manifest?.databaseMigration ?? 0, 0);
+    }),
   );
 });

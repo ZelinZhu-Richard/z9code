@@ -1,4 +1,4 @@
-import { EnvironmentId, GuestShareId, ThreadId, type ThreadGuestShare } from "@t3tools/contracts";
+import { EnvironmentId, GuestShareId, ThreadId, type ThreadGuestShare } from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import { act, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
@@ -45,6 +45,12 @@ vi.mock("../../state/threads", () => ({
   },
 }));
 vi.mock("../../state/use-atom-command", () => ({ useAtomCommand: () => created.command }));
+vi.mock("../../state/session", async () => {
+  const Option = await import("effect/Option");
+  return {
+    usePreparedConnection: () => Option.some({ httpBaseUrl: "https://host.tailnet.ts.net" }),
+  };
+});
 vi.mock("./ThreadGuestShareBar", () => ({
   useThreadGuestShare: () =>
     created.share !== undefined

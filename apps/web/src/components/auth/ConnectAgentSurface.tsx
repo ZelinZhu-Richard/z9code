@@ -6,10 +6,10 @@ import {
   AuthMcpAuthorizationRequest,
   isRuntimeModeAbove,
   parseMcpApprovalCode,
-} from "@t3tools/contracts";
-import { managedRuntimeModeCeilingMessage } from "@t3tools/client-runtime/contract-labels";
+} from "@z9code/contracts";
+import { managedRuntimeModeCeilingMessage } from "@z9code/client-runtime/contract-labels";
 import { Radio as RadioPrimitive } from "@base-ui/react/radio";
-import { isLoopbackHost } from "@t3tools/shared/preview";
+import { isLoopbackHost } from "@z9code/shared/preview";
 import { EyeIcon, type LucideIcon } from "lucide-react";
 import type * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -120,7 +120,7 @@ const primaryTransport: McpApprovalTransport = {
 const decodeAuthorizationRequest = Schema.decodeSync(AuthMcpAuthorizationRequest);
 
 /** The agent's OAuth request from this page's query; other parameters are ignored. */
-export function readAuthorizationRequest(): AuthMcpAuthorizationRequest {
+function readAuthorizationRequest(): AuthMcpAuthorizationRequest {
   return decodeAuthorizationRequest(Object.fromEntries(new URL(window.location.href).searchParams));
 }
 
@@ -133,7 +133,7 @@ export function ConnectAgentSurface() {
  * The consent screen for one agent sign-in. `acceptsCode` shows the sign-in code field;
  * `requireLevelChoice` starts with no level picked; `footer` sits under the actions.
  */
-export function McpConsent({
+function McpConsent({
   authorization,
   transport,
   acceptsCode = false,
@@ -165,7 +165,7 @@ export function McpConsent({
   const [errorMessage, setErrorMessage] = useState("");
   const [pending, setPending] = useState<"approve" | "deny" | null>(null);
 
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- fetches the MCP OAuth approval and redirects the window or stores details, ignoring stale answers
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- fetches the MCP OAuth approval and redirects the window or stores details, ignoring stale answers
   useEffect(() => {
     let cancelled = false;
     void transport.load(authorization).then((answer) => {
@@ -187,7 +187,7 @@ export function McpConsent({
     };
   }, [authorization, transport]);
 
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- keeps Approve off briefly after the page shows or regains focus, so a click aimed at another window cannot land on it
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- keeps Approve off briefly after the page shows or regains focus, so a click aimed at another window cannot land on it
   useEffect(() => {
     if (loaded.status !== "ready") return;
     let timer = window.setTimeout(() => setArmed(true), ARM_DELAY_MS);
@@ -260,7 +260,7 @@ export function McpConsent({
     pending === null &&
     access !== null &&
     resolveApprovalDecision({ code: pairingCode, access, details }) !== null;
-  // A code from "Use T3 Code in another app" names its level, so the page does not ask again.
+  // A code from "Use z9code in another app" names its level, so the page does not ask again.
   const codeAccess = parseMcpApprovalCode(pairingCode)?.access;
   const approveLevel = codeAccess ?? access;
 
@@ -351,8 +351,8 @@ export function McpConsent({
             />
             <p className="text-xs text-muted-foreground">
               <T>
-                Get one from Use T3 Code in another app (MCP), Settings → Sharing & access, or{" "}
-                <code>t3 auth pairing create</code> on this machine.
+                Get one from Use z9code in another app (MCP), Settings → Sharing & access, or{" "}
+                <code>z9 auth pairing create</code> on this machine.
               </T>
             </p>
           </div>
@@ -450,7 +450,7 @@ function ceilingReason(
 }
 
 /** One access level in a radio group; `description` replaces the level's own, null hides it. */
-export function AccessOption({
+function AccessOption({
   access,
   selected,
   disabledReason,

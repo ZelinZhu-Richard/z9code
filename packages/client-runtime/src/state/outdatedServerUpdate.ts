@@ -1,4 +1,4 @@
-import type { EnvironmentId, ServerSelfUpdateInput } from "@t3tools/contracts";
+import type { EnvironmentId, ServerSelfUpdateInput } from "@z9code/contracts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -9,7 +9,6 @@ import type * as Socket from "effect/socket/Socket";
 import { describeOutdatedHost, updateOutdatedHost } from "../connection/outdatedHostUpdate.ts";
 import type * as ConnectionResolver from "../connection/resolver.ts";
 import type * as EnvironmentRegistry from "../connection/registry.ts";
-import type * as RelayEnvironmentDiscovery from "../relay/discovery.ts";
 import { createAtomCommandScheduler, createRuntimeCommand } from "./runtime.ts";
 import { serverUpdateFailure, serverUpdateStateAtom, type ServerUpdateStage } from "./server.ts";
 
@@ -37,7 +36,6 @@ export function createOutdatedServerUpdateCommand<E>(
   runtime: Atom.AtomRuntime<
     | EnvironmentRegistry.EnvironmentRegistry
     | ConnectionResolver.ConnectionResolver
-    | RelayEnvironmentDiscovery.RelayEnvironmentDiscovery
     | Socket.WebSocketConstructor
     | HttpClient.HttpClient,
     E

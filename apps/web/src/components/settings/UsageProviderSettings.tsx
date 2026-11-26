@@ -1,4 +1,4 @@
-import type { EnvironmentId, UnifiedSettings } from "@t3tools/contracts";
+import type { EnvironmentId, UnifiedSettings } from "@z9code/contracts";
 import { T, useGT, Var } from "gt-react";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
@@ -18,8 +18,6 @@ import { AddUsageLimitSourceDialog } from "./AddUsageLimitSourceDialog";
 import { useSearchableSetting } from "./settingsSearch";
 import { SettingsRow, SettingsSection } from "./settingsLayout";
 
-const CLI_PROXY_NAME = "CLI Proxy";
-
 export function UsageProviderSettings({
   environmentId,
   environmentLabel,
@@ -34,7 +32,7 @@ export function UsageProviderSettings({
   const gt = useGT();
   const searchableSetting = useSearchableSetting();
   const updateSettings = useUpdateEnvironmentSettings(environmentId);
-  const [adding, setAdding] = useState<"cliproxy" | "http" | null>(null);
+  const [adding, setAdding] = useState(false);
   const entries = Object.entries(sources);
 
   return (
@@ -43,16 +41,10 @@ export function UsageProviderSettings({
         {...searchableSetting("usage-providers")}
         headerAction={
           !readOnly ? (
-            <div className="flex gap-2">
-              <Button size="xs" variant="outline" onClick={() => setAdding("cliproxy")}>
-                <PlusIcon className="size-3" aria-hidden />
-                <T>Add hub</T>
-              </Button>
-              <Button size="xs" variant="outline" onClick={() => setAdding("http")}>
-                <PlusIcon className="size-3" aria-hidden />
-                <T>Add HTTP source</T>
-              </Button>
-            </div>
+            <Button size="xs" variant="outline" onClick={() => setAdding(true)}>
+              <PlusIcon className="size-3" aria-hidden />
+              <T>Add HTTP source</T>
+            </Button>
           ) : null
         }
       >
@@ -60,7 +52,7 @@ export function UsageProviderSettings({
           <SettingsRow title={gt("No usage sources configured.")} />
         ) : (
           entries.map(([id, source]) => {
-            const kindLabel = source.kind === "http" ? gt("HTTP quota source") : CLI_PROXY_NAME;
+            const kindLabel = gt("HTTP quota source");
             const label = source.label?.trim() || source.url;
             return (
               <SettingsRow
@@ -88,10 +80,7 @@ export function UsageProviderSettings({
       {adding && !readOnly ? (
         <AddUsageLimitSourceDialog
           open
-          kind={adding}
-          onOpenChange={(open) => {
-            if (!open) setAdding(null);
-          }}
+          onOpenChange={setAdding}
           environmentId={environmentId}
           environmentLabel={environmentLabel}
           sources={sources}

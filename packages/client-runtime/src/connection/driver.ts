@@ -59,9 +59,9 @@ export type RouteCheck = "answered" | "silent" | "unchecked";
 export type RoutePreflight = "ready" | "refused" | "unprepared" | "silent" | "unchecked";
 
 const ROUTE_CHECK_TIMEOUT_MS = 2_500;
-// Preferred direct routes share one head start, so a relay connection does not
-// wait the full probe timeout for a LAN the device has already left. A route
-// that misses it connects over relay, then upgrades with a second reconnect.
+// Preferred nearby routes share one head start, so a slower route does not wait
+// the full probe timeout for a LAN the device has already left. A route that
+// misses it connects over the slower one, then upgrades with a second reconnect.
 const ROUTE_CHECK_HEAD_START_MS = 500;
 
 export class ConnectionDriver extends Context.Service<
@@ -78,7 +78,7 @@ export class ConnectionDriver extends Context.Service<
     /** Asks the host behind a live session to answer a fresh request on the session's own origin. */
     readonly checkHost: (prepared: PreparedConnection) => Effect.Effect<RouteCheck>;
   }
->()("@t3tools/client-runtime/connection/driver/ConnectionDriver") {}
+>()("@z9code/client-runtime/connection/driver/ConnectionDriver") {}
 
 export const connectOverRoutes = Effect.fn("ConnectionDriver.connectOverRoutes")(function* <R>(
   entry: ConnectionCatalogEntry,
@@ -252,11 +252,8 @@ export const make = Effect.gen(function* () {
         if (prepared.httpAuthorization?._tag === "Dpop") {
           yield* remote
             .renewDpopBeforeExpiry({
-              expectedEnvironmentId: prepared.environmentId,
               expiresAtEpochMs: prepared.httpAuthorization.expiresAtEpochMs,
-              ...(prepared.httpAuthorization.directConnection
-                ? { directConnection: prepared.httpAuthorization.directConnection }
-                : {}),
+              directConnection: prepared.httpAuthorization.directConnection,
             })
             .pipe(
               Effect.catch((error) =>

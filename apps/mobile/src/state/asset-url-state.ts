@@ -1,5 +1,5 @@
-import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
-import type { AssetUrlState as SharedAssetUrlState } from "@t3tools/client-runtime/state/assets";
+import type { EnvironmentConnectionPhase } from "@z9code/client-runtime/connection";
+import type { AssetUrlState as SharedAssetUrlState } from "@z9code/client-runtime/state/assets";
 
 export type AssetUrlFailureReason = "disconnected" | "failed" | "missing-file-access";
 

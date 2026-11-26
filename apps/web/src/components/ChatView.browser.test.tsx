@@ -1,5 +1,5 @@
 import { createMemoryHistory } from "@tanstack/react-router";
-import { scopeProjectRef, scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { scopeProjectRef, scopeThreadRef } from "@z9code/client-runtime/environment";
 import {
   EnvironmentId,
   IssueTrackerKind,
@@ -10,12 +10,12 @@ import {
   type IssueDetail,
   type IssueRef,
   type ThreadIssueLink,
-} from "@t3tools/contracts";
-import { DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts/settings";
+} from "@z9code/contracts";
+import { DEFAULT_CLIENT_SETTINGS } from "@z9code/contracts/settings";
 import {
   compileResolvedKeybindingsConfig,
   mergeWithDefaultKeybindings,
-} from "@t3tools/shared/keybindings";
+} from "@z9code/shared/keybindings";
 import type * as Context from "effect/Context";
 import * as Schema from "effect/Schema";
 import * as Effect from "effect/Effect";
@@ -171,7 +171,7 @@ it("opens a linked Linear issue from an inactive thread's sidebar badge", async 
       pullRequests: [
         {
           host: "github.com",
-          repository: "pingdotgg/t3code",
+          repository: "ZelinZhu-Richard/z9code",
           number: 124,
           url: "https://github.com/pingdotgg/t3code/pull/124",
           source: "manual",

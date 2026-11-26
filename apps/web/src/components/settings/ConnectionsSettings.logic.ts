@@ -1,9 +1,9 @@
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
+import { thrownErrorMessage } from "@z9code/client-runtime/errors";
 import * as DateTime from "effect/DateTime";
 import { msg } from "gt-react";
 
 import { resolveDesktopPairingUrl, resolveHostedPairingUrl } from "./pairingUrls";
-import { getPairingTokenFromUrl, setPairingTokenOnUrl } from "@t3tools/shared/remote";
+import { getPairingTokenFromUrl, setPairingTokenOnUrl } from "@z9code/shared/remote";
 import { readHostedPairingRequest } from "../../hostedPairing";
 import { m, type MessageResolver } from "../../i18n/messages";
 import {
@@ -13,7 +13,6 @@ import {
 } from "~/environments/primary";
 import {
   type AdvertisedEndpoint,
-  type AuthClientMetadata,
   type AuthClientSession,
   type AuthGrantScope,
   type AuthPairingLink,
@@ -27,7 +26,7 @@ import {
   type EnvironmentId,
   type ServerAuthPolicy,
   type ServerDirectEndpoint,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   getDesktopUpdateDownloadedVersion,
   resolveDesktopUpdateButtonAction,
@@ -454,7 +453,7 @@ export function resolveCurrentOriginPairingUrl(
   currentHref: string = window.location.href,
 ): string | null {
   const url = new URL("/pair", currentHref);
-  // The packaged desktop window loads from t3code://app, which no other device can open.
+  // The packaged desktop window loads from z9code://app, which no other device can open.
   if ((url.protocol !== "http:" && url.protocol !== "https:") || isLoopbackHostname(url.hostname)) {
     return null;
   }
@@ -507,31 +506,4 @@ export function resolveAccessEnvironmentId(input: {
     (input.environments.find((environment) => environment.connected) ?? input.environments[0])
       ?.environmentId ?? null
   );
-}
-
-/** A short name for a T3 Connect device: its label, or what it runs on. */
-export function connectDeviceName(
-  {
-    client,
-  }: {
-    readonly client?: AuthClientMetadata | undefined;
-  },
-  resolve: MessageResolver = m,
-): string {
-  return client?.label ?? client?.os ?? client?.browser ?? resolve(msg("this device"));
-}
-
-/** How a T3 Connect device describes itself. It can say anything, so the code is what to trust. */
-export function describeConnectDeviceClient(
-  {
-    client,
-  }: {
-    readonly client?: AuthClientMetadata | undefined;
-  },
-  resolve: MessageResolver = m,
-): string {
-  const bits = [client?.label, client?.os, client?.browser, client?.ipAddress].filter(
-    (value): value is string => typeof value === "string" && value.length > 0,
-  );
-  return bits.length > 0 ? [...new Set(bits)].join(" · ") : resolve(msg("Unknown device"));
 }

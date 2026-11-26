@@ -15,17 +15,17 @@ import {
   type OrchestrationV2ThreadProjection,
   type RuntimeMode,
   type ServerConfig,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   v2Now,
   v2Projection,
 } from "../../../../packages/client-runtime/src/state/orchestrationV2TestFixtures";
 import type { DraftComposerImageAttachment } from "../lib/composerImages";
-import type { PendingThreadRequests } from "@t3tools/client-runtime/state/thread-requests";
+import type { PendingThreadRequests } from "@z9code/client-runtime/state/thread-requests";
 import {
   makeThreadRequestsResolvedAnnouncer,
   sendApprovalFeedback,
-} from "@t3tools/client-runtime/state/thread-requests";
+} from "@z9code/client-runtime/state/thread-requests";
 import { DateTime } from "effect";
 import { AsyncResult, type Atom } from "effect/reactivity";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
@@ -101,8 +101,8 @@ vi.mock("gt-react-native", async (importOriginal) => {
     useMessages: () => gt.mFallback,
   };
 });
-vi.mock("@t3tools/client-runtime/state/context-window", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@t3tools/client-runtime/state/context-window")>()),
+vi.mock("@z9code/client-runtime/state/context-window", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@z9code/client-runtime/state/context-window")>()),
   compactBeforeSendTokens: (input: { readonly selection: ModelSelection; readonly now: string }) =>
     input.selection.model === state.compactModel && input.now >= state.compactDueAt
       ? 248_000
@@ -694,12 +694,12 @@ it.each(["cancelled", "expired"] as const)(
 describe("mobile handoff preview and submission", () => {
   it("follows project enablement and provider availability for the selected destination", async () => {
     state.grantedEnvironments.add("secondary");
-    const instanceId = ProviderInstanceId.make("antigravity");
+    const instanceId = ProviderInstanceId.make("kiro");
     const projectId = ProjectId.make(state.thread.projectId);
     const selection = { instanceId, model: "gemini" };
     const provider = {
       instanceId,
-      driver: ProviderDriverKind.make("antigravity"),
+      driver: ProviderDriverKind.make("kiro"),
       enabled: false,
       installed: true,
       auth: { status: "authenticated" as const },

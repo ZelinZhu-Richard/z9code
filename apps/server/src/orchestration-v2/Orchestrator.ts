@@ -5,16 +5,16 @@ import type {
   OrchestrationV2SearchThreadResult,
   OrchestrationV2ThreadHistoryPage,
   ProjectId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   latestExecutedRun,
   latestRootProviderFailure,
   orchestrationV2WorktreePending,
   runRanAfter,
   usageLimitBlockedRun,
-} from "@t3tools/shared/orchestrationV2ThreadError";
-import { threadIssueKeysEqual } from "@t3tools/contracts";
-import { canonicalizeGitCafePullRequestUrl } from "@t3tools/source-control-definitions/registry";
+} from "@z9code/shared/orchestrationV2ThreadError";
+import { threadIssueKeysEqual } from "@z9code/contracts";
+import { canonicalizeGitCafePullRequestUrl } from "@z9code/source-control-definitions/registry";
 import { threadPullRequestsOf } from "../sourceControl/threadPullRequests.ts";
 import {
   normalizeThreadPullRequestKey,
@@ -83,10 +83,10 @@ import {
   TurnItemId,
   TrimmedNonEmptyString,
   managedRuntimeModeCeilingMessage,
-} from "@t3tools/contracts";
-import * as KeyedLock from "@t3tools/shared/KeyedLock";
-import { modelSelectionsEqual } from "@t3tools/shared/model";
-import { expandAssistantCitationsForProvider } from "@t3tools/shared/assistantCitations";
+} from "@z9code/contracts";
+import * as KeyedLock from "@z9code/shared/KeyedLock";
+import { modelSelectionsEqual } from "@z9code/shared/model";
+import { expandAssistantCitationsForProvider } from "@z9code/shared/assistantCitations";
 import { modelSwitchSince } from "./modelSwitch.ts";
 import {
   contextBoundaryOrdinal,
@@ -96,14 +96,14 @@ import {
 import { isPlaceholderThreadTitle } from "./placeholderThreadTitle.ts";
 import { combinePullRequestWatchWakes, type PullRequestWatchWake } from "./pullRequestWatch.ts";
 import { outputRequestProblem } from "./runOutput.ts";
-import { recordThreadOpen } from "@t3tools/shared/paletteSearch";
-import { isSlashCommand } from "@t3tools/shared/composerTrigger";
+import { recordThreadOpen } from "@z9code/shared/paletteSearch";
+import { isSlashCommand } from "@z9code/shared/composerTrigger";
 import {
   backgroundWorkHoldsCompletion,
   derivePendingBackgroundWork,
   hasPendingBackgroundSubagent,
   pendingBackgroundTurnItems,
-} from "@t3tools/shared/orchestrationV2PendingBackgroundWork";
+} from "@z9code/shared/orchestrationV2PendingBackgroundWork";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -146,7 +146,7 @@ import {
   visibleConversationItems,
   visibleDeltaRunOrdinals,
 } from "./ContextHandoffService.ts";
-import { notificationTurnItem } from "@t3tools/provider-core/server/notification";
+import { notificationTurnItem } from "@z9code/provider-core/server/notification";
 import {
   cancelledBeforeStart,
   continuationFailedBeforePrompt,
@@ -173,7 +173,7 @@ import {
 import * as EffectOutbox from "./EffectOutbox.ts";
 import { withCommandMetrics } from "../observability/Metrics.ts";
 import type { OrchestrationEffectRequestV2, PendingOrchestrationEffectV2 } from "./EffectOutbox.ts";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
+import * as IdAllocator from "@z9code/provider-core/server/IdAllocator";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
 import {
   DispatchModeLimit,
@@ -201,8 +201,8 @@ import {
   type ShellSnapshotOptions,
 } from "./ProjectionStore.ts";
 import { ProviderAdapterRegistryV2 } from "./ProviderAdapterRegistry.ts";
-import * as ProviderContinuationRequests from "@t3tools/provider-core/server/ProviderContinuationRequests";
-import { makeProviderFailure } from "@t3tools/provider-core/server/failure";
+import * as ProviderContinuationRequests from "@z9code/provider-core/server/ProviderContinuationRequests";
+import { makeProviderFailure } from "@z9code/provider-core/server/failure";
 import * as RunExecutionService from "./RunExecutionService.ts";
 import { makeInterruptResultTurnItem } from "./runInterruptResult.ts";
 import { ProviderSessionManagerV2 } from "./ProviderSessionManager.ts";
@@ -219,14 +219,14 @@ import {
   delegatedTaskReportRuns,
   monitorUpdateRunIds,
   subagentThreadTitle,
-} from "@t3tools/provider-core/server/subagentProjection";
+} from "@z9code/provider-core/server/subagentProjection";
 import {
   forkableSourceRunStatusError,
   isForkableSourceRunStatus,
   ThreadForkServiceV2,
 } from "./ThreadForkService.ts";
 import { planThreadDeletion } from "./ThreadDeletion.ts";
-import type * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
 import * as ServerSettings from "../serverSettings.ts";
 
 const isMessageQuestionAnswer = Schema.is(
@@ -572,7 +572,7 @@ export interface OrchestratorV2Shape {
 }
 
 export class OrchestratorV2 extends Context.Service<OrchestratorV2, OrchestratorV2Shape>()(
-  "t3/orchestration-v2/Orchestrator/OrchestratorV2",
+  "z9/orchestration-v2/Orchestrator/OrchestratorV2",
 ) {}
 
 /** Run ordinals can skip values: a queued run moves past newer runs when it starts. */
@@ -792,7 +792,7 @@ const WORKSPACE_PREPARATION_INPUT = "Preparing workspace";
 /** How long automatic settlement waits for a queued turn to start. */
 export const QUEUED_TURN_START_GRACE_MS = 2 * 60 * 1_000;
 const RUNTIME_REQUEST_DELIVERY_FAILED_MESSAGE =
-  "T3 Code could not confirm that your answer reached the agent. If the run stays stuck, stop it and try again.";
+  "z9code could not confirm that your answer reached the agent. If the run stays stuck, stop it and try again.";
 
 function withoutPreparationResult(
   item: Extract<OrchestrationV2TurnItem, { readonly type: "command_execution" }>,
@@ -1629,6 +1629,12 @@ function lastDeliveredRunForProviderThread(
   );
 }
 
+/** A thread a delete, archive, or unarchive of its parent takes with it. */
+interface CascadeThread {
+  readonly threadId: ThreadId;
+  readonly relation: "side-chat" | "subagent";
+}
+
 type DyingNativeSubagent = {
   readonly projection: Pick<OrchestrationV2ThreadProjection, "nodes" | "subagents" | "turnItems">;
   readonly subagent: Pick<
@@ -1707,7 +1713,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
   ) {
     const adapter = yield* providerAdapters.get(providerInstanceId).pipe(mapDispatchError(command));
     const { driver } = adapter;
-    if (driver === "opencode" || driver === "antigravity") {
+    if (driver === "opencode") {
       const capabilities = yield* adapter.getCapabilities().pipe(mapDispatchError(command));
       return capabilities.turns.supportsNativeGoals === true ? driver : undefined;
     }
@@ -1724,14 +1730,6 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       const goalCommand = parseGoalCommand(message);
       if (goalCommand === null || goalCommand.type === "set") return;
       const driver = yield* goalDriverFor(command, providerInstanceId);
-      if (driver === "antigravity") {
-        return yield* new OrchestratorDispatchError({
-          commandId: command.commandId,
-          commandType: command.type,
-          cause:
-            "Antigravity accepts /goal followed by an objective. Interrupt the running turn, then ask Antigravity to stop the current goal.",
-        });
-      }
       if (goalCommand.type !== "pause" && goalCommand.type !== "resume") return;
       if (driver !== "claudeAgent") return;
       return yield* new OrchestratorDispatchError({
@@ -1948,25 +1946,46 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       .findThread(threadId)
       .pipe(Effect.mapError((cause) => new OrchestratorProjectionError({ threadId, cause })));
 
-  /** Side chats live inside their parent, so deleting or archiving the parent takes them too. */
-  const liveSideChatIds = Effect.fn("Orchestrator.liveSideChatIds")(
-    function* (threadId: ThreadId) {
-      const { contextTransfers } = yield* projectionStore
-        .getThreadRecords(threadId, ["contextTransfers"])
+  /**
+   * Side chats live inside their parent, so deleting or archiving the parent takes them too. A
+   * delete also takes the local subagent threads, which are listed only inside their parent.
+   */
+  const liveCascadeChildren = Effect.fn("Orchestrator.liveCascadeChildren")(
+    function* (threadId: ThreadId, withSubagents: boolean) {
+      const { contextTransfers, subagents } = yield* projectionStore
+        .getThreadRecords(threadId, ["contextTransfers", "subagents"])
         .pipe(
           Effect.catchTags({
-            ProjectionStoreThreadNotFoundError: () => Effect.succeed({ contextTransfers: [] }),
+            ProjectionStoreThreadNotFoundError: () =>
+              Effect.succeed({ contextTransfers: [], subagents: [] }),
           }),
         );
-      const sideChatIds: Array<ThreadId> = [];
+      const children: Array<CascadeThread> = [];
       for (const transfer of contextTransfers) {
         if (transfer.type !== "fork" || transfer.sourceThreadId !== threadId) continue;
         const child = yield* projectionStore.findThread(transfer.targetThreadId);
         if (child?.lineage.sideChat === true && child.deletedAt === null) {
-          sideChatIds.push(child.id);
+          children.push({ threadId: child.id, relation: "side-chat" });
         }
       }
-      return sideChatIds;
+      if (!withSubagents) return children;
+      const subagentThreadIds = new Set(
+        subagents.flatMap((task) => (task.childThreadId === null ? [] : [task.childThreadId])),
+      );
+      for (const childThreadId of subagentThreadIds) {
+        const child = yield* projectionStore.findThread(childThreadId);
+        // A task delegated from a linked environment belongs to that environment.
+        if (
+          child !== null &&
+          child.deletedAt === null &&
+          child.lineage.relationshipToParent === "subagent" &&
+          child.lineage.parentThreadId === threadId &&
+          child.delegatedFrom == null
+        ) {
+          children.push({ threadId: child.id, relation: "subagent" });
+        }
+      }
+      return children;
     },
     (effect, threadId) =>
       effect.pipe(Effect.mapError((cause) => new OrchestratorProjectionError({ threadId, cause }))),
@@ -3821,7 +3840,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       }
       return plan.parentRun?.id;
     }
-    // task_status and t3_thread_read use distinct command IDs, so two
+    // task_status and z9_thread_read use distinct command IDs, so two
     // valid observations can race after their read preflight. Re-emit the
     // existing task row so the second dispatch is a successful idempotent
     // no-op rather than "already acknowledged/disposed" or empty-events.
@@ -6474,7 +6493,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     readonly messageId: OrchestrationV2ConversationMessage["id"];
     readonly text: string;
     readonly attachments: ReadonlyArray<ChatAttachment>;
-    readonly context?: import("@t3tools/contracts").OrchestrationMessageContext | undefined;
+    readonly context?: import("@z9code/contracts").OrchestrationMessageContext | undefined;
     readonly createdBy: OrchestrationV2ConversationMessage["createdBy"];
     readonly creationSource: OrchestrationV2ConversationMessage["creationSource"];
     readonly scheduledTaskId?: OrchestrationV2ConversationMessage["scheduledTaskId"];
@@ -8235,7 +8254,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       const queueIsHeld = projection.runs.some(
         (candidate) => candidate.status === "queued" && candidate.queueHeld === true,
       );
-      // Buffered wakes need a T3 run for output the CLI already started producing.
+      // Buffered wakes need a z9code run for output the CLI already started producing.
       // Stop still holds wakes that arrive before the active run settles.
       const wakeSkipsHold =
         !worktreeSetupUnresolved &&
@@ -11321,7 +11340,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
             : command.feedbackStatus === "sent"
               ? "completed"
               : "cancelled",
-          title: "Feedback for the T3 team",
+          title: "Feedback for the z9code team",
           startedAt: existing?.startedAt ?? now,
           completedAt: pending ? null : now,
           updatedAt: now,
@@ -15985,7 +16004,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
 
   const dispatchOnce = Effect.fn("orchestrationV2.dispatch.once")(function* (
     command: OrchestrationV2ServerCommand,
-    sideChatIds: ReadonlyArray<ThreadId>,
+    cascade: ReadonlyArray<CascadeThread>,
   ): Effect.fn.Return<
     {
       readonly events: ReadonlyArray<OrchestrationV2DomainEvent>;
@@ -16120,13 +16139,13 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
             return { events: [], effects: [] };
           }
         }
-        // The dispatch wrapper holds each side chat's lock, so none can commit after this plan.
+        // The dispatch wrapper holds each cascaded thread's lock, so none can commit after this plan.
         const plans = [
           yield* planDeletion(command),
-          ...(yield* Effect.forEach(sideChatIds, (threadId) =>
+          ...(yield* Effect.forEach(cascade, ({ threadId, relation }) =>
             planDeletion({
               ...command,
-              commandId: CommandId.make(`${command.commandId}:side-chat:${threadId}`),
+              commandId: CommandId.make(`${command.commandId}:${relation}:${threadId}`),
               threadId,
             }),
           )),
@@ -16141,7 +16160,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
         const parentArchivedAt = (yield* findThread(command.threadId))?.archivedAt ?? null;
         yield* dispatchThreadMutation(command, events, effects);
         // Unarchive restores the side chats this parent's archive took, not ones archived before it.
-        for (const threadId of sideChatIds) {
+        for (const { threadId } of cascade) {
           const sideChatArchivedAt = (yield* findThread(threadId))?.archivedAt ?? null;
           const follows =
             command.type === "thread.archive"
@@ -16520,10 +16539,10 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
     } satisfies OrchestratorV2DispatchResult;
   });
 
-  /** `sideChatIds` are the live side chats a delete, archive, or unarchive cascades to, read under their locks. */
+  /** `cascade` holds the live threads a delete, archive, or unarchive cascades to, read under their locks. */
   const dispatchWithReceiptEffect = Effect.fn("orchestrationV2.dispatch.withReceipt")(function* (
     command: OrchestrationV2ServerCommand,
-    sideChatIds: ReadonlyArray<ThreadId> = [],
+    cascade: ReadonlyArray<CascadeThread> = [],
     cancelledTask?: OrchestrationV2Subagent,
   ): Effect.fn.Return<OrchestratorV2DispatchResult, OrchestratorV2Error> {
     yield* Effect.annotateCurrentSpan({
@@ -16577,7 +16596,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       );
     }
 
-    const plan = yield* dispatchOnce(command, sideChatIds).pipe(
+    const plan = yield* dispatchOnce(command, cascade).pipe(
       Effect.tap((planned) => refuseAboveRuntimeModeCeiling(command, planned.events)),
       Effect.filterOrFail(
         (planned) =>
@@ -16812,6 +16831,38 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       ),
     );
 
+  // Locks each thread before reading its children, so a parent's lock always comes before its
+  // children's. Only a delete reaches past the side chats of the thread it names.
+  const withCascadeLocks = (
+    command: Extract<
+      OrchestrationV2ServerCommand,
+      { readonly type: "thread.delete" | "thread.archive" | "thread.unarchive" }
+    >,
+    pending: ReadonlyArray<ThreadId>,
+    cascade: ReadonlyArray<CascadeThread>,
+  ): Effect.Effect<OrchestratorV2DispatchResult, OrchestratorV2Error> => {
+    const [threadId, ...rest] = pending;
+    if (threadId === undefined) return dispatchWithReceiptEffect(command, cascade);
+    const isDelete = command.type === "thread.delete";
+    if (!isDelete && threadId !== command.threadId) {
+      return threadDispatch.withLock(threadId, withCascadeLocks(command, rest, cascade));
+    }
+    return threadDispatch.withLock(
+      threadId,
+      liveCascadeChildren(threadId, isDelete).pipe(
+        Effect.flatMap((children) => {
+          const seen = new Set([command.threadId, ...cascade.map((child) => child.threadId)]);
+          const added = children.filter((child) => !seen.has(child.threadId));
+          return withCascadeLocks(
+            command,
+            [...rest, ...added.map((child) => child.threadId)],
+            [...cascade, ...added],
+          );
+        }),
+      ),
+    );
+  };
+
   // dispatchWithReceiptEffect owns the dispatch span; this wrapper selects the thread locks.
   const dispatchWithReceipt = Effect.fnUntraced(function* (command: OrchestrationV2ServerCommand) {
     // The latest stable run is the one with a checkpoint. Wait for a just-completed run's capture,
@@ -16845,17 +16896,7 @@ const makeOrchestrator = Effect.fn("orchestrationV2.Orchestrator.layer")(functio
       command.type === "thread.archive" ||
       command.type === "thread.unarchive"
     ) {
-      const cascade = threadDispatch.withLock(
-        command.threadId,
-        liveSideChatIds(command.threadId).pipe(
-          Effect.flatMap((sideChatIds) =>
-            sideChatIds.reduce(
-              (locked, sideChatId) => threadDispatch.withLock(sideChatId, locked),
-              dispatchWithReceiptEffect(command, sideChatIds),
-            ),
-          ),
-        ),
-      );
+      const cascade = withCascadeLocks(command, [command.threadId], []);
       return yield* command.type === "thread.delete"
         ? threadDispatch.withDeletionLock(cascade)
         : cascade;

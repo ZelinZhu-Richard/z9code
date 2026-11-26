@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { EnvironmentNotRegisteredError } from "@t3tools/client-runtime/connection";
-import { isTransportConnectionErrorMessage } from "@t3tools/client-runtime/errors";
-import { EnvironmentRpcUnavailableError } from "@t3tools/client-runtime/rpc";
+import { EnvironmentNotRegisteredError } from "@z9code/client-runtime/connection";
+import { isTransportConnectionErrorMessage } from "@z9code/client-runtime/errors";
+import { EnvironmentRpcUnavailableError } from "@z9code/client-runtime/rpc";
 import {
   CommandId,
   ComposerContextId,
@@ -12,7 +12,7 @@ import {
   ProjectId,
   ProviderInstanceId,
   ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { AtomRegistry } from "effect/reactivity";
 import * as RpcClientError from "effect/rpc/RpcClientError";
 import * as Socket from "effect/socket/Socket";
@@ -351,19 +351,19 @@ describe("thread outbox", () => {
 
   it("normalizes queued plan mode against the queued provider, not the current thread", () => {
     const codex = { instanceId: ProviderInstanceId.make("codex"), model: "gpt-5.6-sol" };
-    const antigravity = {
+    const geminiSelection = {
       instanceId: ProviderInstanceId.make("google-personal"),
       model: "gemini-test-thinking",
       options: [{ id: "native-option", value: "keep-this-choice" }],
     };
     const providers = [
       { instanceId: codex.instanceId, showInteractionModeToggle: true, models: [] },
-      { instanceId: antigravity.instanceId, showInteractionModeToggle: false, models: [] },
+      { instanceId: geminiSelection.instanceId, showInteractionModeToggle: false, models: [] },
     ];
     const message = {
       ...queuedMessage({ messageId: "queued-plan", createdAt: "2026-09-02T10:00:00.000Z" }),
       text: "/plan inspect the project",
-      modelSelection: antigravity,
+      modelSelection: geminiSelection,
       interactionMode: "plan",
     } satisfies QueuedThreadMessage;
 
@@ -374,7 +374,7 @@ describe("thread outbox", () => {
         providers,
       ),
     ).toEqual({
-      modelSelection: antigravity,
+      modelSelection: geminiSelection,
       runtimeMode: "approval-required",
       interactionMode: "default",
     });
@@ -382,7 +382,7 @@ describe("thread outbox", () => {
       resolveQueuedThreadSettings(
         { ...message, modelSelection: codex },
         {
-          modelSelection: antigravity,
+          modelSelection: geminiSelection,
           runtimeMode: "approval-required",
           interactionMode: "default",
         },

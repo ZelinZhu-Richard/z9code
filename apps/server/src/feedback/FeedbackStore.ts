@@ -12,7 +12,7 @@ import {
   type RunId,
   type ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -24,8 +24,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as Threads from "../orchestration-v2/ThreadManagementService.ts";
 import * as Providers from "../provider/ProviderRegistry.ts";
 import * as Settings from "../serverSettings.ts";
-import * as Analytics from "../telemetry/AnalyticsService.ts";
-import { type ProviderDimensions, providerDimensions } from "../telemetry/ProviderDimensions.ts";
+import { type ProviderDimensions, providerDimensions } from "./ProviderDimensions.ts";
 import {
   FeedbackLimitError,
   FeedbackNotRequestedError,
@@ -78,7 +77,7 @@ export class FeedbackStore extends Context.Service<
       input: AgentFeedbackAnswerInput,
     ) => Effect.Effect<void, AgentFeedbackRequestError>;
   }
->()("t3/feedback/FeedbackStore") {}
+>()("z9/feedback/FeedbackStore") {}
 
 const storageError = (cause: unknown) => new FeedbackStorageError({ cause });
 const TraceJson = Schema.NullOr(Schema.fromJsonString(FeedbackTrace));
@@ -101,7 +100,6 @@ const make = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
   const threads = yield* Threads.ThreadManagementService;
   const settings = yield* Settings.ServerSettingsService;
-  const analytics = yield* Analytics.AnalyticsService;
   const providers = yield* Providers.ProviderRegistry;
   // Serializes the limit checks with their writes. Held only after any settings wait, so an answer
   // stalled on the settings lock never holds up a card or an unprompted report.
@@ -176,9 +174,7 @@ const make = Effect.gen(function* () {
             user_requested: report.userRequested ? 1 : 0,
             trace: traceJson,
             source: report.source,
-            // Marked sent before the hand-off and cleared only on a refusal, so a delivery cut
-            // short reads as sent.
-            sent: 1,
+            sent: 0,
           })}`;
         }),
       );
@@ -197,34 +193,18 @@ const make = Effect.gen(function* () {
       );
   });
 
-  /** Sends a stored report as the `agent.feedback` event; false when telemetry refuses it. */
+  /**
+   * z9code sends no telemetry, so a report never leaves this machine: it stays in the local
+   * database and its card reads as not sent.
+   */
   const deliver = Effect.fn("FeedbackStore.deliver")(function* (
     report: Omit<FeedbackReport, "sent">,
-    dimensions: Partial<ProviderDimensions>,
+    _dimensions: Partial<ProviderDimensions>,
   ) {
-    const { kind, subject, expected, actual, workaround, trace, userRequested, source } = report;
-    // A report links to no install. One that left without the user seeing it carries only its
-    // categories; the agent's text stays in the local copy.
-    const sent = yield* analytics.record(
-      "agent.feedback",
-      {
-        kind,
-        subject,
-        ...(userRequested ? { expected, actual, workaround } : {}),
-        trace,
-        userRequested,
-        source,
-        ...dimensions,
-      },
-      { anonymous: true },
+    yield* sql`UPDATE agent_feedback SET sent = 0 WHERE id = ${report.id}`.pipe(
+      Effect.mapError(storageError),
     );
-    if (!sent) {
-      // A failed clear leaves the report reading as sent, on purpose: uncertain reads as sent.
-      yield* sql`UPDATE agent_feedback SET sent = 0 WHERE id = ${report.id}`.pipe(
-        Effect.mapError(storageError),
-      );
-    }
-    return sent;
+    return false;
   });
 
   const store = Effect.fn("FeedbackStore.store")(function* ({

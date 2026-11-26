@@ -6,11 +6,11 @@ import {
   serializeTableElementToHtml,
   serializeTableElementToMarkdown,
 } from "./markdown-clipboard";
-import { EnvironmentId, MessageId, ThreadId } from "@t3tools/contracts";
+import { EnvironmentId, MessageId, ThreadId } from "@z9code/contracts";
 import {
   collectAssistantCitations,
   serializeAssistantCitation,
-} from "@t3tools/shared/assistantCitations";
+} from "@z9code/shared/assistantCitations";
 import type { Element as HastElement, ElementContent, Root } from "hast";
 
 import { markdownTree } from "./markdown/wordsHast";
@@ -238,7 +238,7 @@ describe("serializeRenderedMarkdownFragment", () => {
   });
 
   it.each([
-    String.raw`see C:\me\.t3\shot.png`,
+    String.raw`see C:\me\.z9code\shot.png`,
     String.raw`C:\work\_build`,
     "C:/work/_build/out.txt",
     String.raw`C:\work\a-_b.txt`,

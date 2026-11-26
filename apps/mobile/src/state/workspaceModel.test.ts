@@ -1,17 +1,14 @@
 import {
   EMPTY_SHELL_STATE,
   type EnvironmentShellSummary,
-} from "@t3tools/client-runtime/state/shell";
-import {
-  BearerConnectionProfile,
-  BearerConnectionTarget,
-} from "@t3tools/client-runtime/connection";
-import { EnvironmentId } from "@t3tools/contracts";
+} from "@z9code/client-runtime/state/shell";
+import { BearerConnectionProfile, BearerConnectionTarget } from "@z9code/client-runtime/connection";
+import { EnvironmentId } from "@z9code/contracts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Option from "effect/Option";
 
 import { isEnvironmentShellPending, projectWorkspaceState } from "./workspaceModel";
-import { projectEnvironmentConnectionSummary as projectWorkspaceEnvironment } from "@t3tools/client-runtime/state/presentation";
+import { projectEnvironmentConnectionSummary as projectWorkspaceEnvironment } from "@z9code/client-runtime/state/presentation";
 import type { EnvironmentPresentation } from "./environments";
 
 const ENVIRONMENT_ID = EnvironmentId.make("environment-1");
@@ -24,7 +21,6 @@ function environment(
     environmentId: ENVIRONMENT_ID,
     label: "Julius's MacBook Pro",
     displayUrl: "https://environment.example.test",
-    relayManaged: false,
     entry: {
       target: new BearerConnectionTarget({
         environmentId: ENVIRONMENT_ID,

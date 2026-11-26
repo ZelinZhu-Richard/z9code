@@ -70,7 +70,7 @@ export class RunContext extends Context.Service<
     /** Have the engine see the agent turn behind the open wait `wait` through, and wake it. */
     readonly watchTurn: (wait: string) => Effect.Effect<void>;
   }
->()("t3/workflows/workflow/RunContext") {}
+>()("z9/workflows/workflow/RunContext") {}
 
 /** What a workflow body may require: the run it is in, the engine, and somewhere to run agents. */
 export type InRun =
@@ -607,7 +607,7 @@ export const title = (
 };
 
 /**
- * Tag the run, for finding it among the others: `t3 workflow list --tag` and `runs({ tag })`.
+ * Tag the run, for finding it among the others: `z9 workflow list --tag` and `runs({ tag })`.
  * Calling it again replaces the tags.
  */
 export const tags = (

@@ -8,7 +8,7 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Layer from "effect/Layer";
 import { assert, it } from "@effect/vitest";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -21,8 +21,8 @@ import * as TestClock from "effect/testing/TestClock";
 import { ChildProcessSpawner } from "effect/process";
 import { describe, expect } from "vite-plus/test";
 
-import * as AcpSessionRuntime from "@t3tools/provider-acp/server/AcpSessionRuntime";
-import { AgentScope } from "@t3tools/shared/AgentScope";
+import * as AcpSessionRuntime from "@z9code/provider-acp/server/AcpSessionRuntime";
+import { AgentScope } from "@z9code/shared/AgentScope";
 import * as EffectAcpErrors from "effect-acp/errors";
 import type * as EffectAcpSchema from "effect-acp/compat";
 import type * as EffectAcpProtocol from "effect-acp/protocol";
@@ -108,8 +108,8 @@ const promptThenCancel = (input: {
       spawn: {
         ...mockRuntimeOptions.spawn,
         env: {
-          T3_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1",
-          T3_ACP_REQUEST_LOG_PATH: requestLogPath,
+          Z9_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1",
+          Z9_ACP_REQUEST_LOG_PATH: requestLogPath,
         },
       },
       cancelBehavior: input.cancelBehavior,
@@ -192,7 +192,7 @@ describe("AcpSessionRuntime", () => {
             ? {
                 spawn: {
                   ...mockRuntimeOptions.spawn,
-                  env: { T3_ACP_SESSION_LIFECYCLE: "1" },
+                  env: { Z9_ACP_SESSION_LIFECYCLE: "1" },
                 },
                 resumeSessionId: "mock-session-1",
                 resumeMethod: "resume" as const,
@@ -264,7 +264,7 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { T3_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+          env: { Z9_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
         },
         cancelBehavior: "wait-for-prompt",
         requestLogger: (event) =>
@@ -364,7 +364,7 @@ describe("AcpSessionRuntime", () => {
         Effect.provideService(AgentScope, {
           ...AgentScope.defaultValue(),
           wrap: ({ command, args }) =>
-            Effect.succeed({ command, args, unit: "t3code-acp-test.scope" }),
+            Effect.succeed({ command, args, unit: "z9code-acp-test.scope" }),
           stop: (unit) => Deferred.succeed(stopped, unit).pipe(Effect.asVoid),
         }),
       );
@@ -372,7 +372,7 @@ describe("AcpSessionRuntime", () => {
       expect(yield* Deferred.isDone(stopped)).toBe(false);
       yield* runtime.notify("_test/exit", {});
       const events = yield* runtime.getEvents().pipe(Stream.take(1), Stream.runCollect);
-      expect(yield* Deferred.await(stopped)).toBe("t3code-acp-test.scope");
+      expect(yield* Deferred.await(stopped)).toBe("z9code-acp-test.scope");
       const event = events[0];
       expect(event).toMatchObject({ _tag: "ConnectionTerminated", error: { code: 19 } });
       if (event?._tag !== "ConnectionTerminated") return;
@@ -404,7 +404,7 @@ describe("AcpSessionRuntime", () => {
         ...mockRuntimeOptions,
         spawn: {
           ...mockRuntimeOptions.spawn,
-          env: { T3_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
+          env: { Z9_ACP_COMPLETE_FIRST_PROMPT_ON_CANCEL: "1" },
         },
         cancelBehavior: "wait-for-prompt",
       });
@@ -445,7 +445,7 @@ describe("AcpSessionRuntime", () => {
       });
       const runtime = yield* AcpSessionRuntime.make({
         ...mockRuntimeOptions,
-        spawn: { ...mockRuntimeOptions.spawn, env: { T3_ACP_FLOOD_STDERR: "1" } },
+        spawn: { ...mockRuntimeOptions.spawn, env: { Z9_ACP_FLOOD_STDERR: "1" } },
         onStderr: () => Effect.fail(failure),
       });
       expect(yield* runtime.start().pipe(Effect.flip)).toBe(failure);
@@ -514,7 +514,7 @@ describe("AcpSessionRuntime", () => {
         yield* Effect.gen(function* () {
           const runtime = yield* AcpSessionRuntime.make({
             ...mockRuntimeOptions,
-            spawn: { ...mockRuntimeOptions.spawn, env: { T3_ACP_FLOOD_STDERR: "1" } },
+            spawn: { ...mockRuntimeOptions.spawn, env: { Z9_ACP_FLOOD_STDERR: "1" } },
             ...(logStderr
               ? {
                   onStderr: (text: string) =>
@@ -573,7 +573,7 @@ describe("AcpSessionRuntime", () => {
     ({ extendEnv }) =>
       Effect.gen(function* () {
         yield* Effect.acquireRelease(
-          Effect.sync(() => setProcessEnv("T3_ACP_RUNTIME_AMBIENT", "sentinel")),
+          Effect.sync(() => setProcessEnv("Z9_ACP_RUNTIME_AMBIENT", "sentinel")),
           (restore) => Effect.sync(restore),
         );
         const runtime = yield* AcpSessionRuntime.make({
@@ -582,7 +582,7 @@ describe("AcpSessionRuntime", () => {
             command: process.execPath,
             args: mockAgentArgs,
             ...(extendEnv === undefined ? {} : { extendEnv }),
-            env: { T3_ACP_RUNTIME_EXPLICIT: "kept" },
+            env: { Z9_ACP_RUNTIME_EXPLICIT: "kept" },
           },
         });
         yield* runtime.initialize();
@@ -614,7 +614,7 @@ describe("AcpSessionRuntime", () => {
         (event) => event.method === "session/new" && event.status === "started",
       );
       expect(created?.payload).toMatchObject({
-        mcpServers: [{ type: "acp", name: "t3-code", serverId: "t3-code" }],
+        mcpServers: [{ type: "acp", name: "z9code", serverId: "z9code" }],
       });
       // This agent does not advertise additional directories, so the thread's other folders stay out.
       expect(created?.payload).not.toHaveProperty("additionalDirectories");
@@ -624,13 +624,13 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { T3_ACP_MCP_ACP: "1" },
+            env: { Z9_ACP_MCP_ACP: "1" },
           },
           cwd: process.cwd(),
           clientInfo: { name: "t3-test", version: "0.0.0" },
           authMethodId: "test",
-          mcpServers: [{ type: "stdio", name: "t3-code", command: "/usr/bin/node", args: [] }],
-          acpMcpServers: [{ type: "acp", name: "t3-code", serverId: "t3-code" }],
+          mcpServers: [{ type: "stdio", name: "z9code", command: "/usr/bin/node", args: [] }],
+          acpMcpServers: [{ type: "acp", name: "z9code", serverId: "z9code" }],
           extraRoots: ["/tmp/t3-tracked"],
           requestLogger: (event) =>
             Effect.sync(() => {
@@ -679,7 +679,7 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { T3_ACP_V2_MANAGEMENT: "1" },
+            env: { Z9_ACP_V2_MANAGEMENT: "1" },
           },
           cwd: process.cwd(),
           clientInfo: { name: "t3-test", version: "0.0.0" },
@@ -722,8 +722,8 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_AUTH_METHOD_ID: "test",
-              T3_ACP_REQUIRE_AUTH: "1",
+              Z9_ACP_AUTH_METHOD_ID: "test",
+              Z9_ACP_REQUIRE_AUTH: "1",
             },
           },
           cwd: process.cwd(),
@@ -760,8 +760,8 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_AUTH_METHOD_ID: "test",
-              T3_ACP_REQUIRE_AUTH: "1",
+              Z9_ACP_AUTH_METHOD_ID: "test",
+              Z9_ACP_REQUIRE_AUTH: "1",
             },
           },
           cwd: process.cwd(),
@@ -906,7 +906,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_EMIT_FOREIGN_SESSION_UPDATES: "1",
+              Z9_ACP_EMIT_FOREIGN_SESSION_UPDATES: "1",
             },
           },
           cwd: process.cwd(),
@@ -967,7 +967,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS: "1",
+              Z9_ACP_EMIT_INTERLEAVED_ASSISTANT_TOOL_CALLS: "1",
             },
           },
           cwd: process.cwd(),
@@ -1014,7 +1014,7 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { T3_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER: "1" },
+            env: { Z9_ACP_EMIT_BACKGROUND_TOOL_DURING_ANSWER: "1" },
           },
           cwd: process.cwd(),
           clientInfo: { name: "t3-test", version: "0.0.0" },
@@ -1060,7 +1060,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1",
+              Z9_ACP_EMIT_GENERIC_TOOL_PLACEHOLDERS: "1",
             },
           },
           cwd: process.cwd(),
@@ -1132,7 +1132,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_SESSION_LIFECYCLE: "1",
+              Z9_ACP_SESSION_LIFECYCLE: "1",
             },
           },
           additionalDirectories: ["/tmp/t3-attachments"],
@@ -1188,8 +1188,8 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_REQUIRE_AUTH: "1",
-              T3_ACP_SESSION_LIFECYCLE: "1",
+              Z9_ACP_REQUIRE_AUTH: "1",
+              Z9_ACP_SESSION_LIFECYCLE: "1",
             },
           },
           cwd: process.cwd(),
@@ -1217,7 +1217,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_FAIL_LOAD_SESSION: "1",
+              Z9_ACP_FAIL_LOAD_SESSION: "1",
             },
           },
           cwd: process.cwd(),
@@ -1238,8 +1238,8 @@ describe("AcpSessionRuntime", () => {
         spawn: {
           ...mockRuntimeOptions.spawn,
           env: {
-            T3_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            T3_ACP_LOAD_SESSION_DELAY_MS: "500",
+            Z9_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            Z9_ACP_LOAD_SESSION_DELAY_MS: "500",
           },
         },
         resumeSessionId: "mock-session-1",
@@ -1271,9 +1271,9 @@ describe("AcpSessionRuntime", () => {
         spawn: {
           ...mockRuntimeOptions.spawn,
           env: {
-            T3_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            T3_ACP_LOAD_SESSION_DELAY_MS: "500",
-            T3_ACP_HOLD_SET_CONFIG_OPTION_UNTIL_LOAD_REPLY: "1",
+            Z9_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            Z9_ACP_LOAD_SESSION_DELAY_MS: "500",
+            Z9_ACP_HOLD_SET_CONFIG_OPTION_UNTIL_LOAD_REPLY: "1",
           },
         },
         resumeSessionId: "mock-session-1",
@@ -1307,9 +1307,9 @@ describe("AcpSessionRuntime", () => {
         spawn: {
           ...mockRuntimeOptions.spawn,
           env: {
-            T3_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            T3_ACP_LOAD_SESSION_DELAY_MS: "500",
-            T3_ACP_NOTIFY_MODE_BEFORE_LOAD_REPLY: "code",
+            Z9_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            Z9_ACP_LOAD_SESSION_DELAY_MS: "500",
+            Z9_ACP_NOTIFY_MODE_BEFORE_LOAD_REPLY: "code",
           },
         },
         resumeSessionId: "mock-session-1",
@@ -1352,8 +1352,8 @@ describe("AcpSessionRuntime", () => {
         spawn: {
           ...mockRuntimeOptions.spawn,
           env: {
-            T3_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
-            T3_ACP_LOAD_SESSION_DELAY_MS: "500",
+            Z9_ACP_DELAY_LOAD_SESSION_AFTER_REPLAY: "1",
+            Z9_ACP_LOAD_SESSION_DELAY_MS: "500",
           },
         },
         resumeSessionId: "mock-session-1",
@@ -1404,7 +1404,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY: "1",
+              Z9_ACP_FAIL_LOAD_SESSION_AFTER_CONFIG_REPLAY: "1",
             },
           },
           cwd: process.cwd(),
@@ -1440,7 +1440,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_EMIT_LOAD_REPLAY: "1",
+              Z9_ACP_EMIT_LOAD_REPLAY: "1",
             },
           },
           cwd: process.cwd(),
@@ -1471,9 +1471,9 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_EMIT_LOAD_REPLAY: "1",
-              T3_ACP_LOAD_REPLY_DELAY_MS: "500",
-              T3_ACP_REJECT_PROMPT_UNTIL_LOADED: "1",
+              Z9_ACP_EMIT_LOAD_REPLAY: "1",
+              Z9_ACP_LOAD_REPLY_DELAY_MS: "500",
+              Z9_ACP_REJECT_PROMPT_UNTIL_LOADED: "1",
             },
           },
           cwd: process.cwd(),
@@ -1503,8 +1503,8 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_EMIT_LOAD_REPLAY: "1",
-              T3_ACP_LOAD_NEVER_REPLIES: "1",
+              Z9_ACP_EMIT_LOAD_REPLAY: "1",
+              Z9_ACP_LOAD_NEVER_REPLIES: "1",
             },
           },
           cwd: process.cwd(),
@@ -1556,7 +1556,7 @@ describe("AcpSessionRuntime", () => {
             command: mockAgentCommand,
             args: mockAgentArgs,
             env: {
-              T3_ACP_REQUEST_LOG_PATH: requestLogPath,
+              Z9_ACP_REQUEST_LOG_PATH: requestLogPath,
             },
           },
           cwd: process.cwd(),
@@ -1595,7 +1595,7 @@ describe("AcpSessionRuntime", () => {
           spawn: {
             command: mockAgentCommand,
             args: mockAgentArgs,
-            env: { T3_ACP_REQUEST_LOG_PATH: requestLogPath },
+            env: { Z9_ACP_REQUEST_LOG_PATH: requestLogPath },
           },
           customModels: ["cline-free/custom-model"],
         }),
@@ -1680,7 +1680,7 @@ describe("AcpSessionRuntime", () => {
         let promptsStarted = 0;
         const runtime = yield* AcpSessionRuntime.make({
           ...mockRuntimeOptions,
-          spawn: { ...mockRuntimeOptions.spawn, env: { T3_ACP_REQUEST_LOG_PATH: requestLogPath } },
+          spawn: { ...mockRuntimeOptions.spawn, env: { Z9_ACP_REQUEST_LOG_PATH: requestLogPath } },
           interruptPromptOnCancel: false,
           // The cancel spends a test-clock second in its outgoing record, the window in which the
           // next prompt could overtake it.

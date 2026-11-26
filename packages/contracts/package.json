@@ -1,5 +1,5 @@
 {
-  "name": "@t3tools/contracts",
+  "name": "@z9code/contracts",
   "version": "0.1.11",
   "private": true,
   "files": [
@@ -14,10 +14,6 @@
     "./settings": {
       "types": "./src/settings.ts",
       "import": "./src/settings.ts"
-    },
-    "./relay": {
-      "types": "./src/relay.ts",
-      "import": "./src/relay.ts"
     }
   },
   "scripts": {

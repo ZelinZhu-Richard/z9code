@@ -1,7 +1,7 @@
 import {
   isProviderSendTurnSupportedImageMimeType,
   PROVIDER_SEND_TURN_MAX_IMAGE_BYTES,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Predicate from "effect/Predicate";
 
 import {
@@ -29,7 +29,7 @@ const MAX_CONTENT_BLOCKS = 32;
 const MAX_ENVELOPE_DEPTH = 4;
 const MAX_ENVELOPE_NODES = 128;
 const encoder = new TextEncoder();
-// Antigravity's terminal tool prefixes an `acp-mcp-call` result's stdout with timestamps and exit status.
+// Some agents' terminal tools prefix an `acp-mcp-call` result's stdout with timestamps and exit status.
 const TERMINAL_OUTPUT_MARKER = "\nCommand output:\n";
 
 interface ResultReadBudget {
@@ -206,7 +206,7 @@ export function compactDynamicToolOutput(value: unknown): CompactToolOutput | un
   return Object.keys(output).length === 0 ? undefined : output;
 }
 
-// OpenCode 2 Code Mode reports a script's nested T3 tool calls as one item with the script's result.
+// OpenCode 2 Code Mode reports a script's nested z9code tool calls as one item with the script's result.
 const OPENCODE_CODE_MODE_TOOL_NAME = "execute";
 
 export function htmlRenderFromToolItem(item: {
@@ -254,7 +254,7 @@ export function previewRecordingIdFromToolItem(item: {
 }
 
 /**
- * Compact structured result a T3 MCP tool carries on its turn item.
+ * Compact structured result a z9code MCP tool carries on its turn item.
  * Preserves every metadata field clients, summaries, and attachment retention read.
  */
 export function compactT3McpToolOutput(

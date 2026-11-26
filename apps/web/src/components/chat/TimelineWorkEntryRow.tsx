@@ -5,27 +5,27 @@ import {
   getQuestionAnswerText,
   getQuestionTextPreview,
   hasQuestionAnswer,
-} from "@t3tools/client-runtime/work-log/user-input";
+} from "@z9code/client-runtime/work-log/user-input";
 import {
   ORCHESTRATION_V2_WORKSPACE_PREPARATION_FAILURE_CODE,
   type EnvironmentId,
   ThreadId,
-} from "@t3tools/contracts";
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
+} from "@z9code/contracts";
+import { scopeThreadRef } from "@z9code/client-runtime/environment";
 import { Link } from "@tanstack/react-router";
-import { notificationChildThreadId } from "@t3tools/client-runtime/state/thread-execution";
+import { notificationChildThreadId } from "@z9code/client-runtime/state/thread-execution";
 import {
   resolveViewedImageAsset,
   resolveWorkEntryToolPresentation,
   toolGroupAction,
   workEntryViewedImagePath,
-} from "@t3tools/client-runtime/work-log/presentation";
-import { t3ToolResultIndicatesFailure } from "@t3tools/client-runtime/t3ToolSummary";
+} from "@z9code/client-runtime/work-log/presentation";
+import { t3ToolResultIndicatesFailure } from "@z9code/client-runtime/t3ToolSummary";
 import {
   turnItemHasDetail,
   turnItemNeedsDetailFetch,
-} from "@t3tools/client-runtime/work-log/item-detail";
-import { claudeSkillInvocation } from "@t3tools/shared/toolActivity";
+} from "@z9code/client-runtime/work-log/item-detail";
+import { claudeSkillInvocation } from "@z9code/shared/toolActivity";
 import { msg, T, useGT, useMessages, Var } from "gt-react";
 import { memo, use, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import {
@@ -307,7 +307,7 @@ function WorkEntryLogRow(props: WorkEntryRowProps) {
       : null;
   const labelRef = useRef<HTMLSpanElement>(null);
   const [noticeCutOff, setNoticeCutOff] = useState(false);
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- only layout knows whether a notice fits its row
+  // oxlint-disable-next-line z9code/no-unreasoned-state-sync -- only layout knows whether a notice fits its row
   useLayoutEffect(() => {
     const label = labelRef.current;
     if (!label || noticeMessage === null) return;
@@ -743,7 +743,7 @@ function WorkEntryLogRow(props: WorkEntryRowProps) {
 function QuestionAnswerHistory({
   answer,
 }: {
-  answer: import("@t3tools/contracts").UserInputAttachmentAnswerPayload;
+  answer: import("@z9code/contracts").UserInputAttachmentAnswerPayload;
 }) {
   const { activeThreadEnvironmentId } = use(TimelineRowCtx);
   const attachments = Object.values(answer.attachmentsByQuestionId).flat();

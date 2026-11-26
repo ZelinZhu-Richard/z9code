@@ -2,16 +2,14 @@ import {
   BearerConnectionCredential,
   BearerConnectionProfile,
   BearerConnectionRegistration,
-  RelayConnectionRegistration,
-  RelayConnectionTarget,
   BearerConnectionTarget,
-} from "@t3tools/client-runtime/connection";
+} from "@z9code/client-runtime/connection";
 import {
   type ConnectionCatalogDocument,
   EMPTY_CONNECTION_CATALOG_DOCUMENT,
   registerConnectionInCatalog,
-} from "@t3tools/client-runtime/platform";
-import { EnvironmentId } from "@t3tools/contracts";
+} from "@z9code/client-runtime/platform";
+import { EnvironmentId } from "@z9code/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -48,17 +46,8 @@ function migrateConnection(
   document: ConnectionCatalogDocument,
   connection: typeof LegacySavedRemoteConnection.Type,
 ): ConnectionCatalogDocument {
-  if (isRelayManaged(connection)) {
-    return registerConnectionInCatalog(
-      document,
-      new RelayConnectionRegistration({
-        target: new RelayConnectionTarget({
-          environmentId: connection.environmentId,
-          label: connection.environmentLabel,
-        }),
-      }),
-    );
-  }
+  // T3 Connect connections have no route left to migrate.
+  if (isRelayManaged(connection)) return document;
 
   if (connection.bearerToken === null || connection.bearerToken.trim() === "") {
     return document;

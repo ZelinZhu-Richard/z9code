@@ -1,4 +1,4 @@
-import { managedCapabilityDenial, type ServerConfig } from "@t3tools/contracts";
+import { managedCapabilityDenial, type ServerConfig } from "@z9code/contracts";
 
 export function canShareWithGuest(
   permitted: boolean,
@@ -12,6 +12,6 @@ export function canShareWithGuest(
   return (
     permitted &&
     config?.settings.guestSharingEnabled === true &&
-    managedCapabilityDenial(config.managedPolicy, "connect") === undefined
+    managedCapabilityDenial(config.managedPolicy, "remoteClients") === undefined
   );
 }

@@ -26,7 +26,7 @@ import * as Scope from "effect/Scope";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Stream from "effect/Stream";
 import { DurableDeferred, WorkflowEngine } from "effect/workflow";
-import { DEFAULT_WORKFLOW_SKIPPED_RUNS_KEPT } from "@t3tools/contracts";
+import { DEFAULT_WORKFLOW_SKIPPED_RUNS_KEPT } from "@z9code/contracts";
 
 import { checkOutput, rejectionText } from "../orchestration-v2/runOutput.ts";
 import * as ServerSettings from "../serverSettings.ts";

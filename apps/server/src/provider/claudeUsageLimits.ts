@@ -3,7 +3,7 @@ import type {
   ProviderUsageLimitsUpdate,
   ServerProviderUsageLimits,
   ServerProviderUsageWindow,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -14,7 +14,7 @@ import {
   clampPercent,
   makeUnavailableUsageLimits,
   makeUsageLimits,
-} from "@t3tools/provider-core/server/usageLimits";
+} from "@z9code/provider-core/server/usageLimits";
 
 const SESSION_MINS = 5 * 60;
 const WEEK_MINS = 7 * 24 * 60;
@@ -52,15 +52,6 @@ const scopeToken = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "
 
 function scopedWindowId(displayName: string): string {
   return `${SCOPED_WINDOW_PREFIX}${scopeToken(displayName)}`;
-}
-
-/** A model-scoped weekly allowance blocks only its own model; an unknown model is not blocked. */
-export function windowLimitsModel(
-  window: Pick<ServerProviderUsageWindow, "id">,
-  model: string | null,
-): boolean {
-  if (!window.id.startsWith(SCOPED_WINDOW_PREFIX)) return true;
-  return model !== null && scopeToken(model).includes(window.id.slice(SCOPED_WINDOW_PREFIX.length));
 }
 
 function scopedWindow(

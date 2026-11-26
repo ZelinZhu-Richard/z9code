@@ -1,5 +1,5 @@
-import { DEFAULT_SERVER_SETTINGS, type ServerSettings } from "@t3tools/contracts";
-import { applyServerSettingsPatch } from "@t3tools/shared/serverSettings";
+import { DEFAULT_SERVER_SETTINGS, type ServerSettings } from "@z9code/contracts";
+import { applyServerSettingsPatch } from "@z9code/shared/serverSettings";
 import { describe, expect, it } from "vite-plus/test";
 
 import { sourceIdFromUrl } from "./AddUsageLimitSourceDialog.logic";
@@ -19,13 +19,13 @@ describe("adding usage limit sources", () => {
       const id = sourceIdFromUrl(url, settings.usageLimitSources);
       settings = applyServerSettingsPatch(settings, {
         usageLimitSources: {
-          [id]: { kind: "cliproxy", url, label, managementKey, enabled: true },
+          [id]: { kind: "http", url, label, managementKey, enabled: true },
         },
       });
     }
     expect(Object.values(settings.usageLimitSources)).toEqual(
       sources.map(([url, label, managementKey]) => ({
-        kind: "cliproxy",
+        kind: "http",
         url,
         label,
         managementKey,
@@ -41,7 +41,7 @@ describe("adding usage limit sources", () => {
       settings = applyServerSettingsPatch(settings, {
         usageLimitSources: {
           [sourceIdFromUrl(url, settings.usageLimitSources)]: {
-            kind: "cliproxy",
+            kind: "http",
             url,
             managementKey,
             enabled: true,
@@ -51,7 +51,7 @@ describe("adding usage limit sources", () => {
     }
     expect(Object.values(settings.usageLimitSources)).toEqual([
       {
-        kind: "cliproxy",
+        kind: "http",
         url: "http://proxy.test:8318/hub-a",
         managementKey: "new-key",
         enabled: true,

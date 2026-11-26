@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { ProviderInstanceId } from "@t3tools/contracts";
+import { ProviderInstanceId } from "@z9code/contracts";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -138,7 +138,7 @@ describe("AcpRegistryRuntimeCoordinator", () => {
   it.effect("requires matching user consent before accepting URL authentication", () =>
     Effect.gen(function* () {
       const coordinator = yield* AcpRegistryRuntimeCoordinator.AcpRegistryRuntimeCoordinator;
-      const instanceId = ProviderInstanceId.make("acpRegistry_antigravity");
+      const instanceId = ProviderInstanceId.make("acpRegistry_gemini");
       const action = {
         elicitationId: "login-1",
         url: "https://accounts.example.com/login",

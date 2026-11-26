@@ -1,4 +1,4 @@
-import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
+import type { EnvironmentConnectionPhase } from "@z9code/client-runtime/connection";
 import { msg } from "gt-react-native";
 
 import { m, type MessageResolver } from "../../i18n/messages";
@@ -42,13 +42,9 @@ export function connectionRetryLabel(
   input: {
     readonly connectionError: string | null;
     readonly connectionState: EnvironmentConnectionPhase;
-    readonly connectionAwaitingApproval?: boolean;
   },
   resolve: MessageResolver = m,
 ): string | null {
-  if (input.connectionState === "reconnecting" && input.connectionAwaitingApproval) {
-    return resolve(msg("Awaiting device approval"));
-  }
   if (input.connectionState !== "connecting" && input.connectionState !== "reconnecting") {
     return null;
   }

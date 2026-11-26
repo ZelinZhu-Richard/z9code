@@ -16,18 +16,16 @@ import {
   RunId,
   ThreadId,
   TurnItemId,
-} from "@t3tools/contracts";
-import * as Context from "effect/Context";
+} from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
-import type * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Queue from "effect/Queue";
-import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 
@@ -39,7 +37,6 @@ import {
 } from "../attachmentStore.ts";
 import { resolveAttachmentRelativePath } from "../attachmentPaths.ts";
 import * as ServerSecretStore from "../auth/ServerSecretStore.ts";
-import { CloudManagedEndpointRuntime } from "../cloud/ManagedEndpointRuntime.ts";
 import * as ServerConfig from "../config.ts";
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
 import { CodexProviderCapabilitiesV2 } from "../orchestration-v2/Adapters/CodexAdapterV2.ts";
@@ -55,7 +52,6 @@ import * as ProviderReplayHarness from "../orchestration-v2/testkit/ProviderRepl
 import * as DocumentText from "../provider/DocumentText.ts";
 import * as ProviderRegistry from "../provider/ProviderRegistry.ts";
 import * as ServerSettings from "../serverSettings.ts";
-import * as AnalyticsService from "../telemetry/AnalyticsService.ts";
 import * as GuestShareService from "./GuestShareService.ts";
 
 const instanceId = ProviderInstanceId.make("codex");
@@ -78,17 +74,8 @@ const layerOrchestration = Layer.mergeAll(
   ),
 );
 
-// The Connect hostname the fake tunnel reports. Tests set it to null to simulate an unlink.
-const hostname = Ref.makeUnsafe<string | null>("env.t3.test");
-const layerConnect = Layer.mock(CloudManagedEndpointRuntime)({
-  inspectConnector: Effect.map(Ref.get(hostname), (value) => ({
-    pid: 1,
-    readyConnections: 1,
-    hostname: value,
-    origin: null,
-    protocol: "http2",
-  })),
-});
+// The address the owner's client reaches this server at, which the link points at.
+const ORIGIN = "https://env.example.ts.net";
 const layerProviders = Layer.mock(ProviderRegistry.ProviderRegistry)({
   getProviders: Effect.succeed([]),
 });
@@ -119,28 +106,6 @@ const layerCleanup = Layer.effect(
   Layer.provide(layerConfig),
   Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)),
 );
-class RecordedAnalytics extends Context.Service<
-  RecordedAnalytics,
-  Ref.Ref<ReadonlyArray<Readonly<Record<string, unknown>>>>
->()("t3/guest/GuestShareService.test/RecordedAnalytics") {}
-const layerAnalytics = Layer.effectContext(
-  Effect.gen(function* () {
-    const recorded = yield* Ref.make<ReadonlyArray<Readonly<Record<string, unknown>>>>([]);
-    return Context.make(RecordedAnalytics, recorded).pipe(
-      Context.add(
-        AnalyticsService.AnalyticsService,
-        AnalyticsService.AnalyticsService.of({
-          record: (event, properties) =>
-            Ref.update(recorded, (events) => [...events, { event, ...properties }]).pipe(
-              Effect.as(true),
-            ),
-          flush: Effect.void,
-          recordOwners: () => Effect.void,
-        }),
-      ),
-    );
-  }),
-);
 const layerTest = GuestShareService.layer.pipe(
   Layer.provideMerge(
     CommandOutputHub.layer.pipe(
@@ -149,8 +114,6 @@ const layerTest = GuestShareService.layer.pipe(
   ),
   Layer.provide(layerProviders),
   Layer.provideMerge(ServerSettings.layerTest({ guestSharingEnabled: true })),
-  Layer.provide(layerConnect),
-  Layer.provideMerge(layerAnalytics),
   Layer.provide(ServerSecretStore.layer),
   Layer.provide(DocumentText.layer),
   Layer.provideMerge(layerConfig),
@@ -160,7 +123,6 @@ const layerTest = GuestShareService.layer.pipe(
 const threadId = ThreadId.make("thread:guest-share-service");
 
 const shareThreadFor = Effect.fn(function* (threadId: ThreadId) {
-  yield* Ref.set(hostname, "env.t3.test");
   const orchestrator = yield* Orchestrator.OrchestratorV2;
   yield* orchestrator.dispatch({
     type: "thread.create",
@@ -177,8 +139,8 @@ const shareThreadFor = Effect.fn(function* (threadId: ThreadId) {
     creationSource: "web",
   });
   const guestShares = yield* GuestShareService.GuestShareService;
-  const { url } = yield* guestShares.create({ threadId });
-  assert.isTrue(url.startsWith("https://env.t3.test/guest#"));
+  const { url } = yield* guestShares.create({ threadId, origin: ORIGIN });
+  assert.isTrue(url.startsWith(`${ORIGIN}/guest#`));
   const credential = url.slice(url.indexOf("#") + 1);
   return { orchestrator, guestShares, credential };
 });
@@ -208,18 +170,6 @@ it.effect("spends an invite once and ends the guest stream when the owner stops 
     );
     assert.isTrue(Exit.isFailure(yield* Effect.exit(guestShares.stream(session))));
     assert.isTrue(Exit.isFailure(yield* Effect.exit(guestShares.check(session))));
-  }).pipe(Effect.provide(layerTest)),
-);
-
-it.effect("counts a guest joining and sending, without their name or text", () =>
-  Effect.gen(function* () {
-    const { guestShares, credential } = yield* shareThread;
-    const { token: session, shareId } = yield* guestShares.redeem({ credential, name: "Sam" });
-    yield* guestShares.submit(session, { shareId, text: "Hello" }, []);
-    assert.deepEqual(yield* Ref.get(yield* RecordedAnalytics), [
-      { event: "feature.used", feature: "guest_share.join" },
-      { event: "feature.used", feature: "guest_message.submit", variant: "text_only" },
-    ]);
   }).pipe(Effect.provide(layerTest)),
 );
 
@@ -293,7 +243,7 @@ it.effect("starts a stream with the runs and items already in the thread", () =>
 it.effect("redeems only a short invite whose signature and share id are both current", () =>
   Effect.gen(function* () {
     const { guestShares, credential: replaced } = yield* shareThread;
-    const { url } = yield* guestShares.create({ threadId });
+    const { url } = yield* guestShares.create({ threadId, origin: ORIGIN });
     const credential = url.slice(url.indexOf("#") + 1);
     assert.match(credential, /^[\w-]{22}\.[\w-]{22}$/);
 
@@ -309,39 +259,14 @@ it.effect("redeems only a short invite whose signature and share id are both cur
   }).pipe(Effect.provide(layerTest)),
 );
 
-it.effect("refuses guest requests once T3 Connect no longer serves the link's host", () =>
+it.effect("refuses a link to an address only this machine can open", () =>
   Effect.gen(function* () {
-    const { guestShares, credential } = yield* shareThread;
-    const { token: session } = yield* guestShares.redeem({ credential, name: "Sam" });
-    const { id: shareId } = (yield* Orchestrator.OrchestratorV2.use((orchestrator) =>
-      orchestrator.getThreadRecords(threadId, []),
-    )).thread.guestShare!;
-    yield* Ref.set(hostname, null);
-    const submitted = yield* Effect.exit(
-      guestShares.submit(session, { shareId, text: "Hello" }, []),
-    );
-    assert.isTrue(Exit.isFailure(submitted));
-  }).pipe(Effect.provide(layerTest)),
-);
-
-it.effect("closes an open guest stream when T3 Connect stops serving the link's host", () =>
-  Effect.gen(function* () {
-    const { guestShares, credential } = yield* shareThread;
-    const { token: session } = yield* guestShares.redeem({ credential, name: "Sam" });
-    const collecting = yield* Stream.runCollect(yield* guestShares.stream(session)).pipe(
-      Effect.forkChild,
-    );
-    yield* Ref.set(hostname, null);
-    yield* TestClock.adjust("30 seconds");
-    // No `ended`: the browser reconnects, and the host check refuses it while Connect is gone.
-    const received = Array.from(yield* Fiber.join(collecting));
-    assert.deepEqual(
-      received.map((event) => (event.type === "thread" ? event.item.kind : event.type)),
-      ["view", "snapshot"],
-    );
-    assert.isTrue(Exit.isFailure(yield* Effect.exit(guestShares.stream(session))));
-    yield* Ref.set(hostname, "env.t3.test");
-    assert.isTrue(Exit.isSuccess(yield* Effect.exit(guestShares.stream(session))));
+    yield* shareThread;
+    const guestShares = yield* GuestShareService.GuestShareService;
+    for (const origin of ["http://127.0.0.1:3773", "http://localhost:3773", "not a url"]) {
+      const error = yield* Effect.flip(guestShares.create({ threadId, origin }));
+      assert.equal(error.reason, "unreachable_origin");
+    }
   }).pipe(Effect.provide(layerTest)),
 );
 
@@ -357,7 +282,10 @@ it.effect("refuses new links and every guest request while the beta is off", () 
     // An open stream closes at the next access check.
     yield* TestClock.adjust("30 seconds");
     yield* Fiber.join(collecting);
-    assert.equal((yield* Effect.flip(guestShares.create({ threadId }))).reason, "disabled");
+    assert.equal(
+      (yield* Effect.flip(guestShares.create({ threadId, origin: ORIGIN }))).reason,
+      "disabled",
+    );
     assert.equal((yield* Effect.flip(guestShares.check(session))).reason, "inactive");
     // Turning it back on lets the same guest back in.
     yield* settings.updateSettings({ guestSharingEnabled: true });
@@ -610,7 +538,7 @@ it.effect("gives a fork's guest the commands the fork shows from its source thre
     const render = yield* writeItem("item:render", {
       type: "dynamic_tool",
       status: "completed",
-      toolName: "mcp__t3-code__html_render",
+      toolName: "mcp__z9code__html_render",
       input: {},
       output: [
         {
@@ -645,7 +573,7 @@ it.effect("gives a fork's guest the commands the fork shows from its source thre
       createdBy: "user",
       creationSource: "web",
     });
-    const { url } = yield* guestShares.create({ threadId: forkId });
+    const { url } = yield* guestShares.create({ threadId: forkId, origin: ORIGIN });
     const { token: session } = yield* guestShares.redeem({
       credential: url.slice(url.indexOf("#") + 1),
       name: "Sam",
@@ -1187,7 +1115,7 @@ it.effect("gives a fork's guest the files on messages the fork shows from its so
       creationSource: "web",
     });
     const later = yield* ownerImage("after.png");
-    const { url } = yield* guestShares.create({ threadId: forkId });
+    const { url } = yield* guestShares.create({ threadId: forkId, origin: ORIGIN });
     const { token: session } = yield* guestShares.redeem({
       credential: url.slice(url.indexOf("#") + 1),
       name: "Sam",
@@ -1295,7 +1223,7 @@ it.effect("serves an image on the host only when an agent reply the guest sees s
       createdBy: "user",
       creationSource: "web",
     });
-    const { url } = yield* guestShares.create({ threadId: forkId });
+    const { url } = yield* guestShares.create({ threadId: forkId, origin: ORIGIN });
     const { token: session } = yield* guestShares.redeem({
       credential: url.slice(url.indexOf("#") + 1),
       name: "Sam",
@@ -1461,7 +1389,7 @@ it.effect("keeps a connected guest's images while other shares come and go", () 
     }
 
     // A new link on the thread starts empty: its guest gets nothing the last guest was sent.
-    const { url } = yield* guestShares.create({ threadId });
+    const { url } = yield* guestShares.create({ threadId, origin: ORIGIN });
     const next = yield* guestShares.redeem({
       credential: url.slice(url.indexOf("#") + 1),
       name: "Kim",

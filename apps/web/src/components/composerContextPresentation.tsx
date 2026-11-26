@@ -1,5 +1,5 @@
 import ChatMarkdown from "./ChatMarkdown";
-import { isSvgAttachment } from "@t3tools/shared/image";
+import { isSvgAttachment } from "@z9code/shared/image";
 import { ReadOnlySourcePreview } from "./files/AttachmentFilePreview";
 import type {
   ChatAttachment,
@@ -8,9 +8,9 @@ import type {
   EnvironmentId,
   PreviewAnnotationPayload,
   ThreadContextRecord,
-} from "@t3tools/contracts";
-import { formatAttachmentSize } from "@t3tools/client-runtime/state/attachments";
-import { videoMimeType } from "@t3tools/shared/video";
+} from "@z9code/contracts";
+import { formatAttachmentSize } from "@z9code/client-runtime/state/attachments";
+import { videoMimeType } from "@z9code/shared/video";
 import { MessageCircleIcon, MousePointerClickIcon } from "lucide-react";
 import { createContext, type ReactElement, type ReactNode, use } from "react";
 import { msg, T, useGT, useMessages } from "gt-react";

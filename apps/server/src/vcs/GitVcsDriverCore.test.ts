@@ -6,7 +6,7 @@ import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import { assert, it, describe } from "@effect/vitest";
 import { afterAll, vi } from "vite-plus/test";
 import * as Cause from "effect/Cause";
@@ -42,8 +42,8 @@ import {
   type ReviewDiffFileContentsInput,
   type ReviewDiffPreviewResult,
   type WorktreeSubmodules,
-} from "@t3tools/contracts";
-import { symlinksSupported } from "@t3tools/shared/testing/symlinks";
+} from "@z9code/contracts";
+import { symlinksSupported } from "@z9code/shared/testing/symlinks";
 import * as ServerConfig from "../config.ts";
 import {
   isNonRepositoryGitStderr,
@@ -2112,7 +2112,7 @@ describe("pullCurrentBranch", () => {
   );
 });
 
-it.effect.each(["a T3 branch creation", "an external worktree addition"] as const)(
+it.effect.each(["a z9code branch creation", "an external worktree addition"] as const)(
   "refreshes an in-flight ref snapshot after %s",
   (mutation) =>
     Effect.scoped(
@@ -2132,7 +2132,7 @@ it.effect.each(["a T3 branch creation", "an external worktree addition"] as cons
               command.args.includes("for-each-ref") &&
               command.args.includes("refs/heads") &&
               command.args.includes("refs/remotes");
-            if (!isRefScan && (!isWorktreeScan || mutation === "a T3 branch creation")) {
+            if (!isRefScan && (!isWorktreeScan || mutation === "a z9code branch creation")) {
               return yield* delegate.spawn(command);
             }
             if (!(yield* Ref.getAndSet(firstScan, false))) {
@@ -2165,7 +2165,7 @@ it.effect.each(["a T3 branch creation", "an external worktree addition"] as cons
         const inFlight = yield* list.pipe(Effect.forkChild({ startImmediately: true }));
         yield* Deferred.await(firstScanCompleted);
 
-        if (mutation === "a T3 branch creation") {
+        if (mutation === "a z9code branch creation") {
           yield* driver.createRef({ cwd, refName });
           yield* Deferred.succeed(releaseOtherScans, undefined);
           assert.equal((yield* Fiber.join(inFlight)).refs[0]?.name, refName);
@@ -2858,7 +2858,7 @@ it.effect("lets a worktree checkout that is still working run past five minutes"
     const worktreePath = path.join(cwd, "worktree");
 
     const creation = yield* driver
-      .createWorktree({ cwd, refName: "main", newRefName: "t3/slow-checkout", path: worktreePath })
+      .createWorktree({ cwd, refName: "main", newRefName: "z9/slow-checkout", path: worktreePath })
       .pipe(Effect.forkChild);
     yield* Deferred.await(checkoutStarted);
     yield* TestClock.adjust("6 minutes");
@@ -2866,7 +2866,7 @@ it.effect("lets a worktree checkout that is still working run past five minutes"
 
     const result = yield* Fiber.join(creation);
     assert.equal(result.worktree.path, worktreePath);
-    assert.equal(result.worktree.refName, "t3/slow-checkout");
+    assert.equal(result.worktree.refName, "z9/slow-checkout");
   }).pipe(
     Effect.provide(
       layerServerConfig.pipe(
@@ -3300,7 +3300,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
                   .createWorktree({
                     cwd,
                     refName,
-                    ...(action === "worktree add -b" ? { newRefName: "t3/new-thread" } : {}),
+                    ...(action === "worktree add -b" ? { newRefName: "z9/new-thread" } : {}),
                     path: path.join(cwd, "worktree"),
                   })
                   .pipe(Effect.flip);
@@ -5240,11 +5240,11 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         yield* git(cwd, ["push", "upstream", "main"]);
         yield* git(cwd, ["fetch", "origin"]);
         yield* git(cwd, ["fetch", "upstream"]);
-        yield* git(cwd, ["checkout", "-b", "t3/temporary"]);
-        yield* git(cwd, ["config", "branch.t3/temporary.t3-merge-base", "main"]);
+        yield* git(cwd, ["checkout", "-b", "z9/temporary"]);
+        yield* git(cwd, ["config", "branch.z9code/temporary.t3-merge-base", "main"]);
         yield* git(cwd, [
           "config",
-          "branch.t3/temporary.t3-merge-base-ref",
+          "branch.z9code/temporary.t3-merge-base-ref",
           "refs/remotes/upstream/main",
         ]);
         yield* writeTextFile(cwd, "feature.txt", "thread work\n");
@@ -5263,7 +5263,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
               !command.args.includes("status.showUntrackedFiles")
             ) {
               if (!(yield* Ref.getAndSet(renameClaimed, true))) {
-                yield* git(cwd, ["branch", "-m", "t3/temporary", "feature/named"]).pipe(
+                yield* git(cwd, ["branch", "-m", "z9/temporary", "feature/named"]).pipe(
                   Effect.provideService(GitVcsDriver.GitVcsDriver, outer),
                   Effect.orDie,
                 );
@@ -5281,7 +5281,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
 
         const status = yield* driver.statusDetailsLocal(cwd, { includeBranchChanges: true });
 
-        assert.strictEqual(status.branch, "t3/temporary");
+        assert.strictEqual(status.branch, "z9/temporary");
         assert.deepStrictEqual(status.branchChanges, {
           baseRef: null,
           insertions: 1,
@@ -6595,7 +6595,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             GIT_TERMINAL_PROMPT: "1",
             SSH_ASKPASS: "ssh-askpass",
             SSH_ASKPASS_REQUIRE: "force",
-            T3_TEST_SSH_ASKPASS_LOG: sshLogPath,
+            Z9_TEST_SSH_ASKPASS_LOG: sshLogPath,
           }),
         );
       }),
@@ -6796,46 +6796,46 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       }),
     );
 
-    it.effect.each(["t3", "T3"])("flattens a generated name when parent %s blocks it", (parent) =>
+    it.effect.each(["z9", "Z9"])("flattens a generated name when parent %s blocks it", (parent) =>
       Effect.gen(function* () {
         const cwd = yield* makeTmpDir();
         yield* initRepoWithCommit(cwd);
         const driver = yield* GitVcsDriver.GitVcsDriver;
-        // A local `t3` branch is why launches start on the flat `t3-<hex>` temporary branch.
+        // A local `z9` branch is why launches start on the flat `z9-<hex>` temporary branch.
         yield* git(cwd, ["branch", parent]);
-        yield* git(cwd, ["checkout", "-b", "t3-abcd1234"]);
-        yield* git(cwd, ["branch", "t3-fix-login"]);
+        yield* git(cwd, ["checkout", "-b", "z9-abcd1234"]);
+        yield* git(cwd, ["branch", "z9-fix-login"]);
 
         const renamed = yield* driver.renameBranch({
           cwd,
-          oldBranch: "t3-abcd1234",
-          newBranch: "t3/fix-login",
+          oldBranch: "z9-abcd1234",
+          newBranch: "z9/fix-login",
         });
 
-        assert.equal(renamed.branch, "t3-fix-login-1");
-        assert.equal(yield* git(cwd, ["branch", "--show-current"]), "t3-fix-login-1");
+        assert.equal(renamed.branch, "z9-fix-login-1");
+        assert.equal(yield* git(cwd, ["branch", "--show-current"]), "z9-fix-login-1");
       }),
     );
 
-    it.effect.each(["t3-fix-login/child", "T3-Fix-Login/child", "T3-FIX-LOGIN"])(
+    it.effect.each(["z9-fix-login/child", "Z9-Fix-Login/child", "Z9-FIX-LOGIN"])(
       "skips a flattened name blocked by %s",
       (occupied) =>
         Effect.gen(function* () {
           const cwd = yield* makeTmpDir();
           yield* initRepoWithCommit(cwd);
           const driver = yield* GitVcsDriver.GitVcsDriver;
-          yield* git(cwd, ["branch", "t3"]);
-          yield* git(cwd, ["checkout", "-b", "t3-abcd1234"]);
+          yield* git(cwd, ["branch", "z9"]);
+          yield* git(cwd, ["checkout", "-b", "z9-abcd1234"]);
           yield* git(cwd, ["branch", occupied]);
 
           const renamed = yield* driver.renameBranch({
             cwd,
-            oldBranch: "t3-abcd1234",
-            newBranch: "t3/fix-login",
+            oldBranch: "z9-abcd1234",
+            newBranch: "z9/fix-login",
           });
 
-          assert.equal(renamed.branch, "t3-fix-login-1");
-          assert.equal(yield* git(cwd, ["branch", "--show-current"]), "t3-fix-login-1");
+          assert.equal(renamed.branch, "z9-fix-login-1");
+          assert.equal(yield* git(cwd, ["branch", "--show-current"]), "z9-fix-login-1");
         }),
     );
 
@@ -7272,7 +7272,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             cwd,
             path: worktreePath,
             refName: initialBranch,
-            newRefName: "t3/cancel",
+            newRefName: "z9/cancel",
           };
           const worktrees = git(cwd, ["worktree", "list", "--porcelain"]);
 
@@ -7292,7 +7292,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
 
           assert.equal(claims, 0);
           assert.notInclude(yield* worktrees, worktreePath);
-          assert.equal(yield* git(cwd, ["branch", "--list", "t3/cancel"]), "");
+          assert.equal(yield* git(cwd, ["branch", "--list", "z9/cancel"]), "");
           assert.isFalse(yield* fs.exists(worktreePath));
 
           // A retry gets the same path and branch, and a claimed worktree outlives a later cancel.
@@ -7307,7 +7307,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           yield* Fiber.interrupt(retry);
           assert.include(yield* worktrees, worktreePath);
           assert.notInclude(yield* worktrees, "locked");
-          assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "t3/cancel");
+          assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "z9/cancel");
         }),
     );
 
@@ -7434,7 +7434,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
 
           const result = yield* driver
             .createWorktree(
-              { cwd, path: worktreePath, refName: initialBranch, newRefName: "t3/noisy" },
+              { cwd, path: worktreePath, refName: initialBranch, newRefName: "z9/noisy" },
               withProgress ? { progress: { onCheckoutProgress: () => Effect.void } } : undefined,
             )
             .pipe(Effect.result);
@@ -7605,20 +7605,20 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
             cwd,
             path: occupiedPath,
             refName: initialBranch,
-            newRefName: "t3/collide",
+            newRefName: "z9/collide",
           })
           .pipe(Effect.result);
 
         assert.isTrue(Result.isFailure(failed));
-        assert.equal(yield* git(cwd, ["branch", "--list", "t3/collide"]), "");
+        assert.equal(yield* git(cwd, ["branch", "--list", "z9/collide"]), "");
         const worktreePath = path.join(yield* makeTmpDir("git-worktrees-"), "retry");
         yield* driver.createWorktree({
           cwd,
           path: worktreePath,
           refName: initialBranch,
-          newRefName: "t3/collide",
+          newRefName: "z9/collide",
         });
-        assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "t3/collide");
+        assert.equal(yield* git(worktreePath, ["branch", "--show-current"]), "z9/collide");
       }),
     );
 
@@ -7710,7 +7710,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         const driver = yield* GitVcsDriver.GitVcsDriver;
         // A multi-model send launches one worktree per model with the same message, so their
         // generated names often match and the renames can land together.
-        const temporaryBranches = ["t3/aaaa1111", "t3/bbbb2222", "t3/cccc3333"];
+        const temporaryBranches = ["z9/aaaa1111", "z9/bbbb2222", "z9/cccc3333"];
         yield* Effect.forEach(temporaryBranches, (branch) =>
           driver.createWorktree({
             cwd,
@@ -8393,16 +8393,16 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       Effect.gen(function* () {
         const cwd = yield* makeTmpDir();
         yield* initRepoWithCommit(cwd);
-        yield* git(cwd, ["checkout", "-b", "t3/abcd1234"]);
+        yield* git(cwd, ["checkout", "-b", "z9/abcd1234"]);
         yield* writeTextFile(cwd, ".git/config.lock", "");
         const driver = yield* GitVcsDriver.GitVcsDriver;
 
         const renamed = yield* TestClock.withLive(
-          driver.renameBranch({ cwd, oldBranch: "t3/abcd1234", newBranch: "t3/fix-login" }),
+          driver.renameBranch({ cwd, oldBranch: "z9/abcd1234", newBranch: "z9/fix-login" }),
         );
 
-        assert.equal(renamed.branch, "t3/fix-login");
-        assert.equal(yield* git(cwd, ["branch", "--show-current"]), "t3/fix-login");
+        assert.equal(renamed.branch, "z9/fix-login");
+        assert.equal(yield* git(cwd, ["branch", "--show-current"]), "z9/fix-login");
       }),
     );
 
@@ -8754,7 +8754,12 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
       Effect.gen(function* () {
         const cwd = yield* makeTmpDir();
         yield* git(cwd, ["init"]);
-        yield* git(cwd, ["remote", "add", "origin", "https://github.com/pingdotgg/t3code.git"]);
+        yield* git(cwd, [
+          "remote",
+          "add",
+          "origin",
+          "https://github.com/ZelinZhu-Richard/z9code.git",
+        ]);
         yield* git(cwd, ["config", "remote.origin.promisor", "true"]);
         yield* git(cwd, ["config", "remote.origin.partialclonefilter", "blob:none"]);
         const driver = yield* GitVcsDriver.GitVcsDriver;
@@ -8762,13 +8767,13 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         const reused = yield* driver.ensureRemote({
           cwd,
           preferredName: "origin",
-          url: "git@github.com:pingdotgg/t3code.git",
+          url: "git@github.com:ZelinZhu-Richard/z9code.git",
         });
         assert.equal(reused, "origin");
         const added = yield* driver.ensureRemote({
           cwd,
           preferredName: "origin",
-          url: "https://github.com/another-owner/t3code.git",
+          url: "https://github.com/another-owner/z9code.git",
         });
         assert.equal(added, "origin-1");
       }),
@@ -8852,7 +8857,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provide(layerServerConfig),
         );
-        const input = { cwd, preferredName: "fork", url: "https://github.com/fork/t3code.git" };
+        const input = { cwd, preferredName: "fork", url: "https://github.com/fork/z9code.git" };
 
         const names = yield* Effect.all([driver.ensureRemote(input), driver.ensureRemote(input)], {
           concurrency: "unbounded",
@@ -9050,47 +9055,52 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
         yield* initRepoWithCommit(cwd);
         const driver = yield* GitVcsDriver.GitVcsDriver;
 
-        yield* git(cwd, ["remote", "add", "origin", "https://github.com/pingdotgg/t3code.git"]);
+        yield* git(cwd, [
+          "remote",
+          "add",
+          "origin",
+          "https://github.com/ZelinZhu-Richard/z9code.git",
+        ]);
 
         const reusedForSsh = yield* driver.ensureRemote({
           cwd,
           preferredName: "pingdotgg",
-          url: "git@github.com:pingdotgg/t3code.git",
+          url: "git@github.com:ZelinZhu-Richard/z9code.git",
         });
         assert.equal(reusedForSsh, "origin");
 
         const reusedForSshScheme = yield* driver.ensureRemote({
           cwd,
           preferredName: "pingdotgg",
-          url: "ssh://git@github.com/pingdotgg/t3code",
+          url: "ssh://git@github.com/ZelinZhu-Richard/z9code",
         });
         assert.equal(reusedForSshScheme, "origin");
 
         const reusedForBareSshScheme = yield* driver.ensureRemote({
           cwd,
           preferredName: "pingdotgg",
-          url: "ssh://github.com/pingdotgg/t3code",
+          url: "ssh://github.com/ZelinZhu-Richard/z9code",
         });
         assert.equal(reusedForBareSshScheme, "origin");
 
         const reusedForSshPort = yield* driver.ensureRemote({
           cwd,
           preferredName: "pingdotgg",
-          url: "ssh://git@github.com:22/pingdotgg/t3code",
+          url: "ssh://git@github.com:22/ZelinZhu-Richard/z9code",
         });
         assert.equal(reusedForSshPort, "origin");
 
         const reusedForSshWithPort = yield* driver.ensureRemote({
           cwd,
           preferredName: "pingdotgg",
-          url: "ssh://git@github.com:22/pingdotgg/t3code.git",
+          url: "ssh://git@github.com:22/ZelinZhu-Richard/z9code.git",
         });
         assert.equal(reusedForSshWithPort, "origin");
 
         const addedForFork = yield* driver.ensureRemote({
           cwd,
           preferredName: "octocat",
-          url: "git@github.com:octocat/t3code.git",
+          url: "git@github.com:octocat/z9code.git",
         });
         assert.equal(addedForFork, "octocat");
         assert.equal(yield* git(cwd, ["remote"]), "octocat\norigin");
@@ -9888,7 +9898,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           cwd,
           path: worktreePath,
           refName: resolvedBase.commitSha,
-          newRefName: "t3code/fetched-origin",
+          newRefName: "z9code/fetched-origin",
           baseRefName: resolvedBase.remoteRefName,
         });
 
@@ -9902,7 +9912,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           remoteHead,
         );
         assert.equal(
-          yield* driver.readConfigValue(worktreePath, "branch.t3code/fetched-origin.remote"),
+          yield* driver.readConfigValue(worktreePath, "branch.z9code/fetched-origin.remote"),
           null,
         );
         const status = yield* driver.statusDetails(worktreePath);
@@ -10665,7 +10675,7 @@ it.layer(layerTest)("GitVcsDriver core integration", (it) => {
           yield* git(origin, ["init", "--bare"]);
           yield* git(fork, ["init", "--bare"]);
           yield* git(cwd, ["remote", "add", "origin", origin]);
-          // e.g. the remote T3 adds when checking out a pull request from alice's fork.
+          // e.g. the remote z9code adds when checking out a pull request from alice's fork.
           yield* git(cwd, ["remote", "add", "alice", fork]);
           yield* git(cwd, ["checkout", "-b", "alice/fix"]);
           yield* writeTextFile(cwd, "fix.txt", "fix\n");

@@ -5,8 +5,8 @@ import {
   type VcsRefreshStatusResult,
   type VcsStatusResult,
   WS_METHODS,
-} from "@t3tools/contracts";
-import { applyGitStatusStreamEvent } from "@t3tools/shared/git";
+} from "@z9code/contracts";
+import { applyGitStatusStreamEvent } from "@z9code/shared/git";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";

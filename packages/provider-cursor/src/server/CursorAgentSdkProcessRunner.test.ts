@@ -1,8 +1,8 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { ProviderSessionId, ThreadId } from "@t3tools/contracts";
-import { AgentScope } from "@t3tools/shared/AgentScope";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import { ProviderSessionId, ThreadId } from "@z9code/contracts";
+import { AgentScope } from "@z9code/shared/AgentScope";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -248,9 +248,9 @@ describe("CursorAgentSdkWorkerProtocol", () => {
 describe("scrubCursorWorkerEnvironment", () => {
   it("removes the AppImage runtime env the worker inherited before agent shells see it", () => {
     const env: NodeJS.ProcessEnv = {
-      APPIMAGE: "/home/ada/T3-Code.AppImage",
+      APPIMAGE: "/home/ada/z9code.AppImage",
       APPDIR: "/tmp/.mount_T3-test",
-      ARGV0: "T3-Code.AppImage",
+      ARGV0: "z9code.AppImage",
       OWD: "/home/ada",
       ELECTRON_RUN_AS_NODE: "1",
       LD_LIBRARY_PATH: "/tmp/.mount_T3-test/usr/lib",

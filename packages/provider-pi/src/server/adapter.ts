@@ -1,9 +1,9 @@
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as NodeUtil from "node:util";
-import { AgentScope } from "@t3tools/shared/AgentScope";
-import { getModelSelectionStringOptionValue } from "@t3tools/shared/model";
-import { readToolOutputImage } from "@t3tools/shared/toolOutput";
-import { isWorkspaceImagePreviewPath } from "@t3tools/shared/filePreview";
+import { AgentScope } from "@z9code/shared/AgentScope";
+import { getModelSelectionStringOptionValue } from "@z9code/shared/model";
+import { readToolOutputImage } from "@z9code/shared/toolOutput";
+import { isWorkspaceImagePreviewPath } from "@z9code/shared/filePreview";
 import * as Predicate from "effect/Predicate";
 import {
   ProviderDriverKind,
@@ -25,7 +25,7 @@ import {
   type ProviderInstanceId,
   type MessageId,
   type OrchestrationV2ProviderTurnTokenUsage,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { PiSettings } from "../settings.ts";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
@@ -44,25 +44,25 @@ import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
-import { providerMessageTextWithAttachmentPaths } from "@t3tools/provider-core/server/attachmentPrompt";
-import { mcpToolPresentation } from "@t3tools/provider-core/server/mcpToolPresentation";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
+import * as ProviderHost from "@z9code/provider-core/server/ProviderHost";
+import { providerMessageTextWithAttachmentPaths } from "@z9code/provider-core/server/attachmentPrompt";
+import { mcpToolPresentation } from "@z9code/provider-core/server/mcpToolPresentation";
+import * as McpProviderSessions from "@z9code/provider-core/server/McpProviderSessions";
 import { parsePiCompactCommand, type PiCompactCommand } from "./commands.ts";
-import { mergeProviderInstanceEnvironment } from "@t3tools/provider-core/server/instanceEnvironment";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
-import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
-import * as ProviderContinuationRequests from "@t3tools/provider-core/server/ProviderContinuationRequests";
+import { mergeProviderInstanceEnvironment } from "@z9code/provider-core/server/instanceEnvironment";
+import * as IdAllocator from "@z9code/provider-core/server/IdAllocator";
+import * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
+import * as ProviderContinuationRequests from "@z9code/provider-core/server/ProviderContinuationRequests";
 import {
   ProviderAdapterDriverCreateError,
   type ProviderAdapterDriver,
   type ProviderAdapterDriverCreateInput,
-} from "@t3tools/provider-core/server/adapterDriver";
+} from "@z9code/provider-core/server/adapterDriver";
 import {
   makeProviderFailure,
   makeProviderRetryTurnItem,
-} from "@t3tools/provider-core/server/failure";
-import { turnScopedSelectionTransition } from "@t3tools/provider-core/server/selectionTransition";
+} from "@z9code/provider-core/server/failure";
+import { turnScopedSelectionTransition } from "@z9code/provider-core/server/selectionTransition";
 import {
   findReportedPiModel,
   makePiRpcConnection,
@@ -98,7 +98,7 @@ const MAX_EXTENSION_STATUSES = 32;
 const MAX_EXTENSION_STATUS_KEY_LENGTH = 256;
 const MAX_EXTENSION_STATUS_TEXT_LENGTH = 4096;
 const PI_UNSOLICITED_ACTIVITY_ERROR =
-  "Pi started agent work outside an active T3 turn. The session was stopped to prevent invisible tool execution.";
+  "Pi started agent work outside an active z9code turn. The session was stopped to prevent invisible tool execution.";
 const SETTLE_PROBE_MAX_ATTEMPTS = 3;
 const SETTLE_PROBE_RETRY_DELAY = Duration.millis(100);
 
@@ -545,7 +545,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           const launch = buildPiRpcLaunch({
             launchArgs: resolvedLaunchArgs.args,
             // PortScanner.AGENT_THREAD_ENV, as a literal because this package cannot reach apps/server.
-            environment: { ...options.environment, T3CODE_THREAD_ID: input.threadId },
+            environment: { ...options.environment, Z9CODE_THREAD_ID: input.threadId },
             mcpSession,
             extensionPath,
             sessionPath,
@@ -571,7 +571,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
             cwd,
             env: launch.env,
           });
-          // Its tools carry T3CODE_THREAD_ID, so port discovery must scan while Pi runs.
+          // Its tools carry Z9CODE_THREAD_ID, so port discovery must scan while Pi runs.
           const trackAgent = host.trackAgent;
           if (trackAgent !== undefined) {
             yield* Effect.acquireRelease(Effect.sync(trackAgent), (release) =>
@@ -3348,7 +3348,7 @@ export const makePiAdapterV2 = Effect.fn("makePiAdapterV2")(function* (
           // Pi before 0.99 acknowledges a handled extension command without a disposition.
           const disposition = recordString(result, "disposition");
           if (disposition !== undefined && disposition !== "handled") {
-            return yield* protocolError("T3 Code's Pi extension did not apply the service tier");
+            return yield* protocolError("z9code's Pi extension did not apply the service tier");
           }
           serviceTierMayBeSet = serviceTier !== null;
         }
@@ -4323,7 +4323,7 @@ function piForkEntry<E>(
 }
 
 /**
- * Pi shares the server clock. An adopted wake can precede its T3 turn, so search from the target
+ * Pi shares the server clock. An adopted wake can precede its z9code turn, so search from the target
  * turn's end through the boundary turn's end. A boundary turn still running has no end yet, so
  * the window stays open through the tree read. At thread start, use the earlier of thread
  * creation and turn start to include adopted wakes while preserving inherited session history.
@@ -4457,7 +4457,7 @@ const rpivField = (input: unknown, key: string) =>
   recordString(input, key)?.replace(/\r\n/g, "\n").replace(/\r/g, "");
 
 const rpivOptionLine = (option: unknown, index: number) =>
-  // oxlint-disable-next-line t3code/no-em-dash-copy -- Matches the extension's option line format.
+  // oxlint-disable-next-line z9code/no-em-dash-copy -- Matches the extension's option line format.
   `${index + 1}. ${rpivField(option, "label")} — ${rpivField(option, "description")}`;
 
 /** The extension folds option previews into the select title, the only place clients show them. */

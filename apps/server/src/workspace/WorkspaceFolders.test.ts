@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
-import { ProjectId, type ProjectTrackedFolder } from "@t3tools/contracts";
+import { ProjectId, type ProjectTrackedFolder } from "@z9code/contracts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -49,7 +49,7 @@ const layerFor = (project?: {
 const makeTempDir = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   return yield* fileSystem.realPath(
-    yield* fileSystem.makeTempDirectoryScoped({ prefix: "t3code-workspace-folders-" }),
+    yield* fileSystem.makeTempDirectoryScoped({ prefix: "z9code-workspace-folders-" }),
   );
 });
 

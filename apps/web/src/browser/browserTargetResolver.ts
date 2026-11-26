@@ -2,17 +2,17 @@ import type {
   BrowserNavigationTarget,
   EnvironmentId,
   PreviewUrlResolution,
-} from "@t3tools/contracts";
-import { isLoopbackHost, normalizePreviewUrl } from "@t3tools/shared/preview";
-import { isLocalLoopbackHost, isPrivateNetworkHost } from "@t3tools/shared/hostClassification";
+} from "@z9code/contracts";
+import { isLoopbackHost, normalizePreviewUrl } from "@z9code/shared/preview";
+import { isLocalLoopbackHost, isPrivateNetworkHost } from "@z9code/shared/hostClassification";
 
-import type { ConnectionTarget } from "@t3tools/client-runtime/connection";
+import type { ConnectionTarget } from "@z9code/client-runtime/connection";
 
 import { isDesktopLocalConnectionTarget } from "~/connection/desktopLocal";
 import { isElectron } from "~/env";
 import { readPreparedConnection } from "~/state/session";
 
-export { normalizeHostname, isLocalLoopbackHost } from "@t3tools/shared/hostClassification";
+export { normalizeHostname, isLocalLoopbackHost } from "@z9code/shared/hostClassification";
 
 const readEnvironmentUrl = (environmentId: EnvironmentId): URL => {
   const connection = readPreparedConnection(environmentId);

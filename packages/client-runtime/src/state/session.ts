@@ -8,7 +8,7 @@ import {
   EnvironmentScopeRequiredError,
   type ServerConfig,
   sessionGrantsScope,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -22,7 +22,7 @@ import * as RemoteEnvironmentAuthorization from "../authorization/service.ts";
 import * as EnvironmentRegistry from "../connection/registry.ts";
 import type { PreparedConnection } from "../connection/model.ts";
 import * as EnvironmentSupervisor from "../connection/supervisor.ts";
-import * as ManagedRelay from "../relay/managedRelay.ts";
+import * as DpopSigner from "../dpop/signer.ts";
 import {
   RemoteEnvironmentAuthFetchError,
   RemoteEnvironmentAuthUndeclaredStatusError,
@@ -95,7 +95,7 @@ export const fetchEnvironmentSessionState = Effect.fn(
   "clientRuntime.state.fetchEnvironmentSessionState",
 )(function* (input: {
   readonly prepared: PreparedConnection;
-  readonly signer: Option.Option<ManagedRelay.ManagedRelayDpopSigner["Service"]>;
+  readonly signer: Option.Option<DpopSigner.DpopSigner["Service"]>;
   readonly remoteAuthorization?: Option.Option<
     RemoteEnvironmentAuthorization.RemoteEnvironmentAuthorization["Service"]
   >;
@@ -220,7 +220,7 @@ function makeEnvironmentSessionAtoms<R, E>(
           consecutiveFailures = 0;
         }
         return Effect.gen(function* () {
-          const signer = yield* Effect.serviceOption(ManagedRelay.ManagedRelayDpopSigner);
+          const signer = yield* Effect.serviceOption(DpopSigner.DpopSigner);
           const remoteAuthorization = yield* Effect.serviceOption(
             RemoteEnvironmentAuthorization.RemoteEnvironmentAuthorization,
           );

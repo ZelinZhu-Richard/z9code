@@ -1,5 +1,5 @@
-import type { UsageProviderKind } from "@t3tools/contracts";
-import type { DailyTotals } from "@t3tools/shared/usageMerge";
+import type { UsageProviderKind } from "@z9code/contracts";
+import type { DailyTotals } from "@z9code/shared/usageMerge";
 
 import { PROVIDER_ORDER } from "./usageProviders";
 

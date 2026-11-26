@@ -1,9 +1,9 @@
-import type { RepositoryIdentity, SourceControlProviderError } from "@t3tools/contracts";
-import { parseGitRemoteHost } from "@t3tools/source-control-core/shared/definition";
-import { repositoryPathFromRemoteUrl } from "@t3tools/source-control-core/server/SourceControlProvider";
-import { withoutRemoteUrlCredentials } from "@t3tools/shared/cloneUrl";
-import { canonicalRepositoryPath, normalizeGitRemoteUrl } from "@t3tools/shared/git";
-import { isSshRemoteUrl } from "@t3tools/shared/sourceControl";
+import type { RepositoryIdentity, SourceControlProviderError } from "@z9code/contracts";
+import { parseGitRemoteHost } from "@z9code/source-control-core/shared/definition";
+import { repositoryPathFromRemoteUrl } from "@z9code/source-control-core/server/SourceControlProvider";
+import { withoutRemoteUrlCredentials } from "@z9code/shared/cloneUrl";
+import { canonicalRepositoryPath, normalizeGitRemoteUrl } from "@z9code/shared/git";
+import { isSshRemoteUrl } from "@z9code/shared/sourceControl";
 import * as Cache from "effect/Cache";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
@@ -17,7 +17,7 @@ import * as Path from "effect/Path";
 import * as ProcessRunner from "../processRunner.ts";
 import { sourceControlDefinitions } from "../sourceControl/sourceControlDefinitions.ts";
 import { explicitBareRepositoryEnv, unsetInheritedRepositoryEnv } from "../vcs/VcsProcess.ts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import * as HostProcess from "@z9code/shared/HostProcess";
 
 const DEFAULT_REPOSITORY_IDENTITY_CACHE_CAPACITY = 512;
 // Minute-by-minute sweeps need cached hits; clone, publish and PR discovery force refresh.
@@ -39,7 +39,7 @@ export class RepositoryIdentityResolver extends Context.Service<
       options?: { readonly refresh?: boolean },
     ) => Effect.Effect<RepositoryIdentity | null>;
   }
->()("t3/project/RepositoryIdentityResolver") {}
+>()("z9/project/RepositoryIdentityResolver") {}
 
 // Local paths such as GitButler's gb-local=. would give unrelated repos the same identity.
 function isLocalRemoteUrl(url: string): boolean {

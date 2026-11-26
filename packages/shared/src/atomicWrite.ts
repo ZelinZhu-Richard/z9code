@@ -4,11 +4,11 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import type * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { resolveSymlinkTarget } from "@t3tools/shared/symlink";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { resolveSymlinkTarget } from "@z9code/shared/symlink";
 
 /** Windows open-file locks block renames; the same codes can mean permanent denial, so bound retries. */
-export const isWindowsRenameLock = (error: PlatformError.PlatformError) => {
+const isWindowsRenameLock = (error: PlatformError.PlatformError) => {
   const code = (error.reason.cause as NodeJS.ErrnoException | undefined)?.code;
   return code === "EBUSY" || code === "EPERM" || code === "EACCES";
 };

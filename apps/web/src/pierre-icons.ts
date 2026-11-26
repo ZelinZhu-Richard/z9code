@@ -3,8 +3,8 @@ import {
   getBuiltInSpriteSheet,
   type FileTreeIcons,
 } from "@pierre/trees";
-import { VIDEO_FILE_EXTENSIONS } from "@t3tools/shared/video";
-import { fileIconPathForMimeType } from "@t3tools/shared/mediaPreview";
+import { VIDEO_FILE_EXTENSIONS } from "@z9code/shared/video";
+import { fileIconPathForMimeType } from "@z9code/shared/mediaPreview";
 
 import type { ContextChipAccentKind } from "~/lib/contextChipAccents";
 
@@ -13,7 +13,7 @@ export interface PierreIconResolution {
   token?: string;
 }
 
-const PIERRE_ICON_SPRITE_ID = "t3code-pierre-file-icon-sprite";
+const PIERRE_ICON_SPRITE_ID = "z9code-pierre-file-icon-sprite";
 
 const DOCUMENT_ICON_COLORS: Readonly<Record<string, string>> = {
   "t3-file-icon-pdf": "light-dark(#d52c36, #ff6762)",
@@ -23,7 +23,7 @@ const DOCUMENT_ICON_COLORS: Readonly<Record<string, string>> = {
   "t3-file-icon-epub": "light-dark(#693acf, #9d6afb)",
 };
 
-const T3_FILE_ICON_SPRITE = `
+const Z9_FILE_ICON_SPRITE = `
 <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" aria-hidden="true">
   <!-- Lucide Film icon, ISC license. -->
   <symbol id="t3-file-icon-video" viewBox="0 0 24 24">
@@ -132,10 +132,10 @@ const T3_FILE_ICON_SPRITE = `
   </symbol>
 </svg>`;
 
-export const T3_PIERRE_ICONS = {
+export const Z9_PIERRE_ICONS = {
   set: "complete",
   colored: true,
-  spriteSheet: T3_FILE_ICON_SPRITE,
+  spriteSheet: Z9_FILE_ICON_SPRITE,
   byFileName: {
     "package.json": "file-tree-builtin-npm",
     "tsconfig.json": "file-tree-builtin-typescript",
@@ -191,7 +191,7 @@ export const T3_PIERRE_ICONS = {
   },
 } satisfies FileTreeIcons;
 
-const completeIconResolver = createFileTreeIconResolver(T3_PIERRE_ICONS);
+const completeIconResolver = createFileTreeIconResolver(Z9_PIERRE_ICONS);
 
 const LANGUAGE_EXTENSION_ALIASES: Record<string, string> = {
   bash: "sh",
@@ -282,6 +282,6 @@ export function ensurePierreIconSprite(): void {
   container.style.height = "0";
   container.style.overflow = "hidden";
   container.style.pointerEvents = "none";
-  container.innerHTML = `${getBuiltInSpriteSheet("complete")}${T3_FILE_ICON_SPRITE}`;
+  container.innerHTML = `${getBuiltInSpriteSheet("complete")}${Z9_FILE_ICON_SPRITE}`;
   document.body.prepend(container);
 }

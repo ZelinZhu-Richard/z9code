@@ -27,14 +27,14 @@ import {
   xAiSubagentFinishedNotice,
   XAiAskUserQuestionRequest,
 } from "./xaiAcpExtension.ts";
-import * as AcpSessionRuntime from "@t3tools/provider-acp/server/AcpSessionRuntime";
+import * as AcpSessionRuntime from "@z9code/provider-acp/server/AcpSessionRuntime";
 import {
   type AcpToolCallState,
   extractMcpToolCallIdentity,
   mergeToolCallState,
   parseSessionUpdateEvent,
-} from "@t3tools/provider-acp/server/runtimeModel";
-import { compactDynamicToolOutput, htmlRenderFromToolItem } from "@t3tools/shared/toolOutput";
+} from "@z9code/provider-acp/server/runtimeModel";
+import { compactDynamicToolOutput, htmlRenderFromToolItem } from "@z9code/shared/toolOutput";
 
 const decodeXAiAskUserQuestionRequest = Schema.decodeUnknownSync(XAiAskUserQuestionRequest);
 
@@ -376,25 +376,25 @@ describe("XAiAcpExtension", () => {
 
     const rendered = grokCall(
       "call-85597c6c-6fb8-4c9c-a6a8-12c4a74ebc96-1",
-      "t3-code__html_render",
+      "z9code__html_render",
       { path: "a.html" },
       {
         status: "completed",
         rawOutput: {
           type: "MCP",
           tool_name: "html_render",
-          server_name: "t3-code",
+          server_name: "z9code",
           output: { OkayOutput: JSON.stringify({ htmlRender: page, message: "Shown" }) },
         },
       },
     );
     expect(extractMcpToolCallIdentity(rendered)).toEqual({
-      server: "t3-code",
+      server: "z9code",
       tool: "html_render",
     });
     expect(rendered.data.rawInput).toMatchObject({ arguments: { path: "a.html" } });
     expect(
-      htmlRenderFromToolItem({ toolName: "t3-code.html_render", output: rendered.data.rawOutput }),
+      htmlRenderFromToolItem({ toolName: "z9code.html_render", output: rendered.data.rawOutput }),
     ).toEqual(page);
 
     const failed = grokCall(

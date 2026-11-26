@@ -1,22 +1,22 @@
 import { useAtomValue } from "@effect/atom-react";
-import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
-import { PrimaryConnectionTarget } from "@t3tools/client-runtime/connection";
+import type { EnvironmentProject } from "@z9code/client-runtime/state/shell";
+import { PrimaryConnectionTarget } from "@z9code/client-runtime/connection";
 import * as Option from "effect/Option";
 import type { EnvironmentPresentation } from "../../state/environments";
-import type { ServerProvider } from "@t3tools/contracts";
+import type { ServerProvider } from "@z9code/contracts";
 import {
   scopedThreadKey,
   scopeProjectRef,
   scopeThreadRef,
-} from "@t3tools/client-runtime/environment";
-import { createModelSelection } from "@t3tools/shared/model";
-import { DEFAULT_UNIFIED_SETTINGS } from "@t3tools/contracts/settings";
+} from "@z9code/client-runtime/environment";
+import { createModelSelection } from "@z9code/shared/model";
+import { DEFAULT_UNIFIED_SETTINGS } from "@z9code/contracts/settings";
 import {
   EnvironmentId,
   ProjectId,
   ProviderDriverKind,
   ProviderInstanceId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { expect, it, vi } from "vite-plus/test";
 
 import { act, render } from "../../../test/render";
@@ -96,7 +96,6 @@ function setup() {
           environmentId: id,
           label: id,
           displayUrl: null,
-          relayManaged: false,
           entry: {
             target: new PrimaryConnectionTarget({
               environmentId: id,

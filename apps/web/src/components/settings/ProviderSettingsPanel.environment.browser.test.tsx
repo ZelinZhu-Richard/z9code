@@ -7,7 +7,7 @@ import {
   type ProviderAuthState,
   type ServerProvider,
   type UnifiedSettings,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import { AsyncResult, type Atom } from "effect/reactivity";
@@ -385,7 +385,7 @@ describe("EnvironmentProviderSettings routing", () => {
 
   it("routes explicit ACP browser authentication consent to the selected environment", async () => {
     await setup();
-    const instanceId = ProviderInstanceId.make("acpRegistry_antigravity");
+    const instanceId = ProviderInstanceId.make("acpRegistry_gemini");
     const action = {
       elicitationId: "google-login-1",
       url: "https://accounts.google.com/login",
@@ -397,7 +397,7 @@ describe("EnvironmentProviderSettings routing", () => {
         [instanceId]: {
           driver: ProviderDriverKind.make("acpRegistry"),
           enabled: true,
-          config: { agentId: "antigravity" },
+          config: { agentId: "gemini" },
         },
       },
     };
@@ -544,20 +544,20 @@ describe("EnvironmentProviderSettings instance removal", () => {
 
   it("warns that resetting an enabled default-off provider turns it off", async () => {
     await setup();
-    const antigravityId = ProviderInstanceId.make("antigravity");
-    const antigravity = ProviderDriverKind.make("antigravity");
+    const cursorId = ProviderInstanceId.make("cursor");
+    const cursor = ProviderDriverKind.make("cursor");
     state.settings = {
       ...DEFAULT_UNIFIED_SETTINGS,
       providerInstances: {
-        [antigravityId]: {
-          driver: antigravity,
+        [cursorId]: {
+          driver: cursor,
           enabled: true,
-          config: { binaryPath: "/opt/antigravity/bin/agy" },
+          config: { binaryPath: "/opt/cursor/bin/cursor-agent" },
         },
       },
     };
-    await setProviders([{ ...provider(), instanceId: antigravityId, driver: antigravity }]);
-    await using _screen = await render(panel({ targetInstanceId: antigravityId }));
+    await setProviders([{ ...provider(), instanceId: cursorId, driver: cursor }]);
+    await using _screen = await render(panel({ targetInstanceId: cursorId }));
     await userEvent.click(page.getByRole("button", { name: /^Reset .* provider settings/ }));
 
     expect(state.confirm).toHaveBeenCalledWith(

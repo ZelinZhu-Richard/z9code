@@ -9,9 +9,9 @@ import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeSocket from "@effect/platform-node/NodeSocket";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
-import { fromJsonStringPretty } from "@t3tools/shared/schemaJson";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
+import { fromJsonStringPretty } from "@z9code/shared/schemaJson";
 import * as Clock from "effect/Clock";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -43,7 +43,7 @@ import {
   ORCHESTRATION_PROTOCOL_VERSION_TEXT,
   ThreadId,
   WsRpcGroup,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   HttpClient,
   HttpClientRequest,
@@ -848,7 +848,7 @@ const startServer = Effect.fn("serverMetrics.startServer")(function* (
     // Loose refs on purpose: the soak writes them as files, which a reftable store would ignore.
     ["-c", "init.defaultRefFormat=files", "init", "-q", "-b", "main"],
     ["add", "."],
-    ["-c", "user.email=bench@t3.codes", "-c", "user.name=bench", "commit", "-qm", "init"],
+    ["-c", "user.email=bench@z9code.invalid", "-c", "user.name=bench", "commit", "-qm", "init"],
   ]) {
     yield* run("git", args, { cwd: project });
   }
@@ -868,7 +868,7 @@ const startServer = Effect.fn("serverMetrics.startServer")(function* (
   );
   const dropped = new Set([
     "ANTHROPIC_AUTH_TOKEN",
-    "T3CODE_HOME",
+    "Z9CODE_HOME",
     "CLAUDE_CONFIG_DIR",
     ...(environment.noAgentScope ? ["XDG_RUNTIME_DIR"] : []),
   ]);
@@ -884,7 +884,7 @@ const startServer = Effect.fn("serverMetrics.startServer")(function* (
     ANTHROPIC_API_KEY: "sk-bench",
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
     OTEL_SDK_DISABLED: "true",
-    T3CODE_DEV_SEED: "0",
+    Z9CODE_DEV_SEED: "0",
     ...options.forge?.env,
   };
   const port = yield* freePort;
@@ -2129,10 +2129,10 @@ const machineLoad = Effect.gen(function* () {
 );
 
 /** Comm names of the processes that compete with a measured server on a developer's machine. */
-const COMPETING = /^(node|node-MainThread|t3|claude|codex|vite|pnpm)/;
+const COMPETING = /^(node|node-MainThread|z9|claude|codex|vite|pnpm)/;
 
 /**
- * CPU seconds of every node, T3, claude or codex process outside this script's own tree, keyed by
+ * CPU seconds of every node, z9code, claude or codex process outside this script's own tree, keyed by
  * pid and start time so a reused pid is a new process. Linux only; elsewhere none, and the run
  * records only the load average.
  */
@@ -2190,7 +2190,7 @@ const load1 = Effect.gen(function* () {
 
 /**
  * Starts watching the machine for one run; the returned effect reads what competed with it: the
- * highest 1-minute load seen and the cores other T3, node and agent processes kept busy.
+ * highest 1-minute load seen and the cores other z9code, node and agent processes kept busy.
  */
 const watchMachine = Effect.gen(function* () {
   const startedAt = yield* nowMs;

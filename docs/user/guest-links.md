@@ -7,8 +7,10 @@ until you send or dismiss it.
 ## Share a thread
 
 Guest links are a beta. Turn on **Settings → Labs → Guest links** for the machine that runs the
-thread. They also need [T3 Connect](./remote-access.md): sign in and link that machine, because the
-link points at its T3 Connect address. The machine must stay online while the guest uses it.
+thread. The link points at the address your app reaches that machine at, so create it while
+connected over an address the guest can open too, such as a Tailscale HTTPS name or your own proxy
+(see [Remote access](./remote-access.md)). A link from `localhost` or another loopback address is
+refused. The machine must stay online while the guest uses it.
 While the setting is off, every guest link on that machine stops working; links that have not
 expired work again when you turn it back on.
 
@@ -20,8 +22,8 @@ expired work again when you turn it back on.
    Choose **Send** to run it as a normal turn, or **Dismiss**. Files they attached show with the
    message, and **Send** includes them.
 
-Choose **Stop sharing** to end the link at once. Archiving the thread, creating a new link, or
-unlinking the machine from T3 Connect also ends it. The mobile app can send, dismiss, and stop
+Choose **Stop sharing** to end the link at once. Archiving the thread or creating a new link also
+ends it. The mobile app can send, dismiss, and stop
 sharing too.
 
 ## What the guest sees

@@ -6,8 +6,8 @@ import type * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 
-import { INCOGNITO_BROWSER_PROFILE_ID } from "@t3tools/contracts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import { INCOGNITO_BROWSER_PROFILE_ID } from "@z9code/contracts";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import { it as effectIt } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import { chromium, type Browser, type BrowserContext, type BrowserType } from "playwright-core";
@@ -321,7 +321,7 @@ describe("ServerBrowserContexts", () => {
     launches.launch.mockResolvedValue(browser as unknown as Browser);
     const pool = new ServerBrowserContexts({
       ...options(),
-      env: { T3CODE_SERVER_BROWSER_SANDBOX: "0" },
+      env: { Z9CODE_SERVER_BROWSER_SANDBOX: "0" },
     });
     await pool.contextFor(INCOGNITO_BROWSER_PROFILE_ID);
     expect(launches.launch).toHaveBeenCalledWith(
@@ -442,7 +442,7 @@ describe("ServerBrowserContexts", () => {
       await probe.close();
       const pool = new ServerBrowserContexts({
         ...options(),
-        env: { ...process.env, T3CODE_SERVER_BROWSER_SANDBOX: "0" },
+        env: { ...process.env, Z9CODE_SERVER_BROWSER_SANDBOX: "0" },
         chrome: { version, platform: host.platform },
       });
       try {

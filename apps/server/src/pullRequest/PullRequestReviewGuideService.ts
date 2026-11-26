@@ -20,10 +20,10 @@ import {
   type PullRequestStack,
   type RepositoryIdentity,
   type ThreadPullRequestKey,
-} from "@t3tools/contracts";
-import type { ReviewGuideStackLayer } from "@t3tools/provider-core/server/textGeneration";
-import { withoutRemoteUrlCredentials } from "@t3tools/shared/cloneUrl";
-import { resolveProjectSettings } from "@t3tools/shared/projectSettings";
+} from "@z9code/contracts";
+import type { ReviewGuideStackLayer } from "@z9code/provider-core/server/textGeneration";
+import { withoutRemoteUrlCredentials } from "@z9code/shared/cloneUrl";
+import { resolveProjectSettings } from "@z9code/shared/projectSettings";
 import { sourceControlDefinitions } from "../sourceControl/sourceControlDefinitions.ts";
 
 import * as ServerConfig from "../config.ts";
@@ -54,7 +54,7 @@ export class PullRequestReviewGuideService extends Context.Service<
       PullRequestService.PullRequestError
     >;
   }
->()("t3/pullRequest/PullRequestReviewGuideService") {}
+>()("z9/pullRequest/PullRequestReviewGuideService") {}
 
 const keyString = (key: ThreadPullRequestKey) => `${key.host}/${key.repository}#${key.number}`;
 

@@ -19,7 +19,7 @@ import {
   type PreviewAutomationTypeInput,
   type PreviewAutomationUploadInput,
   type PreviewAutomationWaitForInput,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { constVoid } from "effect/Function";
 import * as Schema from "effect/Schema";
 import type { CDPSession, ConsoleMessage, Frame, Locator, Page } from "playwright-core";
@@ -566,7 +566,7 @@ export const captureViewport = async (
           new ServerBrowserOperationError({
             tag: "PreviewAutomationExecutionError",
             message:
-              "The browser is not producing screenshot frames. For a desktop tab, show or restore the T3 Code window and try again.",
+              "The browser is not producing screenshot frames. For a desktop tab, show or restore the z9code window and try again.",
           }),
         ),
       SCREENSHOT_TIMEOUT_MS,

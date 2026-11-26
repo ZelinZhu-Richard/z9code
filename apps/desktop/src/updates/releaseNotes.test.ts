@@ -18,7 +18,7 @@ describe("normalizeDesktopUpdateReleaseNotes", () => {
         "- fix(opencode): handle child approvals, stops, and model catalogs by @human in #8480",
         "## New Contributors",
         "- @human made their first contribution in #8435",
-        "**Full Changelog**: https://github.com/pingdotgg/t3code/compare/old...new",
+        "**Full Changelog**: https://github.com/ZelinZhu-Richard/z9code/compare/old...new",
       ].join("\n"),
       "0.0.36-nightly.20260828.1213",
       "nightly",
@@ -261,7 +261,7 @@ describe("normalizeDesktopUpdateReleaseNotes", () => {
 
   it("ignores the Full Changelog paragraph that ends GitHub's generated notes", () => {
     const fullChangelog = (from: string, to: string) =>
-      `<p><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/pingdotgg/t3code/compare/v${from}...v${to}"><tt>v${from}...v${to}</tt></a></p>`;
+      `<p><strong>Full Changelog</strong>: <a class="commit-link" href="https://github.com/ZelinZhu-Richard/z9code/compare/v${from}...v${to}"><tt>v${from}...v${to}</tt></a></p>`;
     const result = normalizeDesktopUpdateReleaseNotes(
       [
         {

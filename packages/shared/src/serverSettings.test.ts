@@ -9,7 +9,7 @@ import {
   ServerSettingsPatch,
   UsageLimitSourceId,
   type ServerProvider,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Duration from "effect/Duration";
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
@@ -658,10 +658,10 @@ describe("serverSettings helpers", () => {
   });
 
   it("upserts and removes usageLimitSources per entry so concurrent edits cannot clobber", () => {
-    const hubA = UsageLimitSourceId.make("cliproxy-a");
-    const hubB = UsageLimitSourceId.make("cliproxy-b");
+    const hubA = UsageLimitSourceId.make("hub-a");
+    const hubB = UsageLimitSourceId.make("hub-b");
     const source = (url: string) => ({
-      kind: "cliproxy" as const,
+      kind: "http" as const,
       url,
       managementKey: "secret",
       enabled: true,

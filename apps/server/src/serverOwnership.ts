@@ -3,8 +3,8 @@ import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeSqlite from "node:sqlite";
 
-import { SERVER_EXIT_CODE_STATE_DIR_OWNED } from "@t3tools/contracts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import { SERVER_EXIT_CODE_STATE_DIR_OWNED } from "@z9code/contracts";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -18,15 +18,15 @@ import {
   BOOT_SERVICE_PLIST_FILE,
   BOOT_SERVICE_UNIT_FILE,
   bootServiceBaseDirOf,
-} from "./cloud/bootService.ts";
-import { ServiceLauncherHostProcess } from "./cloud/serviceLauncherClient.ts";
+} from "./service/bootService.ts";
+import { ServiceLauncherHostProcess } from "./service/serviceLauncherClient.ts";
 import {
   SERVICE_LAUNCHER_CONTEXT_ENV,
   SERVICE_RESTART_PENDING_FILE,
   SERVICE_STATE_FILE,
   compareExactServiceVersions,
   serviceStateActiveVersion,
-} from "./cloud/serviceProtocol.ts";
+} from "./service/serviceProtocol.ts";
 import {
   legacyOwnerStartedBeforeRecord,
   legacyOwnerStartTimeCommand,
@@ -48,7 +48,7 @@ export class ServerAlreadyRunningError extends Schema.TaggedError<ServerAlreadyR
   override readonly [Runtime.errorExitCode] = SERVER_EXIT_CODE_STATE_DIR_OWNED;
 
   override get message(): string {
-    return `A T3 Code server already owns ${this.stateDir}. Stop that server, or use a separate T3 home and pair with it, then retry. No server was stopped. server-owner.sqlite is the ownership lock; do not delete it while a server is running.`;
+    return `A z9code server already owns ${this.stateDir}. Stop that server, or use a separate z9code home and pair with it, then retry. No server was stopped. server-owner.sqlite is the ownership lock; do not delete it while a server is running.`;
   }
 }
 
@@ -59,7 +59,7 @@ export class OlderBootServiceError extends Schema.TaggedError<OlderBootServiceEr
   override readonly [Runtime.errorExitCode] = SERVER_EXIT_CODE_STATE_DIR_OWNED;
 
   override get message(): string {
-    return `A T3 Code background service set up for ${this.baseDir} may still run a release without the ownership lock. On that machine, try \`t3 update\` and let it restart (or run \`t3 service restart\` if the update is already installed). If the older launcher cannot update, run \`t3 service uninstall\`, then reinstall with \`t3 service install\` from a current CLI. You can also leave the service uninstalled. Pass \`--base-dir ${this.baseDir}\` to each command, and use \`npx t3@latest\` if \`t3\` is not installed or is outdated. Then retry. No server was stopped.`;
+    return `A z9code background service set up for ${this.baseDir} may still run a release without the ownership lock. On that machine, try \`z9 update\` and let it restart (or run \`z9 service restart\` if the update is already installed). If the older launcher cannot update, run \`z9 service uninstall\`, then reinstall with \`z9 service install\` from a current CLI. You can also leave the service uninstalled. Pass \`--base-dir ${this.baseDir}\` to each command, and reinstall z9 with the install script if \`z9\` is not installed or is outdated. Then retry. No server was stopped.`;
   }
 }
 
@@ -299,7 +299,7 @@ export const acquireServerOwnership = Effect.fn("acquireServerOwnership")(functi
         current.ino !== lock.identity.ino;
     }
     yield* Effect.logError(
-      `Server ownership lock at ${lockPath} was deleted or replaced. Another server may now share this T3 home. Stop any other server using this home, then restart this server. Do not delete server-owner.sqlite while a server is running.`,
+      `Server ownership lock at ${lockPath} was deleted or replaced. Another server may now share this z9code home. Stop any other server using this home, then restart this server. Do not delete server-owner.sqlite while a server is running.`,
     );
   }).pipe(Effect.forkScoped);
 

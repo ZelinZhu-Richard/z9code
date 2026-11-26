@@ -1,4 +1,4 @@
-import type { EnvironmentId } from "@t3tools/contracts";
+import type { EnvironmentId } from "@z9code/contracts";
 import { expect, it } from "vite-plus/test";
 
 import type { WorkspaceEnvironment } from "../../state/workspaceModel";
@@ -13,7 +13,6 @@ function environment(
     environmentId: environmentId as EnvironmentId,
     environmentLabel,
     displayUrl: "",
-    isRelayManaged: false,
     isEnabled,
     connectionState: isEnabled ? "connected" : "available",
     connectionError: null,

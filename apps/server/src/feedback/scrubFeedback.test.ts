@@ -17,9 +17,9 @@ describe("scrubFeedback", () => {
     ],
     [
       "known values only as whole words",
-      "t3_feedback failed for t3 and Bob, not bobcat",
-      ["t3", "Bob", "x"],
-      "t3_feedback failed for t3 and [redacted], not bobcat",
+      "z9_feedback failed for z9 and Bob, not bobcat",
+      ["z9", "Bob", "x"],
+      "z9_feedback failed for z9 and [redacted], not bobcat",
     ],
     [
       "URLs with credentials before emails inside them",
@@ -35,9 +35,9 @@ describe("scrubFeedback", () => {
     ],
     [
       "long random runs, not long identifiers or paths",
-      "aB3dE5fG7hI9jK1lM3nO5pQ7rS9tU1vW t3_environment_preferences_update apps/server/src/persistence/Migrations/088",
+      "aB3dE5fG7hI9jK1lM3nO5pQ7rS9tU1vW z9_environment_preferences_update apps/server/src/persistence/Migrations/088",
       [],
-      "[redacted] t3_environment_preferences_update apps/server/src/persistence/Migrations/088",
+      "[redacted] z9_environment_preferences_update apps/server/src/persistence/Migrations/088",
     ],
     [
       "whole absolute paths",
@@ -59,9 +59,9 @@ describe("scrubFeedback", () => {
     ],
     [
       "nothing that only looks like a path",
-      "See https://github.com/org/repo for t3 thread send and t3_thread_read: 3/10 and/or a / b /mcp /compact /secret.env",
+      "See https://github.com/org/repo for z9 thread send and z9_thread_read: 3/10 and/or a / b /mcp /compact /secret.env",
       [],
-      "See https://github.com/org/repo for t3 thread send and t3_thread_read: 3/10 and/or a / b /mcp /compact /secret.env",
+      "See https://github.com/org/repo for z9 thread send and z9_thread_read: 3/10 and/or a / b /mcp /compact /secret.env",
     ],
     [
       "quoted paths with spaces",
@@ -143,9 +143,9 @@ describe("scrubFeedback", () => {
     ],
     [
       "a two-letter username such as t3",
-      "t3 thread send failed for t3",
-      ["t3"],
-      "t3 thread send failed for t3",
+      "z9 thread send failed for t3",
+      ["z9"],
+      "z9 thread send failed for t3",
     ],
     ["a 1,200-character adversarial path", `/a/b${" x/".repeat(398)}`, [], "[redacted]"],
   ])("scrubs %s", (_, text, sensitive, expected) => {

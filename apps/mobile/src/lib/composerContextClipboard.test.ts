@@ -4,12 +4,12 @@ import {
   ComposerContextId,
   EnvironmentId,
   ThreadId,
-} from "@t3tools/contracts";
-import { encodeComposerContextFragment } from "@t3tools/shared/composerContextClipboard";
+} from "@z9code/contracts";
+import { encodeComposerContextFragment } from "@z9code/shared/composerContextClipboard";
 import {
   collectComposerContextReferences,
   formatComposerContextReference,
-} from "@t3tools/shared/composerContextReferences";
+} from "@z9code/shared/composerContextReferences";
 
 const mocks = vi.hoisted(() => ({
   execute: vi.fn(),
@@ -49,7 +49,7 @@ vi.mock("../state/use-composer-drafts", () => ({
   waitForComposerDraftsLoaded: async () => {},
   findLocalComposerClipboardAttachment: mocks.local,
 }));
-vi.mock("@t3tools/client-runtime/state/runtime", () => ({
+vi.mock("@z9code/client-runtime/state/runtime", () => ({
   executeAtomQuery: mocks.execute,
   squashAtomCommandFailure: () => new Error("offline"),
 }));
@@ -353,7 +353,7 @@ describe("mobile context clipboard imports", () => {
 
   it("pastes a thread link as a chip only where the destination's agent reads its machine", async () => {
     const text = [
-      "https://app.t3.codes/threads/destination/local-thread",
+      "<t3-thread://v2/destination/local-thread>",
       "<t3-thread://v2/source/foreign-thread>",
     ].join(" ");
     const result = await importComposerContextClipboard(

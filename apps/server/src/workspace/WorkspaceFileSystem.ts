@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeFS from "node:fs";
 import * as NodeFSP from "node:fs/promises";
+import * as NodeOS from "node:os";
 
 import type {
   FilesystemEntryMetadata,
@@ -10,10 +11,10 @@ import type {
   ProjectReadFileResult,
   ProjectWriteFileInput,
   ProjectWriteFileResult,
-} from "@t3tools/contracts";
-import { expandHomePath } from "@t3tools/provider-core/server/pathExpansion";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { isNetworkPath } from "@t3tools/shared/path";
+} from "@z9code/contracts";
+import { expandHomePath } from "@z9code/provider-core/server/pathExpansion";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { isNetworkPath } from "@z9code/shared/path";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -28,6 +29,7 @@ import * as WorkspaceEntries from "./WorkspaceEntries.ts";
 import * as WorkspacePaths from "./WorkspacePaths.ts";
 import { fileHeaderMimeType } from "./fileHeaderMimeType.ts";
 import { toHostDrivePath } from "./hostDrivePath.ts";
+import { isAgentConfigPath, isCredentialPath } from "./credentialPaths.ts";
 
 const PROJECT_READ_FILE_MAX_BYTES = 1024 * 1024;
 
@@ -133,7 +135,7 @@ export class WorkspaceFileSystem extends Context.Service<
       | KnownWorkspaces.UnknownWorkspaceError
     >;
   }
->()("t3/workspace/WorkspaceFileSystem") {}
+>()("z9/workspace/WorkspaceFileSystem") {}
 
 const UTF8_BOM = "\uFEFF";
 
@@ -166,6 +168,28 @@ export const make = Effect.gen(function* () {
   const isServerInternalPath = yield* makeIsServerInternalPath;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 
+  const realPathOrResolved = (value: string) =>
+    Effect.promise(() => NodeFSP.realpath(value).catch(() => path.resolve(value)));
+  const isCredentialRealPath = Effect.fnUntraced(function* (realPath: string) {
+    const home = yield* realPathOrResolved(yield* HostProcess.HomeDirectory);
+    return isCredentialPath(path, realPath, home);
+  });
+  /**
+   * Absolute reads outside a project are limited to known workspaces, agent folders and the
+   * temp directory, where agents leave reports; credential stores are refused everywhere.
+   */
+  const isServableHostPath = Effect.fnUntraced(function* (realPath: string, cwd?: string) {
+    const home = yield* realPathOrResolved(yield* HostProcess.HomeDirectory);
+    if (isCredentialPath(path, realPath, home)) return false;
+    if (isAgentConfigPath(path, realPath, home)) return true;
+    if (cwd !== undefined) {
+      const realCwd = yield* realPathOrResolved(cwd);
+      if (KnownWorkspaces.isWithinRoot(path, realPath, realCwd)) return true;
+    }
+    if (yield* knownWorkspaces.contains(realPath)) return true;
+    return KnownWorkspaces.isWithinRoot(path, realPath, yield* realPathOrResolved(NodeOS.tmpdir()));
+  });
+
   const toHostPath = (requestedPath: string) =>
     toHostDrivePath(requestedPath).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
@@ -182,6 +206,7 @@ export const make = Effect.gen(function* () {
     const stat = yield* fileSystem.stat(expandedPath).pipe(Effect.option);
     // Server state files answer like missing paths, as readFile refuses them.
     if (stat._tag === "None" || (yield* isServerInternalPath(expandedPath))) return null;
+    if (!(yield* isServableHostPath(yield* realPathOrResolved(expandedPath)))) return null;
     if (stat.value.type === "Directory") return { kind: "directory" } as const;
     if (stat.value.type !== "File") return { kind: "other" } as const;
     let mimeType: string | undefined;
@@ -251,10 +276,9 @@ export const make = Effect.gen(function* () {
   };
 
   /**
-   * Workspace-relative paths must stay inside the root, symlinks included. An
-   * absolute or `~/` path reads a host file in place, such as a report an agent
-   * wrote to a temp directory; it gets no root check. A network path does, since
-   * Windows signs in to its host with the user's NTLM credentials.
+   * Workspace-relative paths must stay inside the root, symlinks included. An absolute or
+   * `~/` path must resolve inside a known workspace or the temp directory. A network path must
+   * stay in the root, since Windows signs in to its host with the user's NTLM credentials.
    */
   const resolveReadTarget = Effect.fn("WorkspaceFileSystem.resolveReadTarget")(function* (
     input: ProjectReadFileInput,
@@ -296,6 +320,12 @@ export const make = Effect.gen(function* () {
           () => Effect.succeed(null),
         ),
       );
+      if (realTargetPath !== null && !(yield* isServableHostPath(realTargetPath, input.cwd))) {
+        return yield* new WorkspacePaths.WorkspacePathOutsideRootError({
+          workspaceRoot: input.cwd,
+          relativePath: input.relativePath,
+        });
+      }
       return { relativePath: requestedPath, realTargetPath };
     }
 
@@ -393,7 +423,10 @@ export const make = Effect.gen(function* () {
     };
     const realTargetPath = target.realTargetPath;
     if (realTargetPath === null) return absentResult;
-    if (yield* isServerInternalPath(realTargetPath)) {
+    if (
+      (yield* isServerInternalPath(realTargetPath)) ||
+      (yield* isCredentialRealPath(realTargetPath))
+    ) {
       return yield* new WorkspacePaths.WorkspacePathOutsideRootError({
         workspaceRoot: input.cwd,
         relativePath: input.relativePath,

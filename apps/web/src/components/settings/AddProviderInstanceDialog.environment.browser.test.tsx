@@ -1,4 +1,4 @@
-import { EnvironmentId, ProviderDriverKind, type AcpRegistrySearchAgent } from "@t3tools/contracts";
+import { EnvironmentId, ProviderDriverKind, type AcpRegistrySearchAgent } from "@z9code/contracts";
 import { userEvent } from "vite-plus/test/browser";
 import { describe, expect, it, vi } from "vite-plus/test";
 
@@ -28,7 +28,7 @@ const preparedAgent = vi.hoisted((): AcpRegistrySearchAgent => ({
   integrity: "sha256",
 }));
 
-vi.mock(import("@t3tools/client-runtime/state/runtime"), async (original) => ({
+vi.mock(import("@z9code/client-runtime/state/runtime"), async (original) => ({
   ...(await original()),
   squashAtomCommandFailure: () => new Error("The settings update failed."),
 }));
@@ -289,6 +289,27 @@ describe("AddProviderInstanceDialog environment routing", () => {
     });
     expect(actions.onOpenChange).toHaveBeenCalledWith(false);
     expect(signInStep()).toBeNull();
+  });
+
+  it("sets up Google Gemini as the official Gemini CLI over ACP", async () => {
+    setup();
+    await using _screen = await render(dialog());
+    await click("Set up Gemini CLI");
+    expect(input("#add-provider-acpRegistry-manual-commandPath").value).toBe("gemini");
+    await click("Next");
+    expect(input("#add-provider-label").value).toBe("Gemini CLI");
+    await click("Add instance");
+
+    expect(settingsHooks.mutate).toHaveBeenCalledWith({
+      operation: "create",
+      instanceId: "acpRegistry_gemini_cli",
+      instance: {
+        driver: "acpRegistry",
+        enabled: true,
+        displayName: "Gemini CLI",
+        config: { source: "local", commandPath: "gemini", commandArgs: ["--acp"] },
+      },
+    });
   });
 
   it("rejects a queued save after the provider grant is revoked", async () => {

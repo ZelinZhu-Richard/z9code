@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { AuthFilesystemReadScope, AuthOrchestrationReadScope } from "@t3tools/contracts";
+import { AuthFilesystemReadScope, AuthOrchestrationReadScope } from "@z9code/contracts";
 
 import {
   createBrowseNavigationCoordinator,
@@ -71,10 +71,10 @@ describe("filesystem read access", () => {
 
 describe("filesystem browse model", () => {
   it("derives the browse target and navigation state", () => {
-    expect(getFilesystemBrowsePath("~/projects/t3")).toEqual({
+    expect(getFilesystemBrowsePath("~/projects/z9")).toEqual({
       isBrowsing: true,
       directoryPath: "~/projects/",
-      filterQuery: "t3",
+      filterQuery: "z9",
       parentPath: "~/",
       canBrowseUp: true,
     });
@@ -115,8 +115,8 @@ describe("filesystem browse model", () => {
     });
     expect(getFilesystemBrowseTabCompletion([], "x")).toBeNull();
     // The list also shows substring and fuzzy matches; Tab completes only the typed name.
-    expect(getFilesystemBrowseTabCompletion([entry("t3code"), entry("my-t3code")], "t3")).toEqual({
-      name: "t3code",
+    expect(getFilesystemBrowseTabCompletion([entry("z9code"), entry("my-z9code")], "z9")).toEqual({
+      name: "z9code",
       isComplete: true,
     });
     expect(
@@ -125,7 +125,7 @@ describe("filesystem browse model", () => {
         "op",
       ),
     ).toEqual({ name: "Open", isComplete: false });
-    expect(getFilesystemBrowseTabCompletion([entry("t3code")], "tcd")).toBeNull();
+    expect(getFilesystemBrowseTabCompletion([entry("z9code")], "zcd")).toBeNull();
   });
 
   it("matches folder names stored decomposed, as macOS Finder names them", () => {
@@ -177,21 +177,23 @@ describe("browse navigation", () => {
 });
 
 describe("browse entry filtering", () => {
-  const entries = ["my-t3code", "t3code", "cotton", "T3Code-old", ".t3", "docs"].map((name) => ({
-    name,
-    fullPath: `~/code/${name}`,
-  }));
+  const entries = ["my-z9code", "z9code", "cotton", "Z9Code-old", ".z9code", "docs"].map(
+    (name) => ({
+      name,
+      fullPath: `~/code/${name}`,
+    }),
+  );
   const names = (query: string) =>
     filterFilesystemBrowseEntries(entries, query).visibleEntries.map((entry) => entry.name);
 
   it("keeps every visible entry in order for an empty query", () => {
-    expect(names("")).toEqual(["my-t3code", "t3code", "cotton", "T3Code-old", "docs"]);
+    expect(names("")).toEqual(["my-z9code", "z9code", "cotton", "Z9Code-old", "docs"]);
   });
 
   it("matches substrings and subsequences, best match first", () => {
-    expect(names("code")).toEqual(["t3code", "T3Code-old", "my-t3code"]);
-    expect(names("t3c")).toEqual(["t3code", "T3Code-old", "my-t3code"]);
-    expect(names("tcd")).toEqual(["t3code", "T3Code-old", "my-t3code"]);
+    expect(names("code")).toEqual(["z9code", "Z9Code-old", "my-z9code"]);
+    expect(names("z9c")).toEqual(["z9code", "Z9Code-old", "my-z9code"]);
+    expect(names("zcd")).toEqual(["z9code", "Z9Code-old", "my-z9code"]);
     expect(names("xyz")).toEqual([]);
   });
 
@@ -207,8 +209,8 @@ describe("browse entry filtering", () => {
   });
 
   it("shows dot folders only when the query starts with a dot", () => {
-    expect(names("t3")).not.toContain(".t3");
-    expect(filterFilesystemBrowseEntries(entries, ".t3")).toEqual({
+    expect(names("z9")).not.toContain(".z9code");
+    expect(filterFilesystemBrowseEntries(entries, ".z9code")).toEqual({
       visibleEntries: [entries[4]],
       exactEntry: entries[4],
     });

@@ -1,16 +1,16 @@
 import { T, msg, useGT, useMessages } from "gt-react";
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
+import { thrownErrorMessage } from "@z9code/client-runtime/errors";
 import { m } from "~/i18n/messages";
 import { useStableCallback } from "../../hooks/useStableCallback";
-import { type EnvironmentId } from "@t3tools/contracts";
-import { type EnvironmentConnectionPresentation } from "@t3tools/client-runtime/connection";
+import { type EnvironmentId } from "@z9code/contracts";
+import { type EnvironmentConnectionPresentation } from "@z9code/client-runtime/connection";
 import { useAtomValue } from "@effect/atom-react";
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
-} from "@t3tools/client-runtime/state/runtime";
+} from "@z9code/client-runtime/state/runtime";
 import { WifiOffIcon } from "lucide-react";
 import { stackedThreadToast, toastManager } from "../ui/toast";
 import { environmentCatalog } from "../../connection/catalog";
@@ -148,7 +148,7 @@ export function useSystemComposerBanners(input: SystemComposerBannersInput) {
   const versionMismatchServerLabel =
     versionMismatchServerName !== null
       ? gt("{environment} server", { environment: versionMismatchServerName })
-      : gt("server", { $context: "noun, the T3 Code server" });
+      : gt("server", { $context: "noun, the z9code server" });
   const serverUpdateEnvironmentId = activeThreadEnvironmentId;
   const versionMismatchSelfUpdate = resolveServerSelfUpdateCapability(serverConfig);
   const versionMismatchInstallation = serverConfig?.environment.capabilities.serverInstallation;
@@ -186,11 +186,8 @@ export function useSystemComposerBanners(input: SystemComposerBannersInput) {
       unavailableConnection !== null &&
       (unavailableConnection.phase === "connecting" ||
         unavailableConnection.phase === "reconnecting");
-    const awaitingApproval = unavailableConnection?.awaitingApproval === true;
     const suppressUnavailableBanner =
-      environmentReconnecting &&
-      !awaitingApproval &&
-      (updateRunning || !reconnectWarningGraceElapsed);
+      environmentReconnecting && (updateRunning || !reconnectWarningGraceElapsed);
     const showUnavailableBanner =
       activeEnvironmentUnavailableState !== null &&
       unavailableConnection !== null &&
@@ -201,20 +198,14 @@ export function useSystemComposerBanners(input: SystemComposerBannersInput) {
         variant: unavailableConnection.phase === "error" ? "error" : "warning",
         group: "environment",
         icon: <WifiOffIcon />,
-        title: awaitingApproval
-          ? gt("{environment} is waiting to approve this device", {
+        title: environmentReconnecting
+          ? gt("{environment} is reconnecting", {
               environment: activeEnvironmentUnavailableState.label,
             })
-          : environmentReconnecting
-            ? gt("{environment} is reconnecting", {
-                environment: activeEnvironmentUnavailableState.label,
-              })
-            : gt("{environment} is offline", {
-                environment: activeEnvironmentUnavailableState.label,
-              }),
-        description: awaitingApproval ? (
-          (unavailableConnection.error ?? undefined)
-        ) : activeEnvironment ? (
+          : gt("{environment} is offline", {
+              environment: activeEnvironmentUnavailableState.label,
+            }),
+        description: activeEnvironment ? (
           <ConnectionDiagnosisHeadline environment={activeEnvironment} />
         ) : undefined,
         actions: (

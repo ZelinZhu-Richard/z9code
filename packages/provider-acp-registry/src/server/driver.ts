@@ -7,10 +7,10 @@ import {
   type CustomModelSetting,
   type ServerProvider,
   type ServerProviderModel,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import { AcpRegistrySettings } from "../settings.ts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { createModelCapabilities } from "@t3tools/shared/model";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { createModelCapabilities } from "@z9code/shared/model";
 import * as Clock from "effect/Clock";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
@@ -26,27 +26,28 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
+import * as ProviderHost from "@z9code/provider-core/server/ProviderHost";
+import { isGeminiCliAgent, withGeminiPrivacyEnvironment } from "./geminiAcp.ts";
 import { AcpRegistryAdapterV2Driver, type AcpRegistryAdapterV2DriverEnv } from "./adapter.ts";
 import { makeAcpRegistryTextGeneration } from "./textGeneration.ts";
-import { ProviderDriverError } from "@t3tools/provider-core/server/errors";
-import { makeManagedServerProvider } from "@t3tools/provider-core/server/managedProvider";
-import { mergeProviderInstanceEnvironment } from "@t3tools/provider-core/server/instanceEnvironment";
+import { ProviderDriverError } from "@z9code/provider-core/server/errors";
+import { makeManagedServerProvider } from "@z9code/provider-core/server/managedProvider";
+import { mergeProviderInstanceEnvironment } from "@z9code/provider-core/server/instanceEnvironment";
 import {
   defaultProviderContinuationIdentity,
   type ProviderDriver,
   type ProviderInstance,
-} from "@t3tools/provider-core/server/driver";
+} from "@z9code/provider-core/server/driver";
 import {
   providerModelsFromSettings,
   providerProbeEnvironment,
-} from "@t3tools/provider-core/server/snapshotProbe";
-import { makeManualOnlyProviderMaintenanceCapabilities } from "@t3tools/provider-core/server/maintenanceResolver";
+} from "@z9code/provider-core/server/snapshotProbe";
+import { makeManualOnlyProviderMaintenanceCapabilities } from "@z9code/provider-core/server/maintenanceResolver";
 import {
   haveProviderSnapshotSettingsChanged,
   makeProviderSnapshotSettingsSource,
   type ProviderSnapshotSettings,
-} from "@t3tools/provider-core/server/snapshotSettings";
+} from "@z9code/provider-core/server/snapshotSettings";
 import {
   type AcpRegistryAvailableCommands,
   type AcpRegistryConfigurationProbe,
@@ -430,7 +431,7 @@ const buildInitialAcpRegistrySnapshot = Effect.fn("AcpRegistryDriver.buildInitia
       auth: { status: "unknown" },
       message: input.settings.enabled
         ? "Checking ACP Registry agent readiness..."
-        : "ACP Registry is disabled in T3 Code settings.",
+        : "ACP Registry is disabled in z9code settings.",
     });
   },
 );
@@ -459,7 +460,7 @@ export function buildCheckedAcpRegistrySnapshot(
       ? `Sign in in provider settings using "${advertisedAuthMethod.name}". The login terminal runs on this environment.`
       : advertisedAuthMethod.type === "env_var" &&
           (advertisedAuthMethod.envVarNames?.length ?? 0) > 0
-        ? `Set ${advertisedAuthMethod.envVarNames!.join(", ")} under this instance's environment variables in provider settings. T3 Code will detect it on the next provider refresh.`
+        ? `Set ${advertisedAuthMethod.envVarNames!.join(", ")} under this instance's environment variables in provider settings. z9code will detect it on the next provider refresh.`
         : `Sign in in provider settings using "${advertisedAuthMethod.name}".`
     : undefined;
   return baseSnapshot({
@@ -621,7 +622,7 @@ export const AcpRegistryDriver: ProviderDriver<AcpRegistrySettings, AcpRegistryD
     instanceId,
     displayName,
     accentColor,
-    environment,
+    environment: instanceEnvironment,
     enabled,
     config,
   }) {
@@ -644,6 +645,16 @@ export const AcpRegistryDriver: ProviderDriver<AcpRegistrySettings, AcpRegistryD
     const path = yield* Path.Path;
     const hostEnvironment = yield* HostProcess.Environment;
     const host = yield* ProviderHost.ProviderHost;
+    const environment = isGeminiCliAgent(config)
+      ? yield* withGeminiPrivacyEnvironment({
+          environment: instanceEnvironment,
+          hostEnvironment,
+          stateDir: host.paths.stateDir,
+        }).pipe(
+          Effect.provideService(FileSystem.FileSystem, fileSystem),
+          Effect.provideService(Path.Path, path),
+        )
+      : instanceEnvironment;
     const continuationIdentity = defaultProviderContinuationIdentity({
       driverKind: DRIVER_KIND,
       instanceId,

@@ -1,6 +1,6 @@
 // @effect-diagnostics globalDate:off globalTimers:off - This isolated Electron preload does not run inside an Effect runtime.
 import { ipcRenderer } from "electron";
-import { matchesKeybindingShortcut } from "@t3tools/shared/keybindingMatching";
+import { matchesKeybindingShortcut } from "@z9code/shared/keybindingMatching";
 import type {
   DesktopPreviewAnnotationTheme,
   DesktopPreviewAnnotationVoiceConfig,
@@ -15,7 +15,7 @@ import type {
   PreviewAnnotationStrokeTarget,
   PreviewAnnotationStyleChange,
   PreviewAnnotationSubmission,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 
 import { createAnnotationIdSource } from "./AnnotationIds.ts";
 import { resolveAnnotationSubmission } from "./AnnotationKeyboard.ts";
@@ -50,8 +50,8 @@ import {
   START_PICK_CHANNEL,
   THUMB_PRESS_CHANNEL,
 } from "./GuestProtocol.ts";
-const OVERLAY_ATTRIBUTE = "data-t3code-annotation-ui";
-const INPUT_LAYER_ATTRIBUTE = "data-t3code-annotation-input";
+const OVERLAY_ATTRIBUTE = "data-z9code-annotation-ui";
+const INPUT_LAYER_ATTRIBUTE = "data-z9code-annotation-input";
 const Z_INDEX_OVERLAY = 2147483646;
 const PRIMARY = "var(--t3-primary)";
 const PRIMARY_FILL = "color-mix(in srgb, var(--t3-primary) 10%, transparent)";
@@ -590,7 +590,7 @@ function startAnnotation(
   root.style.cssText = "pointer-events:none";
   const cursorSheet = new CSSStyleSheet();
   cursorSheet.replaceSync(
-    `[${OVERLAY_ATTRIBUTE}]::backdrop { display:none !important; } html[data-t3code-annotation-tool] body, html[data-t3code-annotation-tool] body * { cursor: crosshair !important; } [${OVERLAY_ATTRIBUTE}], [${OVERLAY_ATTRIBUTE}] * { cursor: default !important; } [${OVERLAY_ATTRIBUTE}] input[type=number]::-webkit-inner-spin-button, [${OVERLAY_ATTRIBUTE}] input[type=number]::-webkit-outer-spin-button { appearance:none; margin:0; }`,
+    `[${OVERLAY_ATTRIBUTE}]::backdrop { display:none !important; } html[data-z9code-annotation-tool] body, html[data-z9code-annotation-tool] body * { cursor: crosshair !important; } [${OVERLAY_ATTRIBUTE}], [${OVERLAY_ATTRIBUTE}] * { cursor: default !important; } [${OVERLAY_ATTRIBUTE}] input[type=number]::-webkit-inner-spin-button, [${OVERLAY_ATTRIBUTE}] input[type=number]::-webkit-outer-spin-button { appearance:none; margin:0; }`,
   );
   document.adoptedStyleSheets = [...document.adoptedStyleSheets, cursorSheet];
   shadowRoot.appendChild(root);
@@ -957,7 +957,7 @@ function startAnnotation(
     }
     if (tool !== "select") hoverOutline.style.display = "none";
     if (tool !== "marquee") marqueeBox.style.display = "none";
-    document.documentElement.setAttribute("data-t3code-annotation-tool", tool);
+    document.documentElement.setAttribute("data-z9code-annotation-tool", tool);
   };
 
   const removeSelected = (target: SelectedElement): void => {
@@ -1698,7 +1698,7 @@ function startAnnotation(
     ipcRenderer.off(ANNOTATION_CAPTURED_CHANNEL, onCaptured);
     ipcRenderer.off(ANNOTATION_VOICE_STATE_CHANNEL, onVoiceState);
     if (elapsedTimer !== null) clearInterval(elapsedTimer);
-    document.documentElement.removeAttribute("data-t3code-annotation-tool");
+    document.documentElement.removeAttribute("data-z9code-annotation-tool");
     document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
       (sheet) => sheet !== cursorSheet,
     );

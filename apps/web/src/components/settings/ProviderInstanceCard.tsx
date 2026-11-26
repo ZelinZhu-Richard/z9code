@@ -31,13 +31,13 @@ import {
   type SecretReference,
   type ServerProvider,
   type ServerProviderModel,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 
 import {
   type CustomModelDefinition,
   readCustomModelEntries,
   toCustomModelSetting,
-} from "@t3tools/shared/model";
+} from "@z9code/shared/model";
 import { cn } from "../../lib/utils";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
 import { useStableCallback } from "../../hooks/useStableCallback";
@@ -50,13 +50,13 @@ import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { Switch } from "../ui/switch";
 import { ManagedControl, ManagedNotice } from "../ManagedPolicy";
 import { managedInstanceLocks, useManagedPolicy } from "../../state/managedPolicy";
-import { disallowedProviderMessage, isManagedDriverAllowed } from "@t3tools/contracts";
+import { disallowedProviderMessage, isManagedDriverAllowed } from "@z9code/contracts";
 import { stackedThreadToast, toastManager } from "../ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import type {
   ProviderClientDefinition,
   ProviderEnvironmentField,
-} from "@t3tools/provider-core/client";
+} from "@z9code/provider-core/client";
 import {
   deriveProviderSettingsFields,
   ProviderSettingsForm,
@@ -746,7 +746,6 @@ interface ProviderInstanceCardProps {
 
 const EMPTY_ACP_PROJECTS: NonNullable<ProviderInstanceCardProps["acpProjects"]> = [];
 const NO_SECRET_SOURCES: ReadonlyArray<SecretSource> = [];
-const NO_CUSTOM_MODELS: ReadonlyArray<CustomModelDefinition> = [];
 
 /**
  * Every custom model save writes the whole list, so the next edit starts from the last list sent
@@ -893,9 +892,7 @@ export function ProviderInstanceCard({
       ? (instance.config as Record<string, unknown>).customModels
       : undefined;
   const [customModels, updateCustomModels] = useCustomModelSaves(
-    instance.driver === "antigravity"
-      ? NO_CUSTOM_MODELS
-      : readCustomModelEntries(storedCustomModels),
+    readCustomModelEntries(storedCustomModels),
     (next) => {
       const nextConfig = nextConfigBlobWithValue(
         instance.config,

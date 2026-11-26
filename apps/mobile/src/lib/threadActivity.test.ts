@@ -13,8 +13,8 @@ import {
   type OrchestrationV2RunAttempt,
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2TurnItem,
-} from "@t3tools/contracts";
-import { summarizeToolGroup } from "@t3tools/client-runtime/work-log/presentation";
+} from "@z9code/contracts";
+import { summarizeToolGroup } from "@z9code/client-runtime/work-log/presentation";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -1354,8 +1354,8 @@ describe("buildThreadFeed", () => {
       type: "subagent",
       subagentId: NodeId.make(id),
       origin: "provider_native",
-      driver: ProviderDriverKind.make("antigravity"),
-      providerInstanceId: ProviderInstanceId.make("antigravity"),
+      driver: ProviderDriverKind.make("kiro"),
+      providerInstanceId: ProviderInstanceId.make("kiro"),
       childThreadId: null,
       prompt: `Read ${id}`,
       result: null,
@@ -1619,7 +1619,7 @@ describe("retained v2 feed presentation", () => {
           {
             ...base(id, "2026-06-20T00:00:02.000Z", index),
             type: "dynamic_tool",
-            toolName: "t3-code.delegate_task",
+            toolName: "z9code.delegate_task",
             input: { task: "Identical task" },
             output,
             ...overrides,
@@ -2011,7 +2011,7 @@ describe("streamed feed updates", () => {
   const delegation: OrchestrationV2TurnItem = {
     ...item("delegation", 3, runs[0]),
     type: "dynamic_tool",
-    toolName: "t3-code.delegate_task",
+    toolName: "z9code.delegate_task",
     input: { task: "Check" },
     output: { taskId: "child" },
   };

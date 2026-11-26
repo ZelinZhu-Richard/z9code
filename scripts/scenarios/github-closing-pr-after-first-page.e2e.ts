@@ -1,6 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import * as NetService from "@t3tools/shared/Net";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import * as NetService from "@z9code/shared/Net";
 import { expect } from "e2e";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -9,14 +9,14 @@ import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/http";
 
-import { APP_DIR, T3_HOME } from "../e2e.config.ts";
+import { APP_DIR, Z9_HOME } from "../e2e.config.ts";
 import { run, ScenarioError } from "./shell.ts";
 import { prepareHome, start } from "./start-app.ts";
 import { makeState, runPromise, test, WEB } from "./t3.ts";
 
 const HOST = "github.scenario.invalid";
 const SCOPE = "scenario/demo";
-const HOME = `${T3_HOME}-github-issue-links`;
+const HOME = `${Z9_HOME}-github-issue-links`;
 
 // Install only on the isolated server. The real GitHub adapter still builds and decodes requests.
 const upstream = String.raw`
@@ -132,7 +132,7 @@ function startFixtureServer(webOrigin: string) {
           HOME,
           GH_HOST: HOST,
           GH_ENTERPRISE_TOKEN: "scenario-only-token",
-          T3CODE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
+          Z9CODE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "0",
         },
         onLine: (line) => {
           const value = /^Token:\s*(\S+)/.exec(line)?.[1];

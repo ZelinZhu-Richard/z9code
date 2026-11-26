@@ -1,6 +1,6 @@
 import "~/index.css";
-import { EnvironmentId, ProjectId } from "@t3tools/contracts";
-import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import { EnvironmentId, ProjectId } from "@z9code/contracts";
+import { sourceControlClients } from "@z9code/client-runtime/source-control-clients";
 import { Cause } from "effect";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";

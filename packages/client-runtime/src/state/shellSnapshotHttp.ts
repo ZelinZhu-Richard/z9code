@@ -1,4 +1,4 @@
-import { EnvironmentHttpCommonError, OrchestrationV2ShellResumable } from "@t3tools/contracts";
+import { EnvironmentHttpCommonError, OrchestrationV2ShellResumable } from "@z9code/contracts";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -10,7 +10,7 @@ import { HttpClient, HttpClientError, type HttpClientResponse } from "effect/htt
 
 import * as RemoteEnvironmentAuthorization from "../authorization/service.ts";
 import type { PreparedConnection } from "../connection/model.ts";
-import * as ManagedRelay from "../relay/managedRelay.ts";
+import * as DpopSigner from "../dpop/signer.ts";
 import {
   executeAuthenticatedEnvironmentHttpRequest,
   withOrchestrationProtocolHeader,
@@ -44,7 +44,7 @@ export const fetchEnvironmentShellSnapshot = Effect.fn(
 )(function* (
   input: {
     readonly prepared: PreparedConnection;
-    readonly signer: Option.Option<ManagedRelay.ManagedRelayDpopSigner["Service"]>;
+    readonly signer: Option.Option<DpopSigner.DpopSigner["Service"]>;
     readonly remoteAuthorization?: Option.Option<
       RemoteEnvironmentAuthorization.RemoteEnvironmentAuthorization["Service"]
     >;
@@ -123,7 +123,7 @@ export class ShellSnapshotLoader extends Context.Service<
       options?: ShellSnapshotOptions,
     ) => Effect.Effect<Option.Option<ShellHttpAnswer>>;
   }
->()("@t3tools/client-runtime/state/shellSnapshotHttp/ShellSnapshotLoader") {}
+>()("@z9code/client-runtime/state/shellSnapshotHttp/ShellSnapshotLoader") {}
 
 export const layer: Layer.Layer<ShellSnapshotLoader, never, HttpClient.HttpClient> = Layer.effect(
   ShellSnapshotLoader,
@@ -131,7 +131,7 @@ export const layer: Layer.Layer<ShellSnapshotLoader, never, HttpClient.HttpClien
     const httpClient = yield* HttpClient.HttpClient;
     // Resolve the DPoP signer optionally: it is only needed for relay/DPoP
     // connections, so the loader must not hard-require it.
-    const signer = yield* Effect.serviceOption(ManagedRelay.ManagedRelayDpopSigner);
+    const signer = yield* Effect.serviceOption(DpopSigner.DpopSigner);
     const remoteAuthorization = yield* Effect.serviceOption(
       RemoteEnvironmentAuthorization.RemoteEnvironmentAuthorization,
     );

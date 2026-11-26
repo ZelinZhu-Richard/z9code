@@ -1,16 +1,16 @@
 import {
   managedNightlyDeniedMessage,
   managedUpdatesDenial,
-} from "@t3tools/client-runtime/contract-labels";
-import type { ServerUpdateState } from "@t3tools/client-runtime/state/server";
+} from "@z9code/client-runtime/contract-labels";
+import type { ServerUpdateState } from "@z9code/client-runtime/state/server";
 import {
   type DesktopUpdateChannel,
   type EnvironmentId,
   type ServerConfig,
   type ServerSelfUpdateCapability,
-} from "@t3tools/contracts";
-import { cliReleaseChannelOf, desktopUpdateChannelOf } from "@t3tools/shared/cliRelease";
-import { compareSemverVersions } from "@t3tools/shared/semver";
+} from "@z9code/contracts";
+import { cliReleaseChannelOf, desktopUpdateChannelOf } from "@z9code/shared/cliRelease";
+import { compareSemverVersions } from "@z9code/shared/semver";
 import { msg } from "gt-react";
 
 import { m, type MessageResolver } from "~/i18n/messages";
@@ -76,7 +76,7 @@ export interface SkippedMachine {
 
 // Desktop servers without the desktop control fd (older apps, WSL backends: wsl.exe cannot pass
 // fds) cannot be updated from here, and their desktop app is not necessarily the stale part.
-const UPDATE_ON_THAT_MACHINE = msg("update T3 Code on that machine");
+const UPDATE_ON_THAT_MACHINE = msg("update z9code on that machine");
 
 /** Skip current and app-hosted servers; the latter update with the app and would relaunch mid-run.
  * Desktop-managed servers use their own feed. Each server's updater checks that it can install the
@@ -172,7 +172,7 @@ function unavailableReason(
   return null;
 }
 
-/** The latest release on the track a fleet switches to, as npm reports it. */
+/** The latest release on the track a fleet switches to, from z9code's GitHub releases. */
 export interface ChannelSwitchRelease {
   readonly channel: DesktopUpdateChannel;
   readonly version: string;
@@ -404,7 +404,7 @@ export function collectChannelSwitchTargets(
       skip(
         resolve(
           msg("run `{command}` there", {
-            command: `t3 update --channel ${release.channel === "nightly" ? "nightly" : "stable"} --allow-downgrade`,
+            command: `z9 update --channel ${release.channel === "nightly" ? "nightly" : "stable"} --allow-downgrade`,
           }),
         ),
       );

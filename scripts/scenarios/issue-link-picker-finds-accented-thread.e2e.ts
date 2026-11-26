@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import type { IssueDetail, IssueRef } from "@t3tools/contracts";
+import type { IssueDetail, IssueRef } from "@z9code/contracts";
 import { expect } from "e2e";
 
 import { test, WEB } from "./t3.ts";

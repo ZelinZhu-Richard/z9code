@@ -6,16 +6,16 @@ import {
   ThreadId,
   type OrchestrationMessageContext,
   type ServerProviderSkill,
-} from "@t3tools/contracts";
-import { collectComposerInlineTokens } from "@t3tools/shared/composerInlineTokens";
-import { markdownMathRanges } from "@t3tools/shared/markdownMath";
-import { serializeAssistantCitation } from "@t3tools/shared/assistantCitations";
+} from "@z9code/contracts";
+import { collectComposerInlineTokens } from "@z9code/shared/composerInlineTokens";
+import { markdownMathRanges } from "@z9code/shared/markdownMath";
+import { serializeAssistantCitation } from "@z9code/shared/assistantCitations";
 import {
   ATTACHMENT_ONLY_BOOTSTRAP_PROMPT,
   collectComposerContextReferences,
   formatComposerContextReference,
   projectComposerContextForProvider,
-} from "@t3tools/shared/composerContextReferences";
+} from "@z9code/shared/composerContextReferences";
 import { describe, expect, it } from "vite-plus/test";
 import {
   assistantCitationDraftWithinLimit,

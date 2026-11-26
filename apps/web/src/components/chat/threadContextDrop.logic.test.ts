@@ -1,5 +1,5 @@
-import { EnvironmentId, ThreadId } from "@t3tools/contracts";
-import { threadContextRecord } from "@t3tools/shared/composerContextReferences";
+import { EnvironmentId, ThreadId } from "@z9code/contracts";
+import { threadContextRecord } from "@z9code/shared/composerContextReferences";
 import { describe, expect, it } from "vite-plus/test";
 import { droppedThreadContextRecord } from "./threadContextDrop.logic";
 

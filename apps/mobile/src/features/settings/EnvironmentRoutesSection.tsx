@@ -13,12 +13,12 @@ import {
   connectionRoutes,
   isLearned,
   pendingRouteOrder,
-} from "@t3tools/client-runtime/connection";
-import { type EnvironmentId, sessionGrantsScope } from "@t3tools/contracts";
+} from "@z9code/client-runtime/connection";
+import { type EnvironmentId, sessionGrantsScope } from "@z9code/contracts";
 import {
   AUTH_SCOPE_OPTIONS,
   sessionPermissionsUnavailableMessage,
-} from "@t3tools/shared/authScopeOptions";
+} from "@z9code/shared/authScopeOptions";
 import { AsyncResult } from "effect/reactivity";
 import * as Option from "effect/Option";
 import { useState } from "react";
@@ -42,7 +42,6 @@ const ICON_SIZE = Platform.OS === "android" ? 24 : 22;
 const REMOVE_SIZE = 20;
 
 const ROUTE_ICONS: Record<ConnectionRouteKind, AppSymbolName> = {
-  relay: "cloud",
   loopback: "desktopcomputer",
   lan: "wifi",
   tailnet: "point.3.connected.trianglepath.dotted",

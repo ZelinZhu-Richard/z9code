@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { summarizeT3ToolCalls, type T3ToolSummaryCall } from "./t3ToolSummary.ts";
+import { summarizeT3ToolCalls, type Z9ToolSummaryCall } from "./t3ToolSummary.ts";
 
-function completed(input: unknown, output?: unknown): T3ToolSummaryCall {
+function completed(input: unknown, output?: unknown): Z9ToolSummaryCall {
   return { input, output, outcome: "completed" };
 }
 
@@ -20,7 +20,7 @@ describe("summarizeT3ToolCalls", () => {
     const calls = outputs.map((output) =>
       completed(
         {
-          toolName: "t3_thread_send",
+          toolName: "z9_thread_send",
           args: { threadId: "input-thread", message: '{"threadId":"fake"}' },
         },
         output,
@@ -29,7 +29,7 @@ describe("summarizeT3ToolCalls", () => {
     expect(summarizeT3ToolCalls("thread-send", calls).label).toBe("Sent 1 message to 1 thread");
     expect(
       summarizeT3ToolCalls("thread-send", [
-        completed({ toolName: "t3_thread_send", args: { threadId: "input-thread" } }),
+        completed({ toolName: "z9_thread_send", args: { threadId: "input-thread" } }),
         completed({ threadId: "input-thread" }),
       ]).label,
     ).toBe("Sent 2 messages to 1 thread");
@@ -103,7 +103,7 @@ describe("summarizeT3ToolCalls", () => {
   });
 
   it("excludes failed and unfinished sends even if the provider reports completed", () => {
-    const calls: T3ToolSummaryCall[] = [
+    const calls: Z9ToolSummaryCall[] = [
       completed({ threadId: "success" }, { messageId: "ok", threadId: "success" }),
       completed(
         { threadId: "failed" },

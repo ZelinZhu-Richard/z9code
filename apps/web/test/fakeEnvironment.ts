@@ -35,15 +35,15 @@ import {
   type OrchestrationV2TurnItem,
   type TerminalMetadataStreamEvent,
   type ResolvedKeybindingsConfig,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import type {
   ConnectionAttemptError,
   ConnectionCatalogEntry,
   EnvironmentConnectionLease,
   RouteCheck,
-} from "@t3tools/client-runtime/connection";
-import type { WsRpcProtocolClient } from "@t3tools/client-runtime/rpc";
-import { DEFAULT_RESOLVED_KEYBINDINGS } from "@t3tools/shared/keybindings";
+} from "@z9code/client-runtime/connection";
+import type { WsRpcProtocolClient } from "@z9code/client-runtime/rpc";
+import { DEFAULT_RESOLVED_KEYBINDINGS } from "@z9code/shared/keybindings";
 import { APP_VERSION } from "~/branding";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -78,7 +78,7 @@ const auth = {
   policy: "loopback-browser",
   bootstrapMethods: ["one-time-token"],
   sessionMethods: ["browser-session-cookie"],
-  sessionCookieName: "t3_session",
+  sessionCookieName: "z9_session",
 };
 
 const readyProvider = (
@@ -119,13 +119,13 @@ const makeServerConfig = (
     },
     auth,
     cwd: "/workspace/render",
-    keybindingsConfigPath: "/workspace/.t3/keybindings.json",
+    keybindingsConfigPath: "/workspace/.z9code/keybindings.json",
     keybindings: [],
     issues: [],
     providers,
     availableEditors: [],
     observability: {
-      logsDirectoryPath: "/workspace/.t3/logs",
+      logsDirectoryPath: "/workspace/.z9code/logs",
       localTracingEnabled: false,
       otlpTracesEnabled: false,
       otlpMetricsEnabled: false,

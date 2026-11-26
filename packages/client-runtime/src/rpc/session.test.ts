@@ -8,8 +8,8 @@ import {
   ServerProvider,
   WS_METHODS,
   UsageLimitSourceId,
-} from "@t3tools/contracts";
-import { splitSocketFrame } from "@t3tools/shared/socketFrameParts";
+} from "@z9code/contracts";
+import { splitSocketFrame } from "@z9code/shared/socketFrameParts";
 import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
@@ -138,7 +138,7 @@ const SERVER_CONFIG: ServerConfigType = {
     policy: "loopback-browser",
     bootstrapMethods: ["one-time-token"],
     sessionMethods: ["browser-session-cookie", "bearer-access-token"],
-    sessionCookieName: "t3_session",
+    sessionCookieName: "z9_session",
   },
   cwd: "/tmp/workspace",
   keybindingsConfigPath: "/tmp/workspace/keybindings.json",
@@ -205,7 +205,7 @@ const SOURCE_EVENT: ServerConfigStreamEventType = {
     sources: [
       {
         id: UsageLimitSourceId.make("proxy"),
-        kind: "cliproxy",
+        kind: "http",
         label: "Proxy",
         checkedAt: "2026-09-04T00:00:00Z",
         accounts: [],
@@ -1080,7 +1080,7 @@ describe("RpcSessionFactory", () => {
       expect(error).toMatchObject({
         reason: "configuration",
         message:
-          "This address now runs a different T3 Code install (environment-2, not environment-1). Remove this connection and add it again.",
+          "This address now runs a different z9code install (environment-2, not environment-1). Remove this connection and add it again.",
       });
       expect((yield* Fiber.join(configFiber))._tag).toBe("RpcClientError");
       expect((yield* Fiber.join(customConfigFiber))._tag).toBe("RpcClientError");

@@ -1,4 +1,4 @@
-import * as SecretResolver from "@t3tools/secret-provider-core/server/SecretResolver";
+import * as SecretResolver from "@z9code/secret-provider-core/server/SecretResolver";
 import * as NodeHttpServer from "@effect/platform-node/NodeHttpServer";
 import { WebSocket } from "@effect/platform-node/NodeWS";
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- Bind an isolated WebSocket negotiation fixture.
@@ -47,10 +47,10 @@ import {
   type ServerConfig,
   type ServerConfigStreamEvent,
   type ServerProvider,
-} from "@t3tools/contracts";
-import { SOCKET_FRAME_PARTS_QUERY_PARAM } from "@t3tools/shared/socketFrameParts";
+} from "@z9code/contracts";
+import { SOCKET_FRAME_PARTS_QUERY_PARAM } from "@z9code/shared/socketFrameParts";
 import * as Deferred from "effect/Deferred";
-import type { ProviderInstance } from "@t3tools/provider-core/server/driver";
+import type { ProviderInstance } from "@z9code/provider-core/server/driver";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -79,16 +79,13 @@ import * as AssetSigner from "./assets/AssetSigner.ts";
 import * as WorkspacePreviewRevisions from "./assets/WorkspacePreviewRevisions.ts";
 import * as PreviewAutomationBroker from "./mcp/PreviewAutomationBroker.ts";
 import * as ServerBrowser from "./preview/ServerBrowser.ts";
-import * as AcpRegistryRuntimeCoordinator from "@t3tools/provider-acp-registry/server/AcpRegistryRuntimeCoordinator";
-import * as AcpRegistrySupport from "@t3tools/provider-acp-registry/server/AcpRegistrySupport";
+import * as AcpRegistryRuntimeCoordinator from "@z9code/provider-acp-registry/server/AcpRegistryRuntimeCoordinator";
+import * as AcpRegistrySupport from "@z9code/provider-acp-registry/server/AcpRegistrySupport";
 import * as AgentSessionImporter from "./project/AgentSessionImporter.ts";
 import * as AgentSessionScanner from "./project/AgentSessionScanner.ts";
-import * as AnalyticsService from "./telemetry/AnalyticsService.ts";
-import * as AntigravityInstallation from "./provider/AntigravityInstallation.ts";
 import * as ProviderInstallation from "./provider/providerInstallation.ts";
 import * as BackgroundPolicy from "./background/BackgroundPolicy.ts";
 import * as CheckpointDiffQuery from "./checkpointing/CheckpointDiffQuery.ts";
-import * as NativeChildWorkQuery from "./orchestration-v2/NativeChildWorkQuery.ts";
 import * as CommandOutputHub from "./orchestration-v2/CommandOutputHub.ts";
 import * as ThreadViewers from "./orchestration-v2/ThreadViewers.ts";
 import * as CodexInstallation from "./provider/CodexInstallation.ts";
@@ -121,7 +118,7 @@ import * as ProjectSetupScriptRunner from "./project/ProjectSetupScriptRunner.ts
 import * as ProviderAuthService from "./provider/ProviderAuthService.ts";
 import * as AcpRegistrySessions from "./provider/AcpRegistrySessions.ts";
 import * as ProviderInstanceRegistry from "./provider/ProviderInstanceRegistry.ts";
-import * as ProviderLatestVersions from "@t3tools/provider-core/server/ProviderLatestVersions";
+import * as ProviderLatestVersions from "@z9code/provider-core/server/ProviderLatestVersions";
 import * as ProviderMaintenanceRunner from "./provider/providerMaintenanceRunner.ts";
 import * as ProviderRegistry from "./provider/ProviderRegistry.ts";
 import * as ProviderSessionManager from "./orchestration-v2/ProviderSessionManager.ts";
@@ -131,7 +128,6 @@ import * as ThreadIssueService from "./orchestration-v2/ThreadIssueService.ts";
 import * as IssueTrackerConnections from "./issue/IssueTrackerConnections.ts";
 import * as PullRequestService from "./pullRequest/PullRequestService.ts";
 import * as PullRequestSyncReactor from "./orchestration-v2/PullRequestSyncReactor.ts";
-import * as RelayClient from "@t3tools/shared/relayClient";
 import * as RemoteOpenTargets from "./environment/RemoteOpenTargets.ts";
 import * as RepositoryIdentityResolver from "./project/RepositoryIdentityResolver.ts";
 import * as ResourceTelemetry from "./resourceTelemetry/ResourceTelemetry.ts";
@@ -145,8 +141,8 @@ import * as GuestShareService from "./guest/GuestShareService.ts";
 import * as ServerEnvironment from "./environment/ServerEnvironment.ts";
 import * as ServerLifecycleEvents from "./serverLifecycleEvents.ts";
 import * as ServerRuntimeStartup from "./serverRuntimeStartup.ts";
-import * as ServerSelfUpdate from "./cloud/selfUpdate.ts";
-import * as NpmRelease from "./cloud/npmRelease.ts";
+import * as ServerSelfUpdate from "./service/selfUpdate.ts";
+import * as CliReleaseLookup from "./service/cliReleaseLookup.ts";
 import * as SessionStore from "./auth/SessionStore.ts";
 import * as SourceControlDiscovery from "./sourceControl/SourceControlDiscovery.ts";
 import * as SourceControlRepositoryService from "./sourceControl/SourceControlRepositoryService.ts";
@@ -175,8 +171,8 @@ import * as ServerSecretStore from "./auth/ServerSecretStore.ts";
 import * as SecretCheck from "./secrets/SecretCheck.ts";
 import * as ServerConfigModule from "./config.ts";
 import * as Keybindings from "./keybindings.ts";
-import { USAGE_LIMITS_COMMAND } from "@t3tools/shared/usageLimits";
-import * as FeatureFlags from "@t3tools/shared/FeatureFlags";
+import { USAGE_LIMITS_COMMAND } from "@z9code/shared/usageLimits";
+import * as FeatureFlags from "@z9code/shared/FeatureFlags";
 import * as ServerSettings from "./serverSettings.ts";
 import * as ManagedPolicy from "./policy/ManagedPolicy.ts";
 
@@ -187,7 +183,7 @@ import * as ProjectionStore from "./orchestration-v2/ProjectionStore.ts";
 import * as EventSink from "./orchestration-v2/EventSink.ts";
 import * as LegacyV1ThreadImporter from "./orchestration-v2/legacy/LegacyV1ThreadImporter.ts";
 import * as ThreadCommandExecutor from "./orchestration-v2/ThreadCommandExecutor.ts";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
+import * as IdAllocator from "@z9code/provider-core/server/IdAllocator";
 import { projectIdentitiesDigest } from "./orchestration-v2/ShellStream.ts";
 import * as OrchestrationEventStore from "./persistence/OrchestrationEventStore.ts";
 import * as SqlitePersistence from "./persistence/Sqlite.ts";
@@ -845,11 +841,8 @@ const layerUnusedConfigRpcServices = Layer.mergeAll(
   Layer.mock(AcpRegistrySessions.AcpRegistrySessions)({}),
   Layer.mock(AgentSessionImporter.AgentSessionImporter)({}),
   Layer.mock(AgentSessionScanner.AgentSessionScanner)({}),
-  Layer.mock(AnalyticsService.AnalyticsService)({}),
-  Layer.mock(AntigravityInstallation.AntigravityInstallation)({ managedDirectory: "/unused" }),
   Layer.mock(BackgroundPolicy.BackgroundPolicy)({}),
   Layer.mock(CheckpointDiffQuery.CheckpointDiffQuery)({}),
-  Layer.mock(NativeChildWorkQuery.NativeChildWorkQuery)({}),
   Layer.mock(CommandOutputHub.CommandOutputHub)({}),
   ThreadViewers.layer,
   Layer.mock(CodexInstallation.CodexInstallation)({ managedDirectory: "/unused" }),
@@ -888,7 +881,6 @@ const layerUnusedConfigRpcServices = Layer.mergeAll(
   Layer.mock(ThreadIssueService.ThreadIssueService)({}),
   Layer.mock(IssueTrackerConnections.IssueTrackerConnections)({}),
   Layer.mock(PullRequestSyncReactor.PullRequestSyncReactor)({}),
-  Layer.mock(RelayClient.RelayClient)({}),
   Layer.mock(RepositoryIdentityResolver.RepositoryIdentityResolver)({}),
   Layer.mock(ResourceTelemetry.ResourceTelemetry)({}),
   Layer.mock(ReviewService.ReviewService)({}),
@@ -902,7 +894,7 @@ const layerUnusedConfigRpcServices = Layer.mergeAll(
   Layer.mock(ServerLifecycleEvents.ServerLifecycleEvents)({}),
   Layer.mock(ServerRuntimeStartup.ServerRuntimeStartup)({}),
   Layer.mock(ServerSelfUpdate.ServerSelfUpdate)({}),
-  Layer.mock(NpmRelease.NpmRelease)({}),
+  Layer.mock(CliReleaseLookup.CliReleaseLookup)({}),
   Layer.mock(SessionStore.SessionStore)({ cookieName: "config-test", legacyCookieName: undefined }),
   Layer.mock(SourceControlDiscovery.SourceControlDiscovery)({}),
   Layer.mock(SourceControlRepositoryService.SourceControlRepositoryService)({}),
@@ -923,6 +915,7 @@ const layerUnusedConfigRpcServices = Layer.mergeAll(
   Layer.mock(WorkspaceFileSystem.WorkspaceFileSystem)({}),
   Layer.mock(WorktreeSetupTracker.WorktreeSetupTracker)({}),
   FeatureFlags.layerTest(),
+  ManagedPolicy.layerTest(),
 );
 
 const layerConfigSources = Layer.mergeAll(
@@ -972,7 +965,6 @@ it.live.each([
           markDisconnected: () => Effect.void,
           awaitInvalidation: () => Effect.never,
         }),
-        Layer.mock(AnalyticsService.AnalyticsService)({ recordOwners: () => Effect.void }),
         Layer.mock(ManagedProjectFolders.ManagedProjectFolders)({
           namedProjectsRoot: process.cwd(),
         }),
@@ -1018,7 +1010,7 @@ it.live.each([
             new WebSocket(
               `${origin}/ws?${ORCHESTRATION_PROTOCOL_QUERY_PARAM}=${ORCHESTRATION_PROTOCOL_VERSION}${framed ? `&${SOCKET_FRAME_PARTS_QUERY_PARAM}=1` : ""}`,
               {
-                origin: "t3code://app",
+                origin: "z9code://app",
               },
             ),
         ),
@@ -1171,7 +1163,6 @@ it.effect.each([
               method: "browser-session-cookie",
               scopes: [],
             },
-            {},
             yield* ServerBrowser.ServerBrowser,
             () => Effect.void,
             { secretReferences: true },
@@ -1326,7 +1317,6 @@ it.effect("access changes made while the snapshot loads reach the client after i
             method: "browser-session-cookie",
             scopes: [],
           },
-          {},
           yield* ServerBrowser.ServerBrowser,
           () => Effect.void,
           { secretReferences: true },
@@ -1347,7 +1337,6 @@ it.effect("access changes made while the snapshot loads reach the client after i
               Layer.mock(ServerEnvironment.ServerEnvironment)({}),
               Layer.mock(EnvironmentAuth.EnvironmentAuth)({
                 listPairingLinks: () => Effect.succeed([]),
-                listConnectDevices: () => Effect.succeed([]),
                 // Another client revokes a session after the snapshot read it.
                 listClientSessions: () =>
                   PubSub.publish(sessionChanges, {
@@ -1393,16 +1382,6 @@ it.effect("access changes made while the snapshot loads reach the client after i
     });
     yield* server.write(0, { _tag: "Ack", requestId });
     assert.equal((yield* Queue.take(responses)).type, "pairingLinkRemoved");
-    yield* server.write(0, { _tag: "Ack", requestId });
-
-    // Device trust has no incremental event, so a change re-sends the whole snapshot.
-    yield* PubSub.publish(pairingChanges, { type: "connectDevicesChanged" });
-    assert.deepEqual(yield* Queue.take(responses), {
-      version: 1,
-      revision: 4,
-      type: "snapshot",
-      payload: { pairingLinks: [], clientSessions: [], connectDevices: [] },
-    });
     yield* server.write(0, { _tag: "Interrupt", requestId, interruptors: [] });
   }).pipe(
     Effect.provide(
@@ -1542,7 +1521,6 @@ it.effect("on-demand clients get provider config without workspace snapshots", (
             method: "browser-session-cookie",
             scopes: [],
           },
-          {},
           yield* ServerBrowser.ServerBrowser,
           () => Effect.void,
           { secretReferences: true },
@@ -1789,7 +1767,7 @@ it.effect("a missing thread worktree gets its project's skills in the cwd snapsh
       projectId,
       archivedAt: null,
       worktreePath,
-      branch: "t3/reply-ok",
+      branch: "z9/reply-ok",
     } as unknown as OrchestrationV2ThreadShell;
     const project = {
       id: projectId,
@@ -1903,7 +1881,6 @@ it.effect("a missing thread worktree gets its project's skills in the cwd snapsh
             method: "browser-session-cookie",
             scopes: [],
           },
-          {},
           yield* ServerBrowser.ServerBrowser,
           () => Effect.void,
           { secretReferences: true },
@@ -1984,7 +1961,6 @@ it.effect(
                 method: "browser-session-cookie",
                 scopes: [...scopes],
               },
-              {},
               browser,
               () => Effect.void,
               { secretReferences: true },
@@ -2075,7 +2051,6 @@ it.effect(
                 method: "browser-session-cookie",
                 scopes: [...scopes],
               },
-              {},
               browser,
               () => Effect.void,
               { secretReferences: true },
@@ -2160,7 +2135,6 @@ it.effect("a git action that fails partway still refreshes the repository status
             method: "browser-session-cookie",
             scopes: [AuthSourceControlWriteScope],
           },
-          {},
           yield* ServerBrowser.ServerBrowser,
           () => Effect.void,
           { secretReferences: true },
@@ -2240,7 +2214,6 @@ it.effect("a publish whose push fails still refreshes the new remote", () =>
             method: "browser-session-cookie",
             scopes: [AuthSourceControlWriteScope],
           },
-          {},
           yield* ServerBrowser.ServerBrowser,
           () => Effect.void,
           { secretReferences: true },
@@ -2831,7 +2804,6 @@ it.effect("ACP session RPCs list a thread missing its history and repair it on i
             method: "browser-session-cookie",
             scopes: [],
           },
-          {},
           yield* ServerBrowser.ServerBrowser,
           () => Effect.void,
           { secretReferences: true },
@@ -2978,7 +2950,6 @@ const makeWorkflowClient = Effect.fn("test.makeWorkflowClient")(function* (
           method: "browser-session-cookie",
           scopes: [...scopes],
         },
-        {},
         yield* ServerBrowser.ServerBrowser,
         () => Effect.void,
         { secretReferences: true },
@@ -3046,7 +3017,6 @@ const makeAcpRegistryClient = Effect.fn("test.makeAcpRegistryClient")(function* 
           method: "browser-session-cookie",
           scopes,
         },
-        {},
         yield* ServerBrowser.ServerBrowser,
         () => Effect.void,
         { secretReferences: true },

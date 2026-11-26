@@ -1,4 +1,4 @@
-import { EnvironmentId } from "@t3tools/contracts";
+import { EnvironmentId } from "@z9code/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
 import type { WorkspaceEnvironment, WorkspaceState } from "../../state/workspaceModel";
@@ -12,7 +12,6 @@ function connectingEnvironment(
     environmentId: EnvironmentId.make("environment-1"),
     environmentLabel: "corex",
     displayUrl: "",
-    isRelayManaged: false,
     isEnabled: true,
     connectionState,
     connectionError,

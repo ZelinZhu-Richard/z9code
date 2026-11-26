@@ -1,6 +1,6 @@
-import { scopeThreadRef } from "@t3tools/client-runtime/environment";
-import { workflowReferenceLabel } from "@t3tools/client-runtime/workflows";
-import { EnvironmentId, ThreadId, type WorkflowRunReference } from "@t3tools/contracts";
+import { scopeThreadRef } from "@z9code/client-runtime/environment";
+import { workflowReferenceLabel } from "@z9code/client-runtime/workflows";
+import { EnvironmentId, ThreadId, type WorkflowRunReference } from "@z9code/contracts";
 import { useGT } from "gt-react";
 import { BotIcon, Maximize2Icon, XIcon } from "lucide-react";
 

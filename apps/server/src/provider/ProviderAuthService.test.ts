@@ -9,7 +9,7 @@ import {
   type OrchestrationV2ProviderSession,
   type OrchestrationV2ThreadShell,
   type ProviderAuthState,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Deferred from "effect/Deferred";
@@ -22,15 +22,15 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 
 import * as ProjectionStore from "../orchestration-v2/ProjectionStore.ts";
 import * as ProviderSessionManager from "../orchestration-v2/ProviderSessionManager.ts";
-import { AcpProviderCapabilitiesV2 } from "@t3tools/provider-acp/server/adapter";
-import type { ProviderInstance } from "@t3tools/provider-core/server/driver";
+import { AcpProviderCapabilitiesV2 } from "@z9code/provider-acp/server/adapter";
+import type { ProviderInstance } from "@z9code/provider-core/server/driver";
 import * as ProviderAuthService from "./ProviderAuthService.ts";
 import * as ProviderInstanceRegistry from "./ProviderInstanceRegistry.ts";
 
-const instanceId = ProviderInstanceId.make("antigravity-personal");
-const otherInstanceId = ProviderInstanceId.make("antigravity-work");
+const instanceId = ProviderInstanceId.make("cursor-personal");
+const otherInstanceId = ProviderInstanceId.make("cursor-work");
 const unsupportedInstanceId = ProviderInstanceId.make("codex");
-const driverKind = ProviderDriverKind.make("antigravity");
+const driverKind = ProviderDriverKind.make("cursor");
 const owner = "paired-client-owner";
 const otherOwner = "paired-client-other";
 const flowId = "test-sign-in-flow";
@@ -48,7 +48,7 @@ const waitingAuthState: ProviderAuthState = {
   ...idleAuthState,
   phase: "waiting",
   flowId,
-  authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth?state=test-state",
+  authorizationUrl: "https://auth.example.test/authorize?state=test-state",
   expiresAt: "2026-09-02T00:05:00.000Z",
 };
 
@@ -524,7 +524,7 @@ describe("ProviderAuthService", () => {
         const newWaiting: ProviderAuthState = {
           ...waitingAuthState,
           flowId: "replacement-flow",
-          authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth?state=replacement-state",
+          authorizationUrl: "https://auth.example.test/authorize?state=replacement-state",
         };
         yield* SubscriptionRef.set(replacement.state, newWaiting);
         assert.deepStrictEqual(yield* Queue.take(firstClient.states), idleAuthState);

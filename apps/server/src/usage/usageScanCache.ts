@@ -1,9 +1,9 @@
-import type { UsageProviderKind } from "@t3tools/contracts";
+import type { UsageProviderKind } from "@z9code/contracts";
 import type {
   TranscriptUsageFormat,
   UsageRecord,
   UsageSpeed,
-} from "@t3tools/provider-core/server/usage";
+} from "@z9code/provider-core/server/usage";
 import * as Schema from "effect/Schema";
 
 import { CLAUDE_SYNTHETIC_MODEL } from "../provider/Drivers/claudeUsage.ts";

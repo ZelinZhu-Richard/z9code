@@ -1,16 +1,15 @@
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeOS from "node:os";
 
-import { TRIAGE_PROMPT_FILE_NAME } from "@t3tools/contracts";
-import * as HostProcess from "@t3tools/shared/HostProcess";
+import { TRIAGE_PROMPT_FILE_NAME } from "@z9code/contracts";
+import * as HostProcess from "@z9code/shared/HostProcess";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 
-import * as BootService from "../cloud/bootService.ts";
-import * as ManagedEndpointRuntime from "../cloud/ManagedEndpointRuntime.ts";
+import * as BootService from "../service/bootService.ts";
 import type * as ServerConfig from "../config.ts";
 import { isProcessAlive, readPersistedServerRuntimeState } from "../serverRuntimeState.ts";
 import {
@@ -43,7 +42,7 @@ export const triageSourceCacheDir = (baseDir: string, path: Path.Path) =>
 
 /**
  * Writes `context.md` and the playbook prompt into a fresh `<stateDir>/triage/<time>`
- * folder. Both `t3 triage` and the in-app entry point start from these files.
+ * folder. Both `z9 triage` and the in-app entry point start from these files.
  */
 export const writeTriageSession = Effect.fn("triage.writeTriageSession")(function* (input: {
   readonly baseDir: string;
@@ -81,7 +80,6 @@ export const writeTriageSession = Effect.fn("triage.writeTriageSession")(functio
         logsDir: paths.logsDir,
         serviceLogPath: path.join(paths.logsDir, BootService.BOOT_SERVICE_LOG_FILE),
         desktopBackendLogGlob: path.join(paths.logsDir, "server-child*.log*"),
-        relayClientLogPath: path.join(paths.logsDir, ManagedEndpointRuntime.RELAY_CLIENT_LOG_FILE),
         serverTracePath: paths.serverTracePath,
         providerEventLogPath: paths.providerEventLogPath,
         terminalLogsDir: paths.terminalLogsDir,

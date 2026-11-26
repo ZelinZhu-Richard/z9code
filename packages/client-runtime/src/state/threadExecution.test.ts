@@ -14,10 +14,10 @@ import {
   type OrchestrationV2ExecutionNode,
   type OrchestrationV2RunStatus,
   type OrchestrationV2RuntimeRequest,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as DateTime from "effect/DateTime";
-import { createModelCapabilities, createModelSelection } from "@t3tools/shared/model";
-import { usageLimitBlockedRun } from "@t3tools/shared/orchestrationV2ThreadError";
+import { createModelCapabilities, createModelSelection } from "@z9code/shared/model";
+import { usageLimitBlockedRun } from "@z9code/shared/orchestrationV2ThreadError";
 import { describe, expect, it } from "vite-plus/test";
 
 import { v2Projection } from "./orchestrationV2TestFixtures.ts";
@@ -742,7 +742,7 @@ describe("deriveProviderSubagentStatus", () => {
     nodes: [root],
   });
 
-  it("leaves T3 delegated tasks and ordinary threads alone", () => {
+  it("leaves z9code delegated tasks and ordinary threads alone", () => {
     expect(deriveProviderSubagentStatus(child("mcp"))).toBeNull();
     expect(deriveProviderSubagentStatus({ ...v2Projection, nodes: [root] })).toBeNull();
   });
@@ -864,8 +864,8 @@ describe("formatModelSelectionEffort", () => {
         }),
       },
     ];
-    const antigravitySelection = createModelSelection(
-      ProviderInstanceId.make("antigravity"),
+    const geminiSelection = createModelSelection(
+      ProviderInstanceId.make("acpRegistry_gemini"),
       "gemini-4-neon",
       [{ id: "thought_level", value: "high" }],
     );
@@ -875,18 +875,18 @@ describe("formatModelSelectionEffort", () => {
       [{ id: "custom_thinking_mode", value: "deep" }],
     );
     const uncatalogedSelection = createModelSelection(
-      ProviderInstanceId.make("antigravity"),
+      ProviderInstanceId.make("acpRegistry_gemini"),
       "gemini-4-neon-preview",
       [{ id: "thought_level", value: "high" }],
     );
 
-    expect(formatModelSelectionEffort(antigravitySelection, models)).toBe("High");
+    expect(formatModelSelectionEffort(geminiSelection, models)).toBe("High");
     expect(formatModelSelectionEffort(customSelection, models)).toBe("Deep");
     expect(
       formatSubagentEffort({
         modelSlug: "gemini-4-neon-preview",
         modelSelection: uncatalogedSelection,
-        provider: { driver: ProviderDriverKind.make("antigravity"), models },
+        provider: { driver: ProviderDriverKind.make("acpRegistry"), models },
       }),
     ).toBe("high");
     expect(

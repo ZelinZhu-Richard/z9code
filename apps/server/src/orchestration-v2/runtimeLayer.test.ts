@@ -1,8 +1,8 @@
-import { PullRequestProviderError } from "@t3tools/source-control-core/server/PullRequestProvider";
-import { PullRequestUnavailableError, SourceControlProviderKind } from "@t3tools/contracts";
+import { PullRequestProviderError } from "@z9code/source-control-core/server/PullRequestProvider";
+import { PullRequestUnavailableError, SourceControlProviderKind } from "@z9code/contracts";
 import { limitRecoveryCommand } from "./UsageLimitRecoveryWorker.ts";
-import { createOrchestrationV2TurnItemVisibility } from "@t3tools/shared/orchestrationV2Timeline";
-import * as McpProviderSessions from "@t3tools/provider-core/server/McpProviderSessions";
+import { createOrchestrationV2TurnItemVisibility } from "@z9code/shared/orchestrationV2Timeline";
+import * as McpProviderSessions from "@z9code/provider-core/server/McpProviderSessions";
 import * as SourceControlProviderRegistry from "../sourceControl/SourceControlProviderRegistry.ts";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -40,7 +40,7 @@ import {
   RunId,
   ScheduledTaskId,
   ThreadId,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import * as Effect from "effect/Effect";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -69,7 +69,7 @@ import * as ServerSettings from "../serverSettings.ts";
 import * as McpSessionRegistryTestkit from "../mcp/McpSessionRegistry.testkit.ts";
 import * as ModelManifest from "../provider/ModelManifest.ts";
 import * as ProviderInstanceRegistry from "../provider/ProviderInstanceRegistry.ts";
-import type { ProviderInstance } from "@t3tools/provider-core/server/driver";
+import type { ProviderInstance } from "@z9code/provider-core/server/driver";
 import * as VcsDriverRegistry from "../vcs/VcsDriverRegistry.ts";
 import * as VcsProcess from "../vcs/VcsProcess.ts";
 import * as WorkspacePaths from "../workspace/WorkspacePaths.ts";
@@ -107,7 +107,7 @@ import * as ResourceCleanupService from "./ResourceCleanupService.ts";
 import * as ThreadLaunchService from "./ThreadLaunchService.ts";
 import * as ThreadCommandExecutor from "./ThreadCommandExecutor.ts";
 import * as DelegatedTaskQuestionReactor from "./DelegatedTaskQuestionReactor.ts";
-import type * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import type * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
 
 const layerPlatformTest = Layer.mergeAll(
   Layer.mock(ProjectSetupScriptRunner.ProjectSetupScriptRunner)({
@@ -198,43 +198,19 @@ const claudeProviderInstance = {
   },
 } satisfies ProviderInstance;
 
-const antigravityInstanceId = ProviderInstanceId.make("antigravity_test");
-const antigravityDriver = ProviderDriverKind.make("antigravity");
-const antigravityProviderInstance = {
-  ...providerInstance,
-  instanceId: antigravityInstanceId,
-  driverKind: antigravityDriver,
-  continuationIdentity: { driverKind: antigravityDriver, continuationKey: "antigravity:test" },
-  displayName: "Antigravity test",
-  orchestrationAdapter: {
-    ...orchestrationAdapter,
-    instanceId: antigravityInstanceId,
-    driver: antigravityDriver,
-    getCapabilities: () =>
-      Effect.succeed({
-        ...CodexProviderCapabilitiesV2,
-        turns: { ...CodexProviderCapabilitiesV2.turns, supportsNativeGoals: true },
-      }),
-  },
-} satisfies ProviderInstance;
-
 const layerTestProviderInstanceRegistry = Layer.merge(
   ModelManifest.layerTest,
   Layer.succeed(ProviderInstanceRegistry.ProviderInstanceRegistry, {
     getInstance: (instanceId) =>
       Effect.succeed(
-        [
-          providerInstance,
-          alternateProviderInstance,
-          claudeProviderInstance,
-          antigravityProviderInstance,
-        ].find((instance) => instanceId === instance.instanceId),
+        [providerInstance, alternateProviderInstance, claudeProviderInstance].find(
+          (instance) => instanceId === instance.instanceId,
+        ),
       ),
     listInstances: Effect.succeed([
       providerInstance,
       alternateProviderInstance,
       claudeProviderInstance,
-      antigravityProviderInstance,
     ]),
     listUnavailable: Effect.succeed([]),
     streamChanges: Stream.empty,
@@ -268,11 +244,11 @@ const watchedPullRequestDetail = (input: {
   projectId: input.projectId,
   projectTitle: "Watch wake",
   workspaceRoot: "/workspace/watch",
-  repository: "pingdotgg/t3code",
+  repository: "zelinzhu-richard/z9code",
   number: input.number,
   title: "Watched pull request",
   body: "",
-  url: `https://github.com/pingdotgg/t3code/pull/${input.number}`,
+  url: `https://github.com/zelinzhu-richard/z9code/pull/${input.number}`,
   author: { login: "agent-user", name: null, avatarUrl: null },
   state: "open",
   isDraft: false,
@@ -1089,6 +1065,121 @@ it.layer(layerProjectDeletionTest)("project deletion during thread commands", (i
           ),
         );
       }),
+  );
+
+  it.effect("deletes a parent's local subagent threads and theirs with it", () =>
+    Effect.gen(function* () {
+      const projects = yield* ProjectService.ProjectService;
+      const orchestrator = yield* Orchestrator.OrchestratorV2;
+      const eventSink = yield* EventSink.EventSinkV2;
+      const projectId = ProjectId.make("runtime-subagent-delete");
+      const parentId = ThreadId.make("runtime-subagent-delete-parent");
+      const childId = ThreadId.make("runtime-subagent-delete-child");
+      const grandchildId = ThreadId.make("runtime-subagent-delete-grandchild");
+      yield* projects.create({
+        commandId: CommandId.make("runtime-subagent-delete-project"),
+        projectId,
+        title: "Subagent deletion",
+        workspaceRoot: "/work/subagent-deletion",
+      });
+      yield* orchestrator.dispatch({
+        type: "thread.create",
+        commandId: CommandId.make("runtime-subagent-delete-create"),
+        createdBy: "user",
+        creationSource: "web",
+        threadId: parentId,
+        projectId,
+        title: "Parent",
+        modelSelection,
+        runtimeMode: "full-access",
+        interactionMode: "default",
+        branch: null,
+        worktreePath: null,
+      });
+      const now = yield* DateTime.now;
+      const seedSubagent = (ownerId: ThreadId, threadId: ThreadId) => {
+        const taskId = NodeId.make(`node:${threadId}`);
+        return eventSink.write({
+          commandId: CommandId.make(`command:seed:${threadId}`),
+          events: [
+            {
+              id: EventId.make(`event:${threadId}:thread`),
+              type: "thread.created",
+              threadId,
+              occurredAt: now,
+              payload: {
+                createdBy: "agent",
+                creationSource: "server",
+                id: threadId,
+                projectId,
+                title: threadId,
+                providerInstanceId: modelSelection.instanceId,
+                modelSelection,
+                runtimeMode: "full-access",
+                interactionMode: "default",
+                branch: null,
+                worktreePath: null,
+                activeProviderThreadId: null,
+                lineage: {
+                  parentThreadId: ownerId,
+                  relationshipToParent: "subagent",
+                  rootThreadId: parentId,
+                },
+                forkedFrom: { type: "node", nodeId: taskId },
+                createdAt: now,
+                updatedAt: now,
+                archivedAt: null,
+                settledOverride: null,
+                settledAt: null,
+                lastVisitedAt: null,
+                deletedAt: null,
+              },
+            },
+            {
+              id: EventId.make(`event:${threadId}:task`),
+              type: "subagent.updated",
+              threadId: ownerId,
+              nodeId: taskId,
+              driver,
+              providerInstanceId: modelSelection.instanceId,
+              occurredAt: now,
+              payload: {
+                id: taskId,
+                threadId: ownerId,
+                runId: null,
+                parentNodeId: NodeId.make(`node:${ownerId}:root`),
+                origin: "app_owned",
+                createdBy: "agent",
+                driver,
+                providerInstanceId: modelSelection.instanceId,
+                providerThreadId: null,
+                childThreadId: threadId,
+                nativeTaskRef: null,
+                prompt: `Run ${threadId}.`,
+                title: null,
+                model: null,
+                status: "completed",
+                result: null,
+                startedAt: now,
+                completedAt: now,
+                updatedAt: now,
+              },
+            },
+          ],
+        });
+      };
+      yield* seedSubagent(parentId, childId);
+      yield* seedSubagent(childId, grandchildId);
+
+      yield* orchestrator.dispatch({
+        type: "thread.delete",
+        commandId: CommandId.make("runtime-subagent-delete-parent"),
+        threadId: parentId,
+      });
+
+      assert.isNotNull((yield* orchestrator.getThreadProjection(childId)).thread.deletedAt);
+      assert.isNotNull((yield* orchestrator.getThreadProjection(grandchildId)).thread.deletedAt);
+    }),
   );
 
   // A fork from a side chat onto its parent used to lock the side chat, then the parent: the
@@ -3627,7 +3718,7 @@ const writeHtmlRenderRun = Effect.fn("test.writeHtmlRenderRun")(function* (input
           startedAt: now,
           completedAt: now,
           updatedAt: now,
-          toolName: "mcp__t3-code__html_render",
+          toolName: "mcp__z9code__html_render",
           input: {},
           output: [
             {
@@ -4042,9 +4133,9 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         },
         branchPullRequest: {
           projectId,
-          repository: "pingdotgg/t3code",
+          repository: "zelinzhu-richard/z9code",
           number: 1,
-          url: "https://github.com/pingdotgg/t3code/pull/1",
+          url: "https://github.com/zelinzhu-richard/z9code/pull/1",
         },
       });
       for (const [index, number] of [2, 2, 1, 3].entries()) {
@@ -4053,9 +4144,9 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`branch-pr-link-${index}`),
           threadId,
           host: "GitHub.com",
-          repository: "Pingdotgg/T3code",
+          repository: "Zelinzhu-richard/Z9code",
           number,
-          url: `https://github.com/pingdotgg/t3code/pull/${number}`,
+          url: `https://github.com/zelinzhu-richard/z9code/pull/${number}`,
           source: "manual",
         });
         assert.deepEqual(
@@ -4068,7 +4159,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         commandId: CommandId.make("branch-pr-unlink"),
         threadId,
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "zelinzhu-richard/z9code",
         number: 1,
       });
       yield* orchestrator.dispatch({
@@ -4076,9 +4167,9 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         commandId: CommandId.make("branch-pr-link-after-unlink"),
         threadId,
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "zelinzhu-richard/z9code",
         number: 4,
-        url: "https://github.com/pingdotgg/t3code/pull/4",
+        url: "https://github.com/zelinzhu-richard/z9code/pull/4",
         source: "manual",
       });
       assert.isTrue((yield* maintenance.rebuild).valid);
@@ -4092,9 +4183,9 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`gitcafe-pr-link-${index}`),
           threadId,
           host: "git.cafe",
-          repository: "pingdotgg/t3code",
+          repository: "zelinzhu-richard/z9code",
           number: 21353 + index,
-          url: `https://git.cafe/pingdotgg/t3code/${route}/${21353 + index}`,
+          url: `https://git.cafe/zelinzhu-richard/z9code/${route}/${21353 + index}`,
           source: "manual",
         });
       }
@@ -4103,7 +4194,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         (yield* orchestrator.getThreadShell(threadId))?.pullRequests
           ?.filter((link) => link.host === "git.cafe")
           .map((link) => link.url),
-        [21353, 21354].map((number) => `https://git.cafe/pingdotgg/t3code/pulls/${number}`),
+        [21353, 21354].map((number) => `https://git.cafe/zelinzhu-richard/z9code/pulls/${number}`),
       );
     }),
   );
@@ -4154,9 +4245,9 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           },
           branchPullRequest: {
             projectId,
-            repository: "pingdotgg/t3code",
+            repository: "zelinzhu-richard/z9code",
             number: 1,
-            url: "https://github.com/pingdotgg/t3code/pull/1",
+            url: "https://github.com/zelinzhu-richard/z9code/pull/1",
           },
         });
         yield* orchestrator.dispatch({
@@ -4174,13 +4265,19 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       });
 
       assert.deepEqual(
-        yield* linkedNumbers("repository-pr-other", { repository: "pingdotgg/api", number: 7 }),
-        ["pingdotgg/t3code#1", "pingdotgg/api#7"],
+        yield* linkedNumbers("repository-pr-other", {
+          repository: "zelinzhu-richard/api",
+          number: 7,
+        }),
+        ["zelinzhu-richard/z9code#1", "zelinzhu-richard/api#7"],
       );
       // A branch that moved on to a new pull request does not drag the old one along.
       assert.deepEqual(
-        yield* linkedNumbers("repository-pr-same", { repository: "pingdotgg/t3code", number: 2 }),
-        ["pingdotgg/t3code#2"],
+        yield* linkedNumbers("repository-pr-same", {
+          repository: "zelinzhu-richard/z9code",
+          number: 2,
+        }),
+        ["zelinzhu-richard/z9code#2"],
       );
     }),
   );
@@ -4204,7 +4301,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "GitHub.com", repository: "Pingdotgg/T3code" };
+      const key = { host: "GitHub.com", repository: "Zelinzhu-richard/Z9code" };
       for (const number of [1, 2]) {
         yield* orchestrator.dispatch({
           type: "thread.pull-request.link",
@@ -4212,14 +4309,18 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           threadId,
           ...key,
           number,
-          url: `https://github.com/pingdotgg/t3code/pull/${number}`,
+          url: `https://github.com/zelinzhu-richard/z9code/pull/${number}`,
           source: number === 1 ? "manual" : "stack",
         });
       }
       const linked = yield* orchestrator.getThreadShell(threadId);
       assert.deepEqual(
         linked?.pullRequests?.map(({ host, repository, number }) => ({ host, repository, number })),
-        [1, 2].map((number) => ({ host: "github.com", repository: "pingdotgg/t3code", number })),
+        [1, 2].map((number) => ({
+          host: "github.com",
+          repository: "zelinzhu-richard/z9code",
+          number,
+        })),
       );
       yield* orchestrator.dispatch({
         type: "thread.pull-request.unlink",
@@ -4248,7 +4349,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         threadId,
         ...key,
         number: 2,
-        url: "https://github.com/pingdotgg/t3code/pull/2",
+        url: "https://github.com/zelinzhu-richard/z9code/pull/2",
         source: "stack",
       });
       assert.equal(
@@ -4266,7 +4367,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         threadId,
         ...key,
         number: 2,
-        url: "https://github.com/pingdotgg/t3code/pull/2",
+        url: "https://github.com/zelinzhu-richard/z9code/pull/2",
         source: "manual",
       });
       assert.equal(
@@ -4299,7 +4400,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       const key = {
         tracker: IssueTrackerKind.make("github"),
         host: "GitHub.com",
-        scope: "Pingdotgg/T3code",
+        scope: "Zelinzhu-richard/Z9code",
         key: "42",
       };
       yield* orchestrator.dispatch({
@@ -4308,7 +4409,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         threadId,
         ...key,
         projectId,
-        url: "https://github.com/pingdotgg/t3code/issues/42",
+        url: "https://github.com/zelinzhu-richard/z9code/issues/42",
         displayKey: "#42",
         title: "Issue links",
         source: "manual",
@@ -4320,9 +4421,9 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         threadId,
         ...key,
         host: "github.com",
-        scope: "pingdotgg/t3code",
+        scope: "zelinzhu-richard/z9code",
         projectId,
-        url: "https://github.com/pingdotgg/t3code/issues/42",
+        url: "https://github.com/zelinzhu-richard/z9code/issues/42",
         displayKey: "#42",
         title: "Issue links, renamed",
         source: "agent",
@@ -4340,7 +4441,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         [
           {
             host: "github.com",
-            scope: "Pingdotgg/T3code",
+            scope: "Zelinzhu-richard/Z9code",
             key: "42",
             source: "manual",
             title: "Issue links",
@@ -4378,8 +4479,8 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 7 };
-      const url = "https://github.com/pingdotgg/t3code/pull/7";
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 7 };
+      const url = "https://github.com/zelinzhu-richard/z9code/pull/7";
       const watchOf = Effect.map(
         orchestrator.getThreadShell(threadId),
         (thread) => thread?.pullRequests?.[0]?.watch,
@@ -4497,7 +4598,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 7 };
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 7 };
       const watchOf = Effect.map(
         orchestrator.getThreadShell(threadId),
         (thread) => thread?.pullRequests?.[0]?.watch,
@@ -4509,7 +4610,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           threadId,
           ...key,
           watching: true,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/7", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/7", source: "agent" },
           ...(until !== undefined && { until }),
         });
 
@@ -4564,7 +4665,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code" };
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code" };
       for (const number of [7, 8]) {
         yield* orchestrator.dispatch({
           type: "thread.pull-request.watch",
@@ -4573,7 +4674,10 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           ...key,
           number,
           watching: true,
-          link: { url: `https://github.com/pingdotgg/t3code/pull/${number}`, source: "agent" },
+          link: {
+            url: `https://github.com/zelinzhu-richard/z9code/pull/${number}`,
+            source: "agent",
+          },
         });
       }
       const before = yield* orchestrator.getThreadShell(threadId);
@@ -4669,14 +4773,14 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: process.cwd(),
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 7 };
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 7 };
       yield* orchestrator.dispatch({
         type: "thread.pull-request.watch",
         commandId: CommandId.make(`${prefix}-start`),
         threadId,
         ...key,
         watching: true,
-        link: { url: "https://github.com/pingdotgg/t3code/pull/7", source: "agent" },
+        link: { url: "https://github.com/zelinzhu-richard/z9code/pull/7", source: "agent" },
       });
       const started = (yield* orchestrator.getThreadShell(threadId))?.pullRequests?.[0]?.watch;
       assert.isDefined(started);
@@ -4785,10 +4889,13 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         type: "thread.pull-request.watch" as const,
         threadId,
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "zelinzhu-richard/z9code",
         number: 7,
         watching: true,
-        link: { url: "https://github.com/pingdotgg/t3code/pull/7", source: "agent" as const },
+        link: {
+          url: "https://github.com/zelinzhu-richard/z9code/pull/7",
+          source: "agent" as const,
+        },
       };
       const watched = Effect.map(
         orchestrator.getThreadShell(threadId),
@@ -4862,10 +4969,10 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`pr-watch-unreadable-start-${reason}-${activityFails}`),
           threadId,
           host: "github.com",
-          repository: "pingdotgg/t3code",
+          repository: "zelinzhu-richard/z9code",
           number: 8,
           watching: true,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/8", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/8", source: "agent" },
         });
         let disconnected = false;
         let passed = false;
@@ -4985,7 +5092,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`pr-watch-unreadable-stop-${reason}-${activityFails}`),
           threadId,
           host: "github.com",
-          repository: "pingdotgg/t3code",
+          repository: "zelinzhu-richard/z9code",
           number: 8,
           watching: false,
         });
@@ -5025,10 +5132,10 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         commandId: CommandId.make("pr-watch-merged-start"),
         threadId,
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "zelinzhu-richard/z9code",
         number: 15,
         watching: true,
-        link: { url: "https://github.com/pingdotgg/t3code/pull/15", source: "agent" },
+        link: { url: "https://github.com/zelinzhu-richard/z9code/pull/15", source: "agent" },
       });
       const reactor = yield* PullRequestWatchReactor.make.pipe(
         Effect.provide(
@@ -5131,10 +5238,13 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
             commandId: CommandId.make(`pr-watch-own-merge-${key}-start-${number}`),
             threadId,
             host: "github.com",
-            repository: "pingdotgg/t3code",
+            repository: "zelinzhu-richard/z9code",
             number,
             watching: true,
-            link: { url: `https://github.com/pingdotgg/t3code/pull/${number}`, source: "agent" },
+            link: {
+              url: `https://github.com/zelinzhu-richard/z9code/pull/${number}`,
+              source: "agent",
+            },
           });
         }
 
@@ -5280,7 +5390,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 16 };
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 16 };
       const watch = (id: string) =>
         orchestrator.dispatch({
           type: "thread.pull-request.watch",
@@ -5288,7 +5398,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           threadId,
           ...key,
           watching: true,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/16", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/16", source: "agent" },
         });
       yield* watch("start");
 
@@ -5385,7 +5495,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           defaultModelSelection: null,
           createdAt: "2026-10-01T00:00:00.000Z",
         });
-        const key = { host: "github.com", repository: "pingdotgg/t3code", number: 8 };
+        const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 8 };
         // Another thread watches the same pull request, before its own link syncs.
         const [merged, unsynced] = (["merged", "unsynced"] as const).map((which) =>
           ThreadId.make(`runtime-pull-request-watch-merged-unreadable-${name}-${which}`),
@@ -5411,7 +5521,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
             threadId,
             ...key,
             watching: true,
-            link: { url: "https://github.com/pingdotgg/t3code/pull/8", source: "agent" },
+            link: { url: "https://github.com/zelinzhu-richard/z9code/pull/8", source: "agent" },
           });
         }
         yield* orchestrator.dispatch({
@@ -5512,10 +5622,10 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         commandId: CommandId.make("pr-watch-closed-unreadable-start"),
         threadId,
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "zelinzhu-richard/z9code",
         number: 8,
         watching: true,
-        link: { url: "https://github.com/pingdotgg/t3code/pull/8", source: "agent" },
+        link: { url: "https://github.com/zelinzhu-richard/z9code/pull/8", source: "agent" },
       });
       const reactor = yield* PullRequestWatchReactor.make.pipe(
         Effect.provide(
@@ -5609,13 +5719,13 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           branch: null,
           worktreePath: null,
         });
-        const key = { host: "github.com", repository: "pingdotgg/t3code", number: 13 };
+        const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 13 };
         yield* orchestrator.dispatch({
           type: "thread.pull-request.link",
           commandId: CommandId.make(`pr-watch-start-link-${label}`),
           threadId,
           ...key,
-          url: "https://github.com/pingdotgg/t3code/pull/13",
+          url: "https://github.com/zelinzhu-richard/z9code/pull/13",
           source: "manual",
         });
         yield* orchestrator.dispatch({
@@ -5733,10 +5843,10 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`pr-watch-told-${id}`),
           threadId,
           host: "github.com",
-          repository: "pingdotgg/t3code",
+          repository: "zelinzhu-richard/z9code",
           number: 12,
           watching: on,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/12", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/12", source: "agent" },
         });
       yield* watch(true, "start");
 
@@ -5853,10 +5963,13 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
             commandId: CommandId.make(`pr-watch-pass-start-${busy}-${number}`),
             threadId,
             host: "github.com",
-            repository: "pingdotgg/t3code",
+            repository: "zelinzhu-richard/z9code",
             number,
             watching: true,
-            link: { url: `https://github.com/pingdotgg/t3code/pull/${number}`, source: "agent" },
+            link: {
+              url: `https://github.com/zelinzhu-richard/z9code/pull/${number}`,
+              source: "agent",
+            },
           });
         }
         if (busy) {
@@ -5922,7 +6035,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make("pr-watch-pass-stop-12"),
           threadId,
           host: "github.com",
-          repository: "pingdotgg/t3code",
+          repository: "zelinzhu-richard/z9code",
           number: 12,
           watching: false,
         });
@@ -5980,10 +6093,13 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
             commandId: CommandId.make(`pr-watch-quiet-start-${number}`),
             threadId,
             host: "github.com",
-            repository: "pingdotgg/t3code",
+            repository: "zelinzhu-richard/z9code",
             number,
             watching: true,
-            link: { url: `https://github.com/pingdotgg/t3code/pull/${number}`, source: "agent" },
+            link: {
+              url: `https://github.com/zelinzhu-richard/z9code/pull/${number}`,
+              source: "agent",
+            },
           });
         }
 
@@ -6125,16 +6241,16 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`pr-watch-owed-${initialStatus}-${id}`),
           threadId,
           host: "github.com",
-          repository: "pingdotgg/t3code",
+          repository: "zelinzhu-richard/z9code",
           number: 12,
           watching: on,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/12", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/12", source: "agent" },
         });
       yield* watch(true, "start");
 
       let remainingStatus: "pending" | "action-required" | "success" = initialStatus;
       const approval = initialStatus === "action-required";
-      const runUrl = "https://github.com/pingdotgg/t3code/actions/runs/123";
+      const runUrl = "https://github.com/zelinzhu-richard/z9code/actions/runs/123";
       const host = Layer.mergeAll(
         NodeServices.layer,
         NodeCrypto.layer,
@@ -6252,7 +6368,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 13 };
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 13 };
       const watch = (id: string) =>
         orchestrator.dispatch({
           type: "thread.pull-request.watch",
@@ -6260,7 +6376,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           threadId,
           ...key,
           watching: true,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/13", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/13", source: "agent" },
         });
       const watchOf = Effect.map(
         orchestrator.getThreadShell(threadId),
@@ -6307,7 +6423,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
                   author: { login: "reviewer", name: null, avatarUrl: null },
                   body: "One more thing.",
                   createdAt: commentAt,
-                  url: "https://github.com/pingdotgg/t3code/pull/13#comment",
+                  url: "https://github.com/zelinzhu-richard/z9code/pull/13#comment",
                   path: null,
                   reviewState: null,
                 },
@@ -6375,14 +6491,14 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 14 };
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 14 };
       yield* orchestrator.dispatch({
         type: "thread.pull-request.watch",
         commandId: CommandId.make("pr-watch-no-checks-start"),
         threadId,
         ...key,
         watching: true,
-        link: { url: "https://github.com/pingdotgg/t3code/pull/14", source: "agent" },
+        link: { url: "https://github.com/zelinzhu-richard/z9code/pull/14", source: "agent" },
       });
 
       // A docs-only push that path filters keep every workflow off.
@@ -6482,14 +6598,14 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           branch: null,
           worktreePath: null,
         });
-        const key = { host: "github.com", repository: "pingdotgg/t3code", number: 15 };
+        const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 15 };
         yield* orchestrator.dispatch({
           type: "thread.pull-request.watch",
           commandId: CommandId.make("pr-watch-host-event-start"),
           threadId,
           ...key,
           watching: true,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/15", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/15", source: "agent" },
         });
 
         let checks: PullRequestDetail["checks"] = [
@@ -6666,14 +6782,14 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         // The first sweep listed watches before this one existed, so it cannot be the read below.
         yield* Queue.take(watchListings);
 
-        const key = { host: "github.com", repository: "pingdotgg/t3code", number: 16 };
+        const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 16 };
         const started = yield* orchestrator.dispatch({
           type: "thread.pull-request.watch",
           commandId: CommandId.make("pr-watch-start-read-start"),
           threadId,
           ...key,
           watching: true,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/16", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/16", source: "agent" },
         });
         yield* PubSub.publishAll(
           domainEvents,
@@ -6729,14 +6845,14 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 14 };
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 14 };
       yield* orchestrator.dispatch({
         type: "thread.pull-request.watch",
         commandId: CommandId.make("pr-watch-late-checks-start"),
         threadId,
         ...key,
         watching: true,
-        link: { url: "https://github.com/pingdotgg/t3code/pull/14", source: "agent" },
+        link: { url: "https://github.com/zelinzhu-richard/z9code/pull/14", source: "agent" },
       });
 
       const headSha = "6074dd48ff";
@@ -6849,14 +6965,14 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           branch: null,
           worktreePath: null,
         });
-        const key = { host: "github.com", repository: "pingdotgg/t3code", number: 14 };
+        const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 14 };
         yield* orchestrator.dispatch({
           type: "thread.pull-request.watch",
           commandId: CommandId.make(`pr-watch-due-start-${fingerprinted}`),
           threadId,
           ...key,
           watching: true,
-          link: { url: "https://github.com/pingdotgg/t3code/pull/14", source: "agent" },
+          link: { url: "https://github.com/zelinzhu-richard/z9code/pull/14", source: "agent" },
         });
 
         let reads = 0;
@@ -7051,8 +7167,8 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 14 };
-      const url = "https://github.com/pingdotgg/t3code/pull/14";
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 14 };
+      const url = "https://github.com/zelinzhu-richard/z9code/pull/14";
       const watchOf = Effect.map(
         orchestrator.getThreadShell(threadId),
         (thread) => thread?.pullRequests?.[0]?.watch,
@@ -7132,10 +7248,10 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         commandId: CommandId.make("queue-removal-start"),
         threadId,
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "zelinzhu-richard/z9code",
         number: 7,
         watching: true,
-        link: { url: "https://github.com/pingdotgg/t3code/pull/7", source: "agent" },
+        link: { url: "https://github.com/zelinzhu-richard/z9code/pull/7", source: "agent" },
       });
       let removal: PullRequestDetail["mergeQueueRemoval"];
       const host = Layer.mergeAll(
@@ -7232,8 +7348,8 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code", number: 7 };
-      const url = "https://github.com/pingdotgg/t3code/pull/7";
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 7 };
+      const url = "https://github.com/zelinzhu-richard/z9code/pull/7";
       yield* orchestrator.dispatch({
         type: "thread.pull-request.link",
         commandId: CommandId.make(`pr-watch-wake-link-${mode}`),
@@ -7405,14 +7521,14 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       branch: null,
       worktreePath: process.cwd(),
     });
-    const key = { host: "github.com", repository: "pingdotgg/t3code", number: 7 };
+    const key = { host: "github.com", repository: "zelinzhu-richard/z9code", number: 7 };
     yield* orchestrator.dispatch({
       type: "thread.pull-request.watch",
       commandId: CommandId.make(`${threadId}-watch`),
       threadId,
       ...key,
       watching: true,
-      link: { url: "https://github.com/pingdotgg/t3code/pull/7", source: "agent" },
+      link: { url: "https://github.com/zelinzhu-richard/z9code/pull/7", source: "agent" },
     });
     let watch = (yield* orchestrator.getThreadShell(threadId))?.pullRequests?.[0]?.watch;
     assert.isDefined(watch);
@@ -7571,7 +7687,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
             commandId: CommandId.make(`${threadId}-relink`),
             threadId,
             ...key,
-            url: "https://github.com/pingdotgg/t3code/pull/7",
+            url: "https://github.com/zelinzhu-richard/z9code/pull/7",
             source: "manual",
           });
         }
@@ -7771,10 +7887,13 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`pr-watch-pipeline-start-${number}`),
           threadId,
           host: "github.com",
-          repository: "pingdotgg/t3code",
+          repository: "zelinzhu-richard/z9code",
           number,
           watching: true,
-          link: { url: `https://github.com/pingdotgg/t3code/pull/${number}`, source: "agent" },
+          link: {
+            url: `https://github.com/zelinzhu-richard/z9code/pull/${number}`,
+            source: "agent",
+          },
         });
       }
       const at = "2026-10-02T12:00:00.000Z";
@@ -7909,7 +8028,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           notification: {
             source: { kind: "system" as const },
             outcome: "updated" as const,
-            summary: "T3 Code restarted and resumed this turn",
+            summary: "z9code restarted and resumed this turn",
             detail: "Continue where you left off.",
           },
           attachments: [],
@@ -7930,7 +8049,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           continuationItems.flatMap((item) =>
             item.type === "notification" ? [[item.summary, item.detail]] : [],
           ),
-          ["T3 Code restarted and resumed this turn", "Continue where you left off."],
+          ["z9code restarted and resumed this turn", "Continue where you left off."],
         );
         yield* orchestrator.dispatch({
           ...command,
@@ -8031,7 +8150,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           commandId: CommandId.make(`restart-${status}-${kind}-continuation`),
           threadId,
           messageId: MessageId.make(`restart-${status}-${kind}-continuation`),
-          text: "Note: the T3 server restarted.",
+          text: "Note: the z9code server restarted.",
           attachments: [],
           modelSelection,
           dispatchMode: { type: "start_immediately" },
@@ -8287,10 +8406,10 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
         commandId: CommandId.make("runtime-layer-settle-then-watch-watch"),
         threadId,
         host: "github.com",
-        repository: "pingdotgg/t3code",
+        repository: "zelinzhu-richard/z9code",
         number: 7,
         watching: true,
-        link: { url: "https://github.com/pingdotgg/t3code/pull/7", source: "agent" },
+        link: { url: "https://github.com/zelinzhu-richard/z9code/pull/7", source: "agent" },
       });
       assert.isDefined((yield* orchestrator.getThreadShell(threadId))?.pullRequests?.[0]?.watch);
 
@@ -10415,7 +10534,7 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
           creationSource: "web",
         });
       }
-      // What t3_thread_send dispatches: no model of its own.
+      // What z9_thread_send dispatches: no model of its own.
       yield* orchestrator.dispatch({
         type: "message.dispatch",
         commandId: CommandId.make(`${threadId}:agent`),
@@ -10602,49 +10721,6 @@ it.layer(layerTest)("OrchestrationV2LayerLive lifecycle", (it) => {
       assert.deepEqual(wake?.modelSelection, modelSelection);
       assert.equal(wake?.providerThreadId, active?.providerThreadId);
     }),
-  );
-
-  it.effect.each(["", "pause", "resume", "clear", "edit"])(
-    "refuses unsupported Antigravity goal controls: %s",
-    (control) =>
-      Effect.gen(function* () {
-        const orchestrator = yield* Orchestrator.OrchestratorV2;
-        const threadId = ThreadId.make(`antigravity-goal-control-${control}`);
-        yield* orchestrator.dispatch({
-          type: "thread.create",
-          commandId: CommandId.make(`${threadId}:create`),
-          threadId,
-          projectId: ProjectId.make(`${threadId}:project`),
-          createdBy: "user",
-          creationSource: "web",
-          title: "Native goal",
-          modelSelection: { ...modelSelection, instanceId: antigravityInstanceId },
-          runtimeMode: "full-access",
-          interactionMode: "default",
-          branch: null,
-          worktreePath: process.cwd(),
-        });
-        const sequence = yield* orchestrator.getThreadEventSequence(threadId);
-        const refused = yield* Effect.flip(
-          orchestrator.dispatch({
-            type: "message.dispatch",
-            commandId: CommandId.make(`${threadId}:goal`),
-            threadId,
-            messageId: MessageId.make(`${threadId}:goal`),
-            text: `/goal ${control}`,
-            attachments: [],
-            dispatchMode: { type: "start_immediately" },
-            createdBy: "user",
-            creationSource: "web",
-          }),
-        );
-        assert.instanceOf(refused, Orchestrator.OrchestratorDispatchError);
-        assert.equal(
-          refused.cause,
-          "Antigravity accepts /goal followed by an objective. Interrupt the running turn, then ask Antigravity to stop the current goal.",
-        );
-        assert.equal(yield* orchestrator.getThreadEventSequence(threadId), sequence);
-      }),
   );
 
   it.effect("checks a queued goal pause against the model picked ahead of it", () =>
@@ -13652,8 +13728,8 @@ it.layer(Layer.fresh(layerSharedApplicationDataPlaneTest))("PR link events", (it
         branch: null,
         worktreePath: null,
       });
-      const key = { host: "github.com", repository: "pingdotgg/t3code" };
-      const repositoryWebUrl = "https://github.com/pingdotgg/t3code/pull/2";
+      const key = { host: "github.com", repository: "zelinzhu-richard/z9code" };
+      const repositoryWebUrl = "https://github.com/zelinzhu-richard/z9code/pull/2";
       for (const number of [1, 2]) {
         yield* orchestrator.dispatch({
           type: "thread.pull-request.link",
@@ -13661,14 +13737,14 @@ it.layer(Layer.fresh(layerSharedApplicationDataPlaneTest))("PR link events", (it
           threadId,
           ...key,
           number,
-          url: `https://github.com/pingdotgg/t3code/pull/${number}`,
+          url: `https://github.com/zelinzhu-richard/z9code/pull/${number}`,
           source: "manual",
           ...(number === 2 ? { repositoryWebUrl } : {}),
         });
       }
       const watchedLink = {
-        url: "https://github.com/pingdotgg/t3code/pull/3",
-        repositoryWebUrl: "https://github.com/pingdotgg/t3code/pull/3",
+        url: "https://github.com/zelinzhu-richard/z9code/pull/3",
+        repositoryWebUrl: "https://github.com/zelinzhu-richard/z9code/pull/3",
         source: "manual" as const,
       };
       yield* orchestrator.dispatch({
@@ -13708,7 +13784,7 @@ it.layer(Layer.fresh(layerSharedApplicationDataPlaneTest))("PR link events", (it
           kind: "native",
           id: "updated",
           number: 2,
-          url: "https://github.com/pingdotgg/t3code/pull/2",
+          url: "https://github.com/zelinzhu-richard/z9code/pull/2",
           base: "main",
           layers: [],
         },

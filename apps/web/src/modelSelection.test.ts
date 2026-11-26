@@ -1,19 +1,18 @@
 import {
-  ANTIGRAVITY_DEFAULT_MODEL,
   DEFAULT_TEXT_GENERATION_MODEL,
   DEFAULT_SERVER_SETTINGS,
   ProjectId,
   ProviderDriverKind,
   ProviderInstanceId,
   type ServerProvider,
-} from "@t3tools/contracts";
+} from "@z9code/contracts";
 import {
   DEFAULT_CLIENT_SETTINGS,
   DEFAULT_UNIFIED_SETTINGS,
   type UnifiedSettings,
-} from "@t3tools/contracts/settings";
+} from "@z9code/contracts/settings";
 import { describe, expect, it } from "vite-plus/test";
-import { createModelSelection } from "@t3tools/shared/model";
+import { createModelSelection } from "@z9code/shared/model";
 import { deriveEffectiveComposerModelState } from "./composerDraftStore";
 import { getComposerProviderState } from "./components/chat/composerProviderState";
 import { resolveComposerProviderSelection } from "./components/ChatView.logic";
@@ -410,11 +409,6 @@ describe("instance-scoped model selection", () => {
       missingModel: "opencode/kimi-k3",
     },
     {
-      driverName: "antigravity",
-      availableModel: "gemini-3.1-pro",
-      missingModel: "gemini-3.1-pro-high",
-    },
-    {
       driverName: "cursor",
       availableModel: "auto-smart",
       missingModel: "claude-opus-5-5",
@@ -581,101 +575,7 @@ describe("instance-scoped model selection", () => {
     expect(state.modelOptions?.[instanceId]).toEqual(draftSelection.options);
   });
 
-  it("preserves the Antigravity model in drafts and existing threads after sign-out", () => {
-    const instanceId = ProviderInstanceId.make("antigravity_work");
-    const driver = ProviderDriverKind.make("antigravity");
-    const saved = createModelSelection(instanceId, "gemini-3.1-pro-high");
-    const providers = [
-      {
-        ...provider({ provider: driver, instanceId, models: [] }),
-        status: "error" as const,
-        auth: { status: "unauthenticated" as const },
-      },
-    ];
-    for (const draft of [
-      null,
-      { activeProvider: instanceId, modelSelectionByProvider: { [instanceId]: saved } },
-    ]) {
-      const state = deriveEffectiveComposerModelState({
-        threadStarted: false,
-        draft,
-        providers,
-        selectedProvider: driver,
-        selectedInstanceId: instanceId,
-        threadModelSelection: saved,
-        projectModelSelection: null,
-        settings: settingsWithProviderInstances(),
-      });
-      expect(state.selectedModel).toBe(saved.model);
-    }
-  });
-
-  it("does not borrow a default model while a new Antigravity account has no catalog", () => {
-    const driver = ProviderDriverKind.make("antigravity");
-    const instanceId = ProviderInstanceId.make("antigravity_work");
-    const providers = [
-      provider({ instanceId: "codex", models: ["gpt-5.6-sol"] }),
-      provider({ provider: driver, instanceId: "antigravity", models: ["gemini-other-account"] }),
-      provider({ provider: driver, instanceId, models: [] }),
-    ];
-
-    const otherAccountId = ProviderInstanceId.make("antigravity");
-    for (const draft of [
-      null,
-      {
-        activeProvider: instanceId,
-        modelSelectionByProvider: {
-          [otherAccountId]: createModelSelection(otherAccountId, "gemini-other-account"),
-        },
-      },
-    ]) {
-      const state = deriveEffectiveComposerModelState({
-        threadStarted: false,
-        draft,
-        providers,
-        selectedProvider: driver,
-        selectedInstanceId: instanceId,
-        threadModelSelection: null,
-        projectModelSelection: createModelSelection(
-          ProviderInstanceId.make("codex"),
-          "gpt-5.6-sol",
-        ),
-        settings: settingsWithProviderInstances(),
-      });
-      expect(state.selectedModel).toBe("");
-    }
-  });
-
-  it("offers only account catalog models for Antigravity despite custom model settings", () => {
-    const driver = ProviderDriverKind.make("antigravity");
-    const customId = ProviderInstanceId.make("antigravity_work");
-    const nativeModel = "gemini-3.1-pro";
-    const settings: UnifiedSettings = {
-      ...DEFAULT_UNIFIED_SETTINGS,
-      providerInstances: {
-        [ProviderInstanceId.make("antigravity")]: {
-          driver,
-          config: { customModels: ["api-only-model"] },
-        },
-        [customId]: { driver, config: { customModels: ["unknown-model"] } },
-      },
-    };
-    const entries = deriveProviderInstanceEntries([
-      provider({ provider: driver, instanceId: "antigravity", models: [nativeModel] }),
-      provider({ provider: driver, instanceId: customId, models: [nativeModel] }),
-    ]);
-
-    for (const entry of entries) {
-      expect(getAppModelOptionsForInstance(settings, entry).map((model) => model.slug)).toEqual([
-        nativeModel,
-      ]);
-    }
-  });
-
-  it.each([
-    { driver: "antigravity", marker: ANTIGRAVITY_DEFAULT_MODEL, nativeModel: "gemini-3.1-pro" },
-    { driver: "acpRegistry", marker: "default", nativeModel: "agent-model" },
-  ])(
+  it.each([{ driver: "acpRegistry", marker: "default", nativeModel: "agent-model" }])(
     "resolves the $driver default marker without creating an unavailable model",
     ({ driver, marker, nativeModel }) => {
       const instanceId = ProviderInstanceId.make(`${driver}_work`);
@@ -689,7 +589,6 @@ describe("instance-scoped model selection", () => {
         models: base.models.map((model) => ({
           ...model,
           isDefault: true,
-          ...(driver === "antigravity" ? { aliases: [marker] } : {}),
         })),
       };
       const settings = settingsWithProviderInstances();
@@ -1006,10 +905,10 @@ describe("instance-scoped model selection", () => {
   });
 
   it("does not select a provider that cannot generate system text", () => {
-    const instanceId = ProviderInstanceId.make("antigravity");
+    const instanceId = ProviderInstanceId.make("kiro");
     const unsupported = {
       ...provider({
-        provider: ProviderDriverKind.make("antigravity"),
+        provider: ProviderDriverKind.make("kiro"),
         instanceId,
         models: ["gemini-3.1-pro"],
       }),
@@ -1438,32 +1337,6 @@ describe("composer fallback to another instance of the same driver", () => {
       });
 
       expect(state.selectedModel).toBe("5.4");
-      expect(traits.modelOptionsForDispatch).toBeUndefined();
-    });
-
-    it("does not carry options through an alias that names another model per instance", () => {
-      // "antigravity-default" is each Antigravity instance's current model.
-      const antigravity = ProviderDriverKind.make("antigravity");
-      const disabledAntigravity = ProviderInstanceId.make("antigravity");
-      const current = { isDefault: true, aliases: [ANTIGRAVITY_DEFAULT_MODEL] };
-      const { state, traits } = composerFor({
-        providers: [
-          {
-            ...provider({ provider: antigravity, instanceId: disabledAntigravity }),
-            enabled: false,
-            models: [reasoningModel("gemini-3-pro", "thinking", current)],
-          },
-          {
-            ...provider({ provider: antigravity, instanceId: "antigravity_work" }),
-            models: [reasoningModel("claude-sonnet-4-6", "thinking", current)],
-          },
-        ],
-        threadModelSelection: createModelSelection(disabledAntigravity, ANTIGRAVITY_DEFAULT_MODEL, [
-          { id: "thinking", value: "high" },
-        ]),
-      });
-
-      expect(state.selectedModel).toBe("claude-sonnet-4-6");
       expect(traits.modelOptionsForDispatch).toBeUndefined();
     });
   });

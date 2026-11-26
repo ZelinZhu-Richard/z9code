@@ -2,8 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { EnvironmentAuthInvalidError } from "@t3tools/contracts";
-import { hashTelemetryId } from "@t3tools/shared/telemetryId";
+import { EnvironmentAuthInvalidError } from "@z9code/contracts";
 import {
   bootstrapRemoteBearerSession,
   exchangeRemoteDpopAccessToken,
@@ -12,7 +11,6 @@ import {
   resolveRemoteDpopWebSocketConnectionUrl,
   resolveRemoteWebSocketConnectionUrl,
 } from "./remote.ts";
-import * as ClientCapabilities from "../platform/capabilities.ts";
 import * as RpcHttp from "../rpc/http.ts";
 
 const isEnvironmentAuthInvalidError = Schema.is(EnvironmentAuthInvalidError);
@@ -96,7 +94,7 @@ describe("remote environment authorization", () => {
         credential: "one-time-credential",
         dpopProof: "token-proof",
         clientMetadata: {
-          label: "T3 Code Mobile",
+          label: "z9code Mobile",
           deviceType: "mobile",
           os: "iOS",
         },
@@ -111,7 +109,7 @@ describe("remote environment authorization", () => {
         url: "https://remote.example.com/oauth/token",
         method: "POST",
         headers: { dpop: "token-proof", "content-type": "application/x-www-form-urlencoded" },
-        body: "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&subject_token=one-time-credential&subject_token_type=urn%3At3%3Aparams%3Aoauth%3Atoken-type%3Aenvironment-bootstrap&requested_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aaccess_token&client_label=T3+Code+Mobile&client_device_type=mobile&client_os=iOS",
+        body: "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&subject_token=one-time-credential&subject_token_type=urn%3At3%3Aparams%3Aoauth%3Atoken-type%3Aenvironment-bootstrap&requested_token_type=urn%3Aietf%3Aparams%3Aoauth%3Atoken-type%3Aaccess_token&client_label=z9code+Mobile&client_device_type=mobile&client_os=iOS",
       });
       expectFetchCall(fetch.calls, 2, {
         url: "https://remote.example.com/api/auth/websocket-ticket",
@@ -180,37 +178,37 @@ describe("remote environment authorization", () => {
     }),
   );
 
-  it.effect("mints a websocket url that targets the rpc route with a short-lived ticket", () =>
-    Effect.gen(function* () {
-      const fetch = recordedFetch(
-        Response.json(
-          {
-            ticket: "ws-ticket",
-            expiresAt: "2026-05-01T12:05:00.000Z",
+  it.effect(
+    "mints a websocket url that carries only the short-lived ticket, no client fingerprint",
+    () =>
+      Effect.gen(function* () {
+        const fetch = recordedFetch(
+          Response.json(
+            {
+              ticket: "ws-ticket",
+              expiresAt: "2026-05-01T12:05:00.000Z",
+            },
+            { status: 200 },
+          ),
+        );
+
+        const url = yield* resolveRemoteWebSocketConnectionUrl({
+          wsBaseUrl: "wss://remote.example.com/",
+          httpBaseUrl: "https://remote.example.com/",
+          bearerToken: "bearer-token",
+          clientMetadata: {
+            surface: "mobile",
+            appVersion: "1.2.3",
+            deviceType: "mobile",
+            os: "Android",
+            osMajorVersion: 15,
+            deviceModel: "Pixel 9",
           },
-          { status: 200 },
-        ),
-      );
+          connectionMethod: "relay",
+        }).pipe(provideRemoteHttp(fetch.fetchFn));
 
-      const url = yield* resolveRemoteWebSocketConnectionUrl({
-        wsBaseUrl: "wss://remote.example.com/",
-        httpBaseUrl: "https://remote.example.com/",
-        bearerToken: "bearer-token",
-        clientMetadata: {
-          surface: "mobile",
-          appVersion: "1.2.3",
-          deviceType: "mobile",
-          os: "Android",
-          osMajorVersion: 15,
-          deviceModel: "Pixel 9",
-        },
-        connectionMethod: "relay",
-      }).pipe(provideRemoteHttp(fetch.fetchFn));
-
-      expect(url).toBe(
-        "wss://remote.example.com/ws?wsTicket=ws-ticket&clientSurface=mobile&clientAppVersion=1.2.3&clientDeviceType=phone&clientOs=Android&clientOsMajorVersion=15&clientDeviceModel=Pixel+9&connectionMethod=relay",
-      );
-    }),
+        expect(url).toBe("wss://remote.example.com/ws?wsTicket=ws-ticket");
+      }),
   );
 
   it.effect("binds a DPoP client's rpc ticket to its key and proves the upgrade", () =>
@@ -244,9 +242,7 @@ describe("remote environment authorization", () => {
         },
         { method: "GET", url: "https://remote.example.com/ws", accessToken: "ws-ticket" },
       ]);
-      expect(url).toBe(
-        "wss://remote.example.com/ws?wsTicket=ws-ticket&dpop=proof-2&connectionMethod=relay",
-      );
+      expect(url).toBe("wss://remote.example.com/ws?wsTicket=ws-ticket&dpop=proof-2");
     }),
   );
 
@@ -311,39 +307,6 @@ describe("remote environment authorization", () => {
       });
       expect(new URL(url).searchParams.get("wsTicket")).toBe("old-ticket");
       expect(new URL(url).searchParams.get("dpop")).toBe("proof-3");
-    }),
-  );
-
-  it.effect("names the signed-in Connect account and this device by hash only", () =>
-    Effect.gen(function* () {
-      const fetch = recordedFetch(
-        Response.json({ ticket: "ws-ticket", expiresAt: "2026-05-01T12:05:00.000Z" }),
-      );
-
-      const url = new URL(
-        yield* resolveRemoteWebSocketConnectionUrl({
-          wsBaseUrl: "wss://remote.example.com/",
-          httpBaseUrl: "https://remote.example.com/",
-          bearerToken: "bearer-token",
-        }).pipe(
-          provideRemoteHttp(fetch.fetchFn),
-          Effect.provideService(
-            ClientCapabilities.CloudSession,
-            ClientCapabilities.CloudSession.of({
-              identity: Effect.succeedSome({ accountId: "user_connect" }),
-              clerkToken: Effect.succeed("clerk-token"),
-            }),
-          ),
-          Effect.provideService(ClientCapabilities.AnalyticsDevice, {
-            id: Effect.succeedSome("device-1"),
-          }),
-        ),
-      );
-
-      expect(url.searchParams.get("clientOwner")).toBe(hashTelemetryId("user_connect"));
-      expect(url.searchParams.get("clientDevice")).toBe(hashTelemetryId("device-1"));
-      expect(url.toString()).not.toContain("user_connect");
-      expect(url.toString()).not.toContain("device-1");
     }),
   );
 });

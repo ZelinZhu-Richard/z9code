@@ -1,6 +1,6 @@
 import * as NodeOS from "node:os";
 
-import type { ThreadId } from "@t3tools/contracts";
+import type { ThreadId } from "@z9code/contracts";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
@@ -12,7 +12,7 @@ import * as Threads from "../orchestration-v2/ThreadManagementService.ts";
 import * as Projects from "../project/ProjectService.ts";
 import * as Providers from "../provider/ProviderRegistry.ts";
 import * as Settings from "../serverSettings.ts";
-import { providerDimensions } from "../telemetry/ProviderDimensions.ts";
+import { providerDimensions } from "./ProviderDimensions.ts";
 import {
   FEEDBACK_AWAITING_APPROVAL_NOTE,
   FEEDBACK_SUBJECT_MESSAGE,
@@ -78,7 +78,7 @@ export class FeedbackService extends Context.Service<
       | FeedbackStorageError
     >;
   }
->()("t3/feedback/FeedbackService") {}
+>()("z9/feedback/FeedbackService") {}
 
 const storageError = (cause: unknown) => new FeedbackStorageError({ cause });
 

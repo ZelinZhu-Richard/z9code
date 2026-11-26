@@ -47,13 +47,13 @@ import {
   ThreadId,
   SERVER_BROWSER_AUTOMATION_CLIENT_ID,
   type PreviewAppearancePreference,
-} from "@t3tools/contracts";
-import { AgentScope, agentScopeLauncherScript } from "@t3tools/shared/AgentScope";
-import { writeFileStringAtomically } from "@t3tools/shared/atomicWrite";
-import * as HostProcess from "@t3tools/shared/HostProcess";
-import { appLinkUrl } from "@t3tools/shared/appLinks";
-import { normalizePreviewUrl } from "@t3tools/shared/preview";
-import { resolvePreviewViewport } from "@t3tools/shared/previewViewport";
+} from "@z9code/contracts";
+import { AgentScope, agentScopeLauncherScript } from "@z9code/shared/AgentScope";
+import { writeFileStringAtomically } from "@z9code/shared/atomicWrite";
+import * as HostProcess from "@z9code/shared/HostProcess";
+import { appLinkUrl } from "@z9code/shared/appLinks";
+import { normalizePreviewUrl } from "@z9code/shared/preview";
+import { resolvePreviewViewport } from "@z9code/shared/previewViewport";
 import * as NodeCrypto from "node:crypto";
 import * as NodeFSP from "node:fs/promises";
 import * as NodePath from "node:path";
@@ -304,7 +304,7 @@ export class ServerBrowser extends Context.Service<
 
     readonly profileReporter: Effect.Effect<ProfileReporter, never, Scope.Scope>;
   }
->()("t3/preview/ServerBrowser") {}
+>()("z9/preview/ServerBrowser") {}
 
 interface ViewerState {
   readonly id: string;
@@ -1808,7 +1808,7 @@ const make = Effect.gen(function* () {
   const assertTabCapacity = (agentSessionId: string) => {
     if (atTabLimit(agentSessionId))
       throw new BrowserControlInterrupted({
-        message: `Too many server browser tabs are open (${AGENT_TAB_LIMIT} per agent session, ${SERVER_TAB_LIMIT} per server). Close one with t3_preview_close or reuse one from preview_status tabs.`,
+        message: `Too many server browser tabs are open (${AGENT_TAB_LIMIT} per agent session, ${SERVER_TAB_LIMIT} per server). Close one with z9_preview_close or reuse one from preview_status tabs.`,
         reason: "tabLimit",
       });
   };
@@ -2885,7 +2885,7 @@ const make = Effect.gen(function* () {
           throw new ServerBrowserPage.ServerBrowserOperationError({
             tag: "PreviewAutomationExecutionError",
             message:
-              "The desktop did not draw the page at the new size. Show or restore the T3 Code window and try again.",
+              "The desktop did not draw the page at the new size. Show or restore the z9code window and try again.",
           });
         }
         // Only a read after the draw, with no page resize or load during it, measures this resize.
@@ -3497,7 +3497,7 @@ const make = Effect.gen(function* () {
     (yield* PreviewBrowserHost.sandboxBlocked)
   ) {
     yield* Effect.logWarning(
-      `This host blocks the sandbox T3's browser runs in, so browser tabs and HTML previews will not start. Run \`${setupCommand}\` once to allow it.`,
+      `This host blocks the sandbox z9code's browser runs in, so browser tabs and HTML previews will not start. Run \`${setupCommand}\` once to allow it.`,
     );
   }
 

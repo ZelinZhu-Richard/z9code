@@ -1,14 +1,11 @@
 import { msg } from "gt-react";
-import { thrownErrorMessage } from "@t3tools/client-runtime/errors";
+import { thrownErrorMessage } from "@z9code/client-runtime/errors";
 import { m } from "~/i18n/messages";
 import { useAtomValue } from "@effect/atom-react";
-import {
-  makeQueuedRunEditStore,
-  makeQueuedRunsAtom,
-} from "@t3tools/client-runtime/queued-run-edit";
-import type { ComposerDispatchMode } from "@t3tools/client-runtime/state/composer-dispatch";
-import type { ThreadStructure } from "@t3tools/client-runtime/state/shell";
-import { deriveThreadQueueWorkflowState } from "@t3tools/client-runtime/state/thread-workflows";
+import { makeQueuedRunEditStore, makeQueuedRunsAtom } from "@z9code/client-runtime/queued-run-edit";
+import type { ComposerDispatchMode } from "@z9code/client-runtime/state/composer-dispatch";
+import type { ThreadStructure } from "@z9code/client-runtime/state/shell";
+import { deriveThreadQueueWorkflowState } from "@z9code/client-runtime/state/thread-workflows";
 import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
   type ChatAttachment,
@@ -24,12 +21,12 @@ import {
   type ScopedThreadRef,
   type ThreadContextRecord,
   type ThreadId,
-} from "@t3tools/contracts";
-import { scopedThreadKey } from "@t3tools/client-runtime/environment";
+} from "@z9code/contracts";
+import { scopedThreadKey } from "@z9code/client-runtime/environment";
 import {
   restoreAttachmentOnlyBootstrapPrompt,
   stripAttachmentOnlyBootstrapPrompt,
-} from "@t3tools/shared/composerContextReferences";
+} from "@z9code/shared/composerContextReferences";
 import { Atom } from "effect/reactivity";
 import type { RefObject } from "react";
 import { useAssetUrls } from "../../assets/assetUrls";

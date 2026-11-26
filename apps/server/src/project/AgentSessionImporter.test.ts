@@ -14,10 +14,10 @@ import {
   type OrchestrationV2AppThread,
   type OrchestrationV2DomainEvent,
   type OrchestrationV2ProviderThread,
-} from "@t3tools/contracts";
-import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
-import * as AcpRegistryRuntimeCoordinator from "@t3tools/provider-acp-registry/server/AcpRegistryRuntimeCoordinator";
-import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+} from "@z9code/contracts";
+import * as IdAllocator from "@z9code/provider-core/server/IdAllocator";
+import * as AcpRegistryRuntimeCoordinator from "@z9code/provider-acp-registry/server/AcpRegistryRuntimeCoordinator";
+import * as ProviderAdapter from "@z9code/provider-core/server/ProviderAdapter";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -559,7 +559,7 @@ it.effect("does not certify new native history after a partial import retry", ()
     continued.source.size = 200;
     continued.source.mtimeMs = 3;
     continued.thread.messages.push(
-      { role: "user", text: "Continue outside T3", createdAt: timestamp },
+      { role: "user", text: "Continue outside z9code", createdAt: timestamp },
       { role: "assistant", text: "Native continuation", createdAt: timestamp },
     );
     // The thread holds only the original messages, so the continued transcript stays unrecorded.
