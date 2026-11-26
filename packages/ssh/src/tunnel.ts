@@ -485,7 +485,7 @@ if [ -z "$Z9_ARCHIVE_VERSION" ]; then
   printf 'No z9 release version was provided for the remote runtime.\\n' >&2
   exit 1
 fi
-Z9_SYSTEM_EXECUTABLE="$(command -v t3 2>/dev/null || true)"
+Z9_SYSTEM_EXECUTABLE="$(command -v z9 2>/dev/null || true)"
 if [ -n "$Z9_SYSTEM_EXECUTABLE" ] && Z9_SYSTEM_VERSION="$("$Z9_SYSTEM_EXECUTABLE" --version 2>/dev/null)" && [ "$Z9_SYSTEM_VERSION" = "z9 v$Z9_ARCHIVE_VERSION" ]; then
   # A matching host-provided runtime supports platforms such as musl Linux,
   # where the portable release archive cannot run.
@@ -496,7 +496,7 @@ fi
 Z9_RELEASE_BASE_URL=@@Z9_RELEASE_BASE_URL@@
 Z9_RUNTIME_DIR="$HOME/.z9code/runtime/versions/$Z9_ARCHIVE_VERSION"
 z9_runtime_ready() {
-  [ -x "$Z9_RUNTIME_DIR/t3" ] && [ "$(cat "$Z9_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$Z9_ARCHIVE_VERSION" ]
+  [ -x "$Z9_RUNTIME_DIR/z9" ] && [ "$(cat "$Z9_RUNTIME_DIR/.install-complete" 2>/dev/null)" = "$Z9_ARCHIVE_VERSION" ]
 }
 if ! z9_runtime_ready; then
   mkdir -p "$HOME/.z9code/runtime/versions"
@@ -521,7 +521,7 @@ if ! z9_runtime_ready; then
       fi
     fi
     if [ "$Z9_LOCK_WAITED" -ge @@Z9_ARCHIVE_LOCK_WAIT_SECONDS@@ ]; then
-      printf 'Another t3 %s installation has held %s for too long.\\n' "$Z9_ARCHIVE_VERSION" "$Z9_LOCK" >&2
+      printf 'Another z9 %s installation has held %s for too long.\\n' "$Z9_ARCHIVE_VERSION" "$Z9_LOCK" >&2
       exit 1
     fi
     sleep 1
@@ -549,7 +549,7 @@ if ! z9_runtime_ready; then
     elif command -v wget >/dev/null 2>&1; then wget -q --timeout=30 --tries=1 "$1" -O "$2"
     else printf 'Remote host needs curl or wget to download %s.\\n' "$Z9_ARCHIVE" >&2; exit 1
     fi || {
-      printf 'Could not download t3 %s from %s. If this host cannot reach it, install t3 %s on it with https://raw.githubusercontent.com/ZelinZhu-Richard/z9code/main/scripts/install.sh (Z9CODE_VERSION=%s; Z9CODE_RELEASE_BASE_URL selects a mirror).\\n' "$Z9_ARCHIVE_VERSION" "$1" "$Z9_ARCHIVE_VERSION" "$Z9_ARCHIVE_VERSION" >&2
+      printf 'Could not download z9 %s from %s. If this host cannot reach it, install z9 %s on it with https://raw.githubusercontent.com/ZelinZhu-Richard/z9code/main/scripts/install.sh (Z9CODE_VERSION=%s; Z9CODE_RELEASE_BASE_URL selects a mirror).\\n' "$Z9_ARCHIVE_VERSION" "$1" "$Z9_ARCHIVE_VERSION" "$Z9_ARCHIVE_VERSION" >&2
       exit 1
     }
   }
@@ -574,8 +574,8 @@ if ! z9_runtime_ready; then
   rm -f "$Z9_STAGING/$Z9_ARCHIVE" "$Z9_STAGING/SHA256SUMS"
   # Prove the binary runs here (libc, arch) before marking it ready, or every
   # later launch would exec a broken install instead of retrying.
-  if ! "$Z9_STAGING/t3" --version >/dev/null 2>&1; then
-    printf 'The t3 %s executable does not run on this host.\\n' "$Z9_ARCHIVE_VERSION" >&2; exit 1
+  if ! "$Z9_STAGING/z9" --version >/dev/null 2>&1; then
+    printf 'The z9 %s executable does not run on this host.\\n' "$Z9_ARCHIVE_VERSION" >&2; exit 1
   fi
   printf '%s\\n' "$Z9_ARCHIVE_VERSION" > "$Z9_STAGING/.install-complete"
   rm -rf "$Z9_RUNTIME_DIR"
@@ -585,7 +585,7 @@ if [ -n "\${Z9_LOCK:-}" ]; then
   rm -rf "$Z9_LOCK"
   trap - EXIT
 fi
-exec "$Z9_RUNTIME_DIR/t3" "$@"
+exec "$Z9_RUNTIME_DIR/z9" "$@"
 `;
 
 // kill -0 also passes for a zombie, a reused PID and, on Linux, a thread ID,
@@ -602,10 +602,10 @@ const REMOTE_MANAGED_SERVER_RUNNING_SCRIPT = `managed_server_running() {
   ! ps -ww -o args= -p "$$" >/dev/null 2>&1
 }`;
 
-// NFS-shared homes can link ~/.t3 to a directory that does not exist yet, and
+// NFS-shared homes can link ~/.z9code to a directory that does not exist yet, and
 // mkdir -p fails with EEXIST on a dangling symlink, so create its target first.
-const REMOTE_ENSURE_T3_HOME_SCRIPT = `if [ -L "$HOME/.t3" ] && [ ! -e "$HOME/.t3" ]; then
-  (cd "$HOME" && mkdir -p "$(readlink .t3)")
+const REMOTE_ENSURE_T3_HOME_SCRIPT = `if [ -L "$HOME/.z9code" ] && [ ! -e "$HOME/.z9code" ]; then
+  (cd "$HOME" && mkdir -p "$(readlink .z9code)")
 fi`;
 
 const REMOTE_LAUNCH_SCRIPT = `set -eu
@@ -613,7 +613,7 @@ const REMOTE_LAUNCH_SCRIPT = `set -eu
 STATE_KEY="$1"
 LAUNCHER_ID="\${2:-}"
 STATE_DIR="$HOME/.z9code/ssh-launch/$STATE_KEY"
-DEFAULT_SERVER_HOME="$HOME/.t3"
+DEFAULT_SERVER_HOME="$HOME/.z9code"
 DEFAULT_RUNTIME_FILE="$DEFAULT_SERVER_HOME/userdata/server-runtime.json"
 PORT_FILE="$STATE_DIR/port"
 PID_FILE="$STATE_DIR/pid"
@@ -1078,7 +1078,7 @@ printf '{"remotePort":%s,"serverKind":"%s"}\\n' "$REMOTE_PORT" "\${REMOTE_MANAGE
 
 const REMOTE_PAIRING_SCRIPT = `set -eu
 STATE_DIR="$HOME/.z9code/ssh-launch/@@Z9_STATE_KEY@@"
-DEFAULT_SERVER_HOME="$HOME/.t3"
+DEFAULT_SERVER_HOME="$HOME/.z9code"
 RUNNER_FILE="$STATE_DIR/run-t3.sh"
 @@Z9_ENSURE_T3_HOME_SCRIPT@@
 mkdir -p "$STATE_DIR"

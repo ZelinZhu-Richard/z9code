@@ -15,14 +15,14 @@ describe("resolveT3McpToolPresentation", () => {
         "mcp__z9code__",
         "mcp__z9_code__",
         "mcp__z9code__",
-        "z9code-code.",
+        "Z9code.",
         "z9code.",
         "z9code-direct.",
         "mcp__z9_code_direct__",
         "z9_code/",
         "z9code:",
         "mcp_z9code_",
-        "z9code ",
+        "Z9 Code ",
         "z9code · ",
       ]) {
         expect(resolveT3McpToolPresentation(`${prefix}${tool} completed`), tool).toEqual(
@@ -57,7 +57,7 @@ describe("resolveT3McpToolDefinition", () => {
 
 describe("resolveT3McpSummaryAction", () => {
   it("summarizes an action tool by the action each call ran", () => {
-    expect(resolveT3McpSummaryAction("mcp__z9code__t3_queue", { action: "list" })).toBe(
+    expect(resolveT3McpSummaryAction("mcp__z9code__z9_queue", { action: "list" })).toBe(
       "queue-list",
     );
     expect(resolveT3McpSummaryAction("z9_queue", { action: "edit" })).toBe("queue-edit");

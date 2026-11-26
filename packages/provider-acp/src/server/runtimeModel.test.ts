@@ -1534,7 +1534,7 @@ describe("extractMcpToolCallIdentity", () => {
         }),
       );
 
-    expect(identityFor("mcp__editor_z9_code_f6129534__html_render")).toEqual({
+    expect(identityFor("mcp__editor_z9code_f6129534__html_render")).toEqual({
       server: "z9code",
       tool: "html_render",
     });

@@ -29,27 +29,27 @@ describe("findPromptLinkProjects", () => {
     const projects = [
       {
         id: "fork",
-        repositoryIdentity: identity("github.com/ZelinZhu-Richard/z9code", "github.com/me/z9code"),
+        repositoryIdentity: identity("github.com/zelinzhu-richard/z9code", "github.com/me/z9code"),
       },
       { id: "none", repositoryIdentity: null },
-      { id: "recent", repositoryIdentity: identity("github.com/PingDotGG/Z9Code") },
-      { id: "older", repositoryIdentity: identity("github.com/ZelinZhu-Richard/z9code") },
+      { id: "recent", repositoryIdentity: identity("github.com/ZelinZhu-Richard/Z9Code") },
+      { id: "older", repositoryIdentity: identity("github.com/zelinzhu-richard/z9code") },
     ];
     const ids = (owner: string, name: string) =>
       findPromptLinkProjects(projects, { owner, name }).map((project) => project.id);
-    expect(ids("pingdotgg", "z9code")).toEqual(["recent", "older"]);
+    expect(ids("zelinzhu-richard", "z9code")).toEqual(["recent", "older"]);
     expect(ids("me", "z9code")).toEqual(["fork"]);
     expect(ids("gitlab", "x")).toEqual([]);
   });
 
   it("matches a checkout of the repository's GitCafe mirror", () => {
     const projects = [
-      { id: "gitcafe", repositoryIdentity: identity("git.cafe/ZelinZhu-Richard/z9code") },
-      { id: "staging", repositoryIdentity: identity("staging.git.cafe/ZelinZhu-Richard/z9code") },
-      { id: "gitlab", repositoryIdentity: identity("gitlab.com/ZelinZhu-Richard/z9code") },
+      { id: "gitcafe", repositoryIdentity: identity("git.cafe/zelinzhu-richard/z9code") },
+      { id: "staging", repositoryIdentity: identity("staging.git.cafe/zelinzhu-richard/z9code") },
+      { id: "gitlab", repositoryIdentity: identity("gitlab.com/zelinzhu-richard/z9code") },
     ];
     expect(
-      findPromptLinkProjects(projects, { owner: "pingdotgg", name: "z9code" }).map(
+      findPromptLinkProjects(projects, { owner: "zelinzhu-richard", name: "z9code" }).map(
         (project) => project.id,
       ),
     ).toEqual(["gitcafe", "staging"]);

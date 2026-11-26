@@ -1217,7 +1217,7 @@ export function extractMcpToolCallIdentity(
     if (
       qualified?.[1] &&
       qualified[2] &&
-      /^editor_t3_?code_[0-9a-f]{8}$/.test(qualified[1]) &&
+      /^editor_z9_?code_[0-9a-f]{8}$/.test(qualified[1]) &&
       Z9_MCP_TOOL_NAMES.has(qualified[2])
     ) {
       return { server: "z9code", tool: qualified[2] };

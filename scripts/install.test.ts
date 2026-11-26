@@ -248,13 +248,13 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("install.sh z9 
       // A link that only looks like it points into versions (join() would normalize the ..).
       await NodeFSP.rm(link);
       await NodeFSP.mkdir(NodePath.join(home, "other"), { recursive: true });
-      await NodeFSP.writeFile(NodePath.join(home, "other/t3"), "#!/bin/sh\n");
-      await NodeFSP.symlink(`${home}/runtime/versions/../../other/t3`, link);
+      await NodeFSP.writeFile(NodePath.join(home, "other/z9"), "#!/bin/sh\n");
+      await NodeFSP.symlink(`${home}/runtime/versions/../../other/z9`, link);
       const climbing = await installOver({ script: "install.sh", home, binDir });
       expect(climbing.code).not.toBe(0);
-      expect(await NodeFSP.readlink(link)).toBe(`${home}/runtime/versions/../../other/t3`);
+      expect(await NodeFSP.readlink(link)).toBe(`${home}/runtime/versions/../../other/z9`);
 
-      // Only `<version>/t3` counts, not another program inside a version.
+      // Only `<version>/z9` counts, not another program inside a version.
       await NodeFSP.rm(link);
       await NodeFSP.symlink(NodePath.join(home, "runtime/versions/1.0.0/helper"), link);
       const sibling = await installOver({ script: "install.sh", home, binDir });
@@ -265,7 +265,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("install.sh z9 
 
       // An upgrade over an older version's link, written through a symlinked z9code home.
       await NodeFSP.rm(link);
-      await NodeFSP.symlink(NodePath.join(home, "runtime/versions/1.0.0/t3"), link);
+      await NodeFSP.symlink(NodePath.join(home, "runtime/versions/1.0.0/z9"), link);
       await NodeFSP.symlink(home, NodePath.join(root, "alias"));
       const upgrade = await installOver({
         script: "install.sh",
@@ -275,7 +275,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("install.sh z9 
       });
       expect(upgrade.code, upgrade.output).toBe(0);
       expect(await NodeFSP.readFile(link, "utf8")).toBe(
-        launcherScript(NodePath.join(root, "alias/runtime/versions/1.2.3/t3")),
+        launcherScript(NodePath.join(root, "alias/runtime/versions/1.2.3/z9")),
       );
       expect(upgrade.output).toContain(
         `printf '\\n%s\\n' 'export PATH="$PATH:$HOME/bin"' >> ~/.zshrc`,
@@ -313,7 +313,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("install.sh z9 
       expect(relative.output).toContain(`'export PATH="$PATH:$HOME/bin"'`);
 
       // A launcher script someone edited is theirs now.
-      const edited = `${launcherScript(NodePath.join(home, "runtime/versions/1.2.3/t3"))}# mine\n`;
+      const edited = `${launcherScript(NodePath.join(home, "runtime/versions/1.2.3/z9"))}# mine\n`;
       await NodeFSP.writeFile(link, edited);
       const overEdited = await installOver({ script: "install.sh", home, binDir });
       expect(overEdited.code).not.toBe(0);
@@ -328,7 +328,7 @@ describe.skipIf(HostProcess.Platform.defaultValue() !== "linux")("install.sh z9 
       });
       expect(overDesktop.code, overDesktop.output).toBe(0);
       expect(await NodeFSP.readFile(link, "utf8")).toBe(
-        launcherScript(NodePath.join(home, "runtime/versions/1.2.3/t3")),
+        launcherScript(NodePath.join(home, "runtime/versions/1.2.3/z9")),
       );
     } finally {
       await NodeFSP.rm(root, { recursive: true, force: true });

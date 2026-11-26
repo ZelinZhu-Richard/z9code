@@ -133,7 +133,7 @@ it.layer(NodeServices.layer)("build-npm-launcher", (it) => {
         );
         assert.equal(manifest.name, "z9");
         assert.equal(manifest.version, VERSION);
-        assert.deepStrictEqual(manifest.bin, { t3: "./bin/z9.mjs" });
+        assert.deepStrictEqual(manifest.bin, { z9: "./bin/z9.mjs" });
         assert.isUndefined(manifest.dependencies);
         assert.isUndefined(manifest.optionalDependencies);
         assert.isAbove(npmReleaseDatabaseMigration(manifest) ?? 0, 0);
@@ -258,7 +258,7 @@ const { readFileSync, renameSync, rmSync } = fs;
 let checking = false;
 let published = false;
 const checkPeer = () => {
-  const child = spawnSync(dir + "/t3", ["--version"], { encoding: "utf8" });
+  const child = spawnSync(dir + "/z9", ["--version"], { encoding: "utf8" });
   let sidecar;
   try {
     sidecar = readFileSync(dir + "/sidecar", "utf8");

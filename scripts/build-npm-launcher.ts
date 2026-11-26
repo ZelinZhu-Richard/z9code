@@ -39,7 +39,7 @@ export function npmLauncherPackageManifest(version: string, databaseMigration: n
       "z9code CLI. Downloads the self-contained executable for this platform from the GitHub Release.",
     license: serverPackageJson.license,
     repository: serverPackageJson.repository,
-    bin: { t3: "./bin/z9.mjs" },
+    bin: { z9: "./bin/z9.mjs" },
     files: ["bin", "dist"],
     engines: { node: ">=20.11" },
     z9code: { databaseMigration },

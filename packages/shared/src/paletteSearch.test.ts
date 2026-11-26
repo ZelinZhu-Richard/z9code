@@ -213,15 +213,15 @@ describe("scoreThreadSearch", () => {
           branch: "z9/diagnose-connect",
           projectTitle: "z9code",
         }),
-        thread("T3 Connect Tunnel Lifecycle Review", { projectTitle: "z9code" }),
+        thread("Z9 Connect Tunnel Lifecycle Review", { projectTitle: "z9code" }),
       ])[0],
-    ).toBe("T3 Connect Tunnel Lifecycle Review");
+    ).toBe("Z9 Connect Tunnel Lifecycle Review");
     expect(
       rankTitles("z9code", [
         thread("Fix sidebar lag", { ...busy, projectTitle: "z9code", branch: "z9code/sidebar" }),
-        thread("z9code vs Gemini Token Volume", { projectTitle: "slophouse" }),
+        thread("Z9 Code vs Gemini Token Volume", { projectTitle: "slophouse" }),
       ])[0],
-    ).toBe("z9code vs Gemini Token Volume");
+    ).toBe("Z9 Code vs Gemini Token Volume");
   });
 
   it("matches pull request numbers, branches, and projects with every token somewhere", () => {
@@ -247,7 +247,7 @@ describe("scoreThreadSearch", () => {
       [],
     );
     // Words with digits still forgive one.
-    expect(rankTitles("t3coed", [thread("z9code perf audit"), thread("Other")])).toEqual([
+    expect(rankTitles("z9coed", [thread("z9code perf audit"), thread("Other")])).toEqual([
       "z9code perf audit",
     ]);
     expect(rankTitles("oath2", [thread("Fix oauth2 redirect")])).toEqual(["Fix oauth2 redirect"]);
@@ -336,12 +336,12 @@ describe("scoreThreadSearch beyond Latin text and titles", () => {
       ranges: [{ start: 0, end: 7 }],
     });
     expect(scoreThreadSearch("trim", subject, NOW)?.explain?.()).toBeUndefined();
-    // Nor is it in the flat t3-<hex> form used when a `z9` branch blocks nested refs.
-    const flat = thread("Add search", { branch: "t3-abcd1234" });
+    // Nor is it in the flat z9-<hex> form used when a `z9` branch blocks nested refs.
+    const flat = thread("Add search", { branch: "z9-abcd1234" });
     expect(scoreThreadSearch("z9", flat, NOW)).toBeNull();
     expect(scoreThreadSearch("z9 connect", flat, NOW)).toBeNull();
     expect(scoreThreadSearch("abcd1234", flat, NOW)).not.toBeNull();
-    for (const query of ["t3-abcd", "t3-abcd1234 connect", "connect t3-abcd1234"]) {
+    for (const query of ["z9-abcd", "z9-abcd1234 connect", "connect z9-abcd1234"]) {
       expect(scoreThreadSearch(query, { ...flat, projectTitle: "connect" }, NOW)).not.toBeNull();
     }
   });
@@ -371,7 +371,7 @@ describe("scoreThreadSearch beyond Latin text and titles", () => {
     // Short words before a mere prefix are a coincidence.
     expect(rankTitles("inth", [thread("Show skill names in thread overview")])).toEqual([]);
     expect(rankTitles("tos", [thread("Move Client State to Server")])).toEqual([]);
-    expect(rankTitles("t3co", [thread("z9code vs Gemini")])).toEqual(["z9code vs Gemini"]);
+    expect(rankTitles("z9co", [thread("Z9 Code vs Gemini")])).toEqual(["Z9 Code vs Gemini"]);
     expect(rankTitles('"sidebar lag"', [thread("Fix sidebar lag")])).toEqual(["Fix sidebar lag"]);
     // A pasted query with a separate accent mark matches the composed title.
     expect(rankTitles("cafe\u0301", [thread("Café menu")])).toEqual(["Café menu"]);
@@ -460,14 +460,17 @@ describe("scoreThreadSearch with heavy use and loose input", () => {
       pullRequests: [
         {
           number: 22889,
-          references: ["pingdotgg/t3code#22889", "https://github.com/pingdotgg/t3code/pull/22889"],
+          references: [
+            "zelinzhu-richard/z9code#22889",
+            "https://github.com/zelinzhu-richard/z9code/pull/22889",
+          ],
         },
       ],
     });
     for (const query of [
       "z9code#22889",
-      "github.com/pingdotgg/t3code/pull/22889",
-      "https://github.com/pingdotgg/t3code/pull/22889/files",
+      "github.com/zelinzhu-richard/z9code/pull/22889",
+      "https://github.com/zelinzhu-richard/z9code/pull/22889/files",
       "5fe6f59c",
       "beebox",
     ]) {
@@ -475,7 +478,7 @@ describe("scoreThreadSearch with heavy use and loose input", () => {
     }
     expect(scoreThreadSearch("github.com", subject, NOW)).toBeNull();
     // A number is never cut short.
-    for (const query of ["github.com/pingdotgg/t3code/pull/2288", "z9code#2288"]) {
+    for (const query of ["github.com/zelinzhu-richard/z9code/pull/2288", "z9code#2288"]) {
       expect(scoreThreadSearch(foldSearchQuery(query), subject, NOW), query).toBeNull();
     }
   });

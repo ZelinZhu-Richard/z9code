@@ -46,7 +46,7 @@ describe("parseNewThreadLink", () => {
       value: {
         kind: "new",
         prompt: { text: "Rate me", hiddenCharacters: 0 },
-        repository: { owner: "pingdotgg", name: "z9code" },
+        repository: { owner: "ZelinZhu-Richard", name: "z9code" },
         provider: "codex",
         model: "gpt-5",
       },
@@ -57,13 +57,13 @@ describe("parseNewThreadLink", () => {
     for (const pr of [
       "ZelinZhu-Richard/z9code/42",
       "ZelinZhu-Richard/z9code%2342",
-      "https://github.com/pingdotgg/t3code/pull/42/files",
+      "https://github.com/ZelinZhu-Richard/z9code/pull/42/files",
     ]) {
       expect(parseNewThreadLink(`?pr=${pr}`)).toEqual({
         ok: true,
         value: {
           kind: "pull-request",
-          pullRequest: { owner: "pingdotgg", name: "z9code", number: 42 },
+          pullRequest: { owner: "ZelinZhu-Richard", name: "z9code", number: 42 },
           prompt: null,
         },
       });

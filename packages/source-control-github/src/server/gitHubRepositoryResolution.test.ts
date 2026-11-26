@@ -187,7 +187,10 @@ describe("gitHubApiHostForRemote", () => {
           hostHint: undefined,
           defaultHost: "github.com",
         }),
-        { host: "github.com", locator: { host: "github.com", owner: "pingdotgg", name: "z9code" } },
+        {
+          host: "github.com",
+          locator: { host: "github.com", owner: "zelinzhu-richard", name: "z9code" },
+        },
         url,
       );
     }

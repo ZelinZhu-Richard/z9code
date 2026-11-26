@@ -8,7 +8,7 @@
 #   Z9CODE_CHANNEL           release train to follow: stable, nightly, or preview
 #                            (default: stable; preview is a maintainers' test train)
 #   Z9CODE_VERSION           exact version to install (overrides Z9CODE_CHANNEL)
-#   Z9CODE_HOME              z9code home directory (default: ~/.t3)
+#   Z9CODE_HOME              z9code home directory (default: ~/.z9code)
 #   Z9CODE_INSTALL_BIN_DIR   where the `z9` command goes (default: ~/.local/bin)
 #   Z9CODE_RELEASE_BASE_URL  mirror for releases/download (default: GitHub)
 #
@@ -19,7 +19,7 @@ set -eu
 
 repo="ZelinZhu-Richard/z9code"
 base_url="${Z9CODE_RELEASE_BASE_URL:-https://github.com/${repo}/releases/download}"
-z9_home="${Z9CODE_HOME:-$HOME/.t3}"
+z9_home="${Z9CODE_HOME:-$HOME/.z9code}"
 case "$z9_home" in
   /*) ;;
   *)
@@ -36,7 +36,7 @@ while [ "${bin_dir%/}" != "$bin_dir" ] && [ "$bin_dir" != / ]; do bin_dir="${bin
 case "$bin_dir" in /*) ;; *) bin_dir="$PWD/$bin_dir" ;; esac
 
 fail() {
-  printf '\nt3 install: %s\n' "$1" >&2
+  printf '\nz9 install: %s\n' "$1" >&2
   exit 1
 }
 
@@ -171,7 +171,7 @@ case "$(uname -m)" in
   *) fail "unsupported architecture $(uname -m)" ;;
 esac
 if [ "${platform}-${arch}" = darwin-x64 ]; then
-  fail "there is no t3 CLI for Intel Macs. Install the desktop app from https://github.com/ZelinZhu-Richard/z9code/releases, or run a server from source: https://github.com/${repo}/blob/main/docs/user/install.md#intel-macs"
+  fail "there is no z9 CLI for Intel Macs. Install the desktop app from https://github.com/ZelinZhu-Richard/z9code/releases, or run a server from source: https://github.com/${repo}/blob/main/docs/user/install.md#intel-macs"
 fi
 command -v tar >/dev/null 2>&1 || fail "tar is required"
 if command -v sha256sum >/dev/null 2>&1; then
@@ -211,7 +211,7 @@ fi
 case "$version" in
   *-preview.*)
     printf '%s\n' \
-      "t3 ${version} is a preview build." \
+      "z9 ${version} is a preview build." \
       "  Preview builds are cut by maintainers from unreleased branches to exercise the release" \
       "  pipeline. They can be broken, receive no fixes, and are never offered as updates." \
       "  Set Z9CODE_CHANNEL=stable (the default) for a supported build." >&2
@@ -242,12 +242,12 @@ else
   fetch_status=0
   fetch "${base_url}/v${version}/SHA256SUMS" "${staging}/SHA256SUMS" || fetch_status=$?
   if [ "$fetch_status" -eq 44 ]; then
-    fail "t3 ${version} has no release archive for ${platform}-${arch}; releases before the self-contained CLI can only be installed with \`npm install -g z9@${version}\`"
+    fail "z9 ${version} has no release archive for ${platform}-${arch}; releases before the self-contained CLI can only be installed with \`npm install -g z9@${version}\`"
   elif [ "$fetch_status" -ne 0 ]; then
     fail "could not download the release checksums"
   fi
   expected="$(grep " \*\{0,1\}${archive}\$" "${staging}/SHA256SUMS" | cut -d' ' -f1)"
-  [ -n "$expected" ] || fail "t3 ${version} has no release archive for ${platform}-${arch}"
+  [ -n "$expected" ] || fail "z9 ${version} has no release archive for ${platform}-${arch}"
   download "${base_url}/v${version}/${archive}" "${staging}/${archive}" || fail "could not download ${archive}"
 
   step "Verifying the download..."
@@ -257,7 +257,7 @@ else
   step "Extracting z9code..."
   tar -xzf "${staging}/${archive}" -C "$staging" --strip-components=1
   rm -f "${staging}/${archive}" "${staging}/SHA256SUMS"
-  "${staging}/t3" --version >/dev/null || fail "the downloaded executable does not run"
+  "${staging}/z9" --version >/dev/null || fail "the downloaded executable does not run"
   printf '%s\n' "$version" > "${staging}/.install-complete"
 
   rm -rf "$target_dir"
@@ -294,21 +294,21 @@ script_t3() {
 }
 # Replace only this home's own z9 launchers: into its versions, or the desktop app's launcher.
 # Anything else (a user's script, a copied binary) belongs to someone else.
-# Exactly <versions>/<version>/t3 ($1 under $2), never another program inside a version.
+# Exactly <versions>/<version>/z9 ($1 under $2), never another program inside a version.
 version_t3() {
   case "$1" in "$2"/*) ;; *) return 1 ;; esac
-  case "${1#"$2"/}" in */*/*) return 1 ;; */t3) return 0 ;; *) return 1 ;; esac
+  case "${1#"$2"/}" in */*/*) return 1 ;; */z9) return 0 ;; *) return 1 ;; esac
 }
 slot_empty=true
-if [ -e "${bin_dir}/t3" ] || [ -L "${bin_dir}/t3" ]; then
+if [ -e "${bin_dir}/z9" ] || [ -L "${bin_dir}/z9" ]; then
   slot_empty=false
   owned=false
   real_versions_dir="$(CDPATH='' cd -P -- "$versions_dir" && pwd)"
-  if [ -L "${bin_dir}/t3" ]; then
-    existing="$(readlink "${bin_dir}/t3" 2>/dev/null || true)"
+  if [ -L "${bin_dir}/z9" ]; then
+    existing="$(readlink "${bin_dir}/z9" 2>/dev/null || true)"
     case "$existing" in /*) ;; *) existing="${bin_dir}/${existing}" ;; esac
   else
-    existing="$(script_t3 "${bin_dir}/t3")"
+    existing="$(script_t3 "${bin_dir}/z9")"
   fi
   if [ -n "$existing" ]; then
     # Through a symlinked z9code home the path names the alias; resolve its folder to compare.
@@ -325,26 +325,26 @@ if [ -e "${bin_dir}/t3" ] || [ -L "${bin_dir}/t3" ]; then
       owned=true
     fi
   fi
-  "$owned" || fail "another z9 is already at ${bin_dir}/t3. Remove it and run this again, or run ${target_dir}/t3 directly."
+  "$owned" || fail "another z9 is already at ${bin_dir}/z9. Remove it and run this again, or run ${target_dir}/z9 directly."
 fi
-launcher_tmp="$(mktemp "${bin_dir}/.t3.XXXXXX")"
+launcher_tmp="$(mktemp "${bin_dir}/.z9.XXXXXX")"
 trap 'rm -f "$launcher_tmp"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-launcher_script "${target_dir}/t3" > "$launcher_tmp"
+launcher_script "${target_dir}/z9" > "$launcher_tmp"
 chmod 755 "$launcher_tmp"
 # An empty spot is hard-linked without -f, so a file that appears after the check above is kept.
 if "$slot_empty"; then
-  ln "$launcher_tmp" "${bin_dir}/t3" || fail "could not write ${bin_dir}/t3; something else was created there."
+  ln "$launcher_tmp" "${bin_dir}/z9" || fail "could not write ${bin_dir}/z9; something else was created there."
 else
   # Known race, accepted: a file written here after the ownership check above is overwritten.
   # mv replaces a legacy symlink rather than writing through it.
-  mv -f "$launcher_tmp" "${bin_dir}/t3"
+  mv -f "$launcher_tmp" "${bin_dir}/z9"
 fi
 rm -f "$launcher_tmp"
 trap - EXIT
 # Pruning keeps what this launcher points at; a background service cannot see bin_dir otherwise.
-launcher="$(CDPATH='' cd -P -- "$bin_dir" && pwd)/t3"
+launcher="$(CDPATH='' cd -P -- "$bin_dir" && pwd)/z9"
 launchers="${z9_home}/runtime/launchers"
 grep -qxF "$launcher" "$launchers" 2>/dev/null || printf '%s\n' "$launcher" >> "$launchers"
 if "$interactive"; then printf '\r\033[2K' >&2; fi
@@ -365,7 +365,7 @@ path_prefix=
 case "$bin_dir" in "$HOME"/*) path_rest="${bin_dir#"$HOME"}" path_prefix='$HOME' ;; esac
 case "$path_rest" in *[!A-Za-z0-9_./-]*) path_rest= ;; esac
 if [ -n "$path_rest" ]; then
-  # Last on PATH, so it never shadows another t3.
+  # Last on PATH, so it never shadows another z9.
   path_line="export PATH=\"\$PATH:${path_prefix}${path_rest}\""
   shell_name="${SHELL:-}"
   case "${shell_name##*/}" in
@@ -382,19 +382,19 @@ if [ -n "$path_rest" ]; then
   esac
 fi
 # A z9 earlier on PATH runs instead; the PATH command adds this folder last.
-# A PATH entry with a trailing slash gives `dir//t3`.
-first_t3="$(command -v t3 2>/dev/null | tr -s / || true)"
-case "$first_t3" in "" | "${bin_dir}/t3") first_t3= ;; esac
+# A PATH entry with a trailing slash gives `dir//z9`.
+first_t3="$(command -v z9 2>/dev/null | tr -s / || true)"
+case "$first_t3" in "" | "${bin_dir}/z9") first_t3= ;; esac
 if [ -n "$first_t3" ]; then
-  printf '  Another z9 at %s runs first, so run %s%s/t3%s to use this one.\n\n' "$first_t3" "$bold" "$bin_dir" "$reset"
+  printf '  Another z9 at %s runs first, so run %s%s/z9%s to use this one.\n\n' "$first_t3" "$bold" "$bin_dir" "$reset"
 else
   case ":${PATH}:" in
-    *":${bin_dir}:"* | *":${bin_dir}/:"*) printf '  Run %st3%s to use z9code here, or %st3 up%s to use it from your other devices.\n\n' "$bold" "$reset" "$bold" "$reset" ;;
+    *":${bin_dir}:"* | *":${bin_dir}/:"*) printf '  Run %sz9%s to use z9code here, or %sz9 up%s to use it from your other devices.\n\n' "$bold" "$reset" "$bold" "$reset" ;;
     *)
       if [ -n "$path_command" ]; then
-        printf '  %s is not on your PATH yet. Add it with:\n\n    %s\n\n  Then open a new terminal and run %st3%s.\n\n' "$bin_dir" "$path_command" "$bold" "$reset"
+        printf '  %s is not on your PATH yet. Add it with:\n\n    %s\n\n  Then open a new terminal and run %sz9%s.\n\n' "$bin_dir" "$path_command" "$bold" "$reset"
       else
-        printf '  Add %s to your PATH, then run %st3%s.\n\n' "$bin_dir" "$bold" "$reset"
+        printf '  Add %s to your PATH, then run %sz9%s.\n\n' "$bin_dir" "$bold" "$reset"
       fi
       ;;
   esac

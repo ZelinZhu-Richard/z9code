@@ -48,7 +48,7 @@ const bitbucketPullRequest = {
     branch: { name: "main" },
     repository: {
       full_name: "ZelinZhu-Richard/z9code",
-      workspace: { slug: "pingdotgg" },
+      workspace: { slug: "zelinzhu-richard" },
     },
   },
 };
@@ -331,7 +331,7 @@ it.effect.each([false, true])(
                   baseUrl: "https://bitbucket.org",
                 },
                 remoteName: "upstream",
-                remoteUrl: "git@bitbucket.org:PingDotGG/Z9Code.git",
+                remoteUrl: "git@bitbucket.org:ZelinZhu-Richard/Z9Code.git",
               },
             }
           : {}),

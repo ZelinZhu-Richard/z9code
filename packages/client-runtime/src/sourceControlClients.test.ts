@@ -23,10 +23,10 @@ describe("sourceControlClients.parseChangeRequestUrl", () => {
 
   it("reads a GitCafe pull request at its canonical /pull/ path and the older /pulls/ path", () => {
     for (const path of ["pull", "pulls"]) {
-      const url = `https://git.cafe/PingDotGG/Z9Code/${path}/23897`;
+      const url = `https://git.cafe/ZelinZhu-Richard/Z9Code/${path}/23897`;
       expect(parse(url), path).toEqual({
         host: "git.cafe",
-        repository: "ZelinZhu-Richard/z9code",
+        repository: "zelinzhu-richard/z9code",
         number: 23897,
       });
       expect(kindOf(url), path).toBe("gitcafe");
@@ -203,13 +203,13 @@ describe("sourceControlClients.parseChangeRequestUrl", () => {
 });
 
 describe("sourceControlClients.isSameChangeRequest", () => {
-  const linked = "https://github.com/pingdotgg/t3code/pull/42";
+  const linked = "https://github.com/zelinzhu-richard/z9code/pull/42";
 
   it("matches the same pull request whatever its case or trailing path", () => {
     expect(
       sourceControlClients.isSameChangeRequest(
         linked,
-        "https://github.com/PingDotGG/Z9Code/pull/42/files",
+        "https://github.com/ZelinZhu-Richard/Z9Code/pull/42/files",
       ),
     ).toBe(true);
   });

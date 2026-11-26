@@ -505,7 +505,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
-          baseEnv: { Z9CODE_HOME: "/home/user/.t3" },
+          baseEnv: { Z9CODE_HOME: "/home/user/.z9code" },
           serverOffset: 0,
           webOffset: 0,
           t3Home: undefined,
@@ -549,8 +549,8 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
         assert.equal(yield* homeFor("~someone/t3-dev"), path.resolve("~someone/t3-dev"));
         assert.equal(yield* homeFor("relative/t3-dev"), path.resolve("relative/t3-dev"));
         assert.equal(yield* homeFor("/tmp/t3-dev"), path.resolve("/tmp/t3-dev"));
-        // An explicit ~/.t3 would put state in the live userdata; leaving it implicit selects ~/.z9code/dev.
-        assert.equal(yield* homeFor("~/.t3"), undefined);
+        // An explicit ~/.z9code would put state in the live userdata; leaving it implicit selects ~/.z9code/dev.
+        assert.equal(yield* homeFor("~/.z9code"), undefined);
         assert.equal(yield* homeFor("/home/dev/.z9code/"), undefined);
       }),
     );

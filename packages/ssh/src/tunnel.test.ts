@@ -371,7 +371,7 @@ describe("ssh tunnel scripts", () => {
         );
         NodeFS.writeFileSync(
           NodePath.join(bin, "z9"),
-          `#!/bin/sh\ncase "$1" in --version) echo "z9 v${installed}"; exit ${status} ;; *) echo "host t3 $*" ;; esac\n`,
+          `#!/bin/sh\ncase "$1" in --version) echo "z9 v${installed}"; exit ${status} ;; *) echo "host z9 $*" ;; esac\n`,
           { mode: 0o755 },
         );
         const runner = NodePath.join(root, "run-t3.sh");
@@ -1826,10 +1826,10 @@ const canBind = (port) =>
         yield* fs.makeDirectory(runtimeDir, { recursive: true });
         // The runner gets only HOME, so `node` would resolve on sh's default PATH, which may not have it.
         yield* fs.writeFileString(
-          `${runtimeDir}/t3`,
+          `${runtimeDir}/z9`,
           `#!/bin/sh\nexec '${process.execPath}' '${fakeT3}' '${version}' "$@"\n`,
         );
-        yield* fs.chmod(`${runtimeDir}/t3`, 0o755);
+        yield* fs.chmod(`${runtimeDir}/z9`, 0o755);
         yield* fs.writeFileString(`${runtimeDir}/.install-complete`, `${version}\n`);
       }
       const readManagedPid = fs
@@ -1882,15 +1882,15 @@ const canBind = (port) =>
       }).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  // An NFS home can carry a ~/.t3 symlink whose target exists only on another host.
-  it.live.skipIf(windowsHost)("launches through a ~/.t3 symlink whose target is missing", () =>
+  // An NFS home can carry a ~/.z9code symlink whose target exists only on another host.
+  it.live.skipIf(windowsHost)("launches through a ~/.z9code symlink whose target is missing", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "t3-dangling-home-" });
       const home = `${root}/home`;
       const target = `${root}/shared/t3`;
       yield* fs.makeDirectory(home, { recursive: true });
-      yield* fs.symlink(target, `${home}/.t3`);
+      yield* fs.symlink(target, `${home}/.z9code`);
       const launch = `${root}/launch.sh`;
       yield* fs.writeFileString(
         launch,

@@ -482,7 +482,7 @@ function parseT3McpToolName(value: string): string | null {
   }
 
   const namespaceMatch =
-    /^(?<server>z9[-_]code[-_]direct|z9code|z9_code|z9code)(?:[.:/]|\s*·\s*)(?<tool>.+)$/i.exec(
+    /^(?<server>z9[-_]?code[-_]direct|z9code|z9_code|z9code)(?:[.:/]|\s*·\s*)(?<tool>.+)$/i.exec(
       label,
     );
   if (namespaceMatch?.groups) {

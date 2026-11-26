@@ -249,7 +249,7 @@ function executableError(key, detail) {
 }
 
 function fail(error) {
-  process.stderr.write(`t3: ${error.message}\n`);
+  process.stderr.write(`z9: ${error.message}\n`);
   process.exit(1);
 }
 

@@ -71,7 +71,7 @@ describe("filesystem read access", () => {
 
 describe("filesystem browse model", () => {
   it("derives the browse target and navigation state", () => {
-    expect(getFilesystemBrowsePath("~/projects/t3")).toEqual({
+    expect(getFilesystemBrowsePath("~/projects/z9")).toEqual({
       isBrowsing: true,
       directoryPath: "~/projects/",
       filterQuery: "z9",
@@ -125,7 +125,7 @@ describe("filesystem browse model", () => {
         "op",
       ),
     ).toEqual({ name: "Open", isComplete: false });
-    expect(getFilesystemBrowseTabCompletion([entry("z9code")], "tcd")).toBeNull();
+    expect(getFilesystemBrowseTabCompletion([entry("z9code")], "zcd")).toBeNull();
   });
 
   it("matches folder names stored decomposed, as macOS Finder names them", () => {
@@ -192,8 +192,8 @@ describe("browse entry filtering", () => {
 
   it("matches substrings and subsequences, best match first", () => {
     expect(names("code")).toEqual(["z9code", "Z9Code-old", "my-z9code"]);
-    expect(names("t3c")).toEqual(["z9code", "Z9Code-old", "my-z9code"]);
-    expect(names("tcd")).toEqual(["z9code", "Z9Code-old", "my-z9code"]);
+    expect(names("z9c")).toEqual(["z9code", "Z9Code-old", "my-z9code"]);
+    expect(names("zcd")).toEqual(["z9code", "Z9Code-old", "my-z9code"]);
     expect(names("xyz")).toEqual([]);
   });
 

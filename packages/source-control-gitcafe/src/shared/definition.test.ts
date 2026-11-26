@@ -42,11 +42,11 @@ describe("GitCafe change request URLs", () => {
 
   it("reads its canonical /pull/ path and the older /pulls/ path on its own hosts", () => {
     for (const path of ["pull", "pulls"]) {
-      expect(parse(`https://git.cafe/PingDotGG/Z9Code/${path}/23897`), path).toEqual({
+      expect(parse(`https://git.cafe/ZelinZhu-Richard/Z9Code/${path}/23897`), path).toEqual({
         host: "git.cafe",
-        repository: "ZelinZhu-Richard/z9code",
+        repository: "zelinzhu-richard/z9code",
         number: 23897,
-        repositoryUrl: "https://git.cafe/PingDotGG/Z9Code",
+        repositoryUrl: "https://git.cafe/ZelinZhu-Richard/Z9Code",
       });
     }
     expect(parse("https://staging.git.cafe/team/repo/pull/7/files")).toMatchObject({
