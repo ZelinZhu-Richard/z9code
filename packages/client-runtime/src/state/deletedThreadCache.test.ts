@@ -21,7 +21,6 @@ import {
 } from "../connection/model.ts";
 import * as EnvironmentSupervisor from "../connection/supervisor.ts";
 import * as Persistence from "../platform/persistence.ts";
-import { RpcPermissionGuard } from "../rpc/client.ts";
 import type * as RpcSession from "../rpc/session.ts";
 import type { WsRpcProtocolClient } from "../rpc/protocol.ts";
 import { pruneDeletedCachedThreads } from "./deletedThreadCache.ts";
@@ -43,8 +42,6 @@ const PREPARED: PreparedConnection = {
   httpAuthorization: null,
   target: TARGET,
 };
-
-const ALLOW_ALL = RpcPermissionGuard.of({ authorize: () => Effect.void });
 
 const makeHarness = Effect.fn("test.makeDeletedThreadHarness")(function* (options: {
   readonly deletedThreadLookup: boolean;
@@ -108,7 +105,6 @@ const makeHarness = Effect.fn("test.makeDeletedThreadHarness")(function* (option
     effect.pipe(
       Effect.provideService(EnvironmentSupervisor.EnvironmentSupervisor, supervisor),
       Effect.provideService(Persistence.EnvironmentCacheStore, cache),
-      Effect.provideService(RpcPermissionGuard, ALLOW_ALL),
     );
   return { events, lookups, removed, removedSignal, session, provide };
 });
