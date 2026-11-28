@@ -3279,6 +3279,50 @@ describe("storage cleanup reports and local file policies", () => {
       }),
     ),
   );
+  it.live("keeps no thread title in the leftover record", () =>
+    runCleanupTest(
+      Effect.gen(function* () {
+        const fixture = yield* cleanupFixture();
+        const root = yield* fixture.fs.makeTempDirectoryScoped({ prefix: "cleanup-leftover-" });
+        // A gitdir pointing outside any repository makes the retry fail, so the record is kept.
+        const adminDir = `${root}/worktrees/gone`;
+        yield* fixture.fs.makeDirectory(adminDir, { recursive: true });
+        yield* fixture.fs.makeDirectory(`${root}/checkout`);
+        yield* fixture.fs.writeFileString(`${root}/checkout/.git`, "not a gitfile\n");
+        yield* fixture.fs.writeFileString(`${adminDir}/gitdir`, `${root}/checkout/.git\n`);
+        const title = "SECRET-DO-NOT-KEEP-leftover";
+        const record = `${fixture.config.stateDir}/storage-cleanup-leftovers.json`;
+        // Written by an earlier version, which kept the title.
+        yield* fixture.fs.writeFileString(
+          record,
+          JSON.stringify([
+            {
+              adminDir,
+              entry: {
+                kind: "worktree",
+                outcome: "kept",
+                reason: "",
+                path: `${root}/gone`,
+                projectPath: fixture.repo,
+                threadId: "thread-1",
+                threadTitle: title,
+                bytes: null,
+                files: null,
+              },
+            },
+          ]),
+        );
+        const report = yield* fixture.service.runNow;
+        expect(report.entries).toContainEqual(
+          expect.objectContaining({ path: `${root}/gone`, outcome: "failed" }),
+        );
+        const kept = yield* fixture.fs.readFileString(record);
+        expect(kept).toContain(adminDir);
+        expect(kept).toContain("thread-1");
+        expect(kept).not.toContain(title);
+      }),
+    ),
+  );
   it.live("leaves git metadata that a recreated worktree took over from a failed removal", () =>
     runCleanupTest(
       Effect.gen(function* () {

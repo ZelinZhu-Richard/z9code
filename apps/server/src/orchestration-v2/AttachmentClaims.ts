@@ -35,6 +35,8 @@ export const validateAttachmentLimits = Effect.fn("AttachmentClaims.validateAtta
 export interface ClaimedAttachments {
   readonly attachments: ReadonlyArray<ChatAttachment>;
   readonly claimedPaths: ReadonlyArray<string>;
+  /** Each claimed copy's pending upload and sidecar, kept as the retry source until a send is accepted. */
+  readonly sources: ReadonlyMap<string, ReadonlyArray<string>>;
 }
 
 export function attachmentIsPendingUpload(attachment: ChatAttachment): boolean {
@@ -63,7 +65,22 @@ export const releaseClaimedAttachments = Effect.fn("AttachmentClaims.releaseClai
   },
 );
 
-/** Copies preserve the pending retry source after failed bootstrap; the pending sweep reclaims it. */
+/** Removes the pending uploads behind the claimed copies an accepted send kept. */
+export const removeAcceptedSources = Effect.fn("AttachmentClaims.removeAcceptedSources")(function* (
+  sources: ClaimedAttachments["sources"],
+  keptPaths: ReadonlySet<string>,
+) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  for (const [finalPath, paths] of sources) {
+    if (!keptPaths.has(finalPath)) continue;
+    for (const path of paths) yield* fileSystem.remove(path, { force: true }).pipe(Effect.ignore);
+  }
+});
+
+/**
+ * Copies preserve the pending retry source after a failed or unproven send; the pending sweep
+ * reclaims it. An accepted send removes it with `removeAcceptedSources`.
+ */
 export const claimPendingAttachments = Effect.fn("AttachmentClaims.claimPendingAttachments")(
   function* (input: {
     readonly threadId: string;
@@ -79,11 +96,16 @@ export const claimPendingAttachments = Effect.fn("AttachmentClaims.claimPendingA
       });
     }
     if (!input.attachments.some(attachmentIsPendingUpload)) {
-      return { attachments: input.attachments, claimedPaths: [] } satisfies ClaimedAttachments;
+      return {
+        attachments: input.attachments,
+        claimedPaths: [],
+        sources: new Map(),
+      } satisfies ClaimedAttachments;
     }
     const serverConfig = yield* ServerConfig.ServerConfig;
     const fileSystem = yield* FileSystem.FileSystem;
     const claimedPaths: string[] = [];
+    const sources = new Map<string, Array<string>>();
     const documents = yield* DocumentText.DocumentText;
     const attachments = yield* Effect.forEach(
       input.attachments,
@@ -146,13 +168,23 @@ export const claimPendingAttachments = Effect.fn("AttachmentClaims.claimPendingA
                   cause,
                 }),
             ),
-            Effect.andThen(Effect.sync(() => claimedPaths.push(claim.finalPath))),
+            Effect.andThen(
+              Effect.sync(() => {
+                claimedPaths.push(claim.finalPath);
+                sources.set(claim.finalPath, [claim.currentPath]);
+              }),
+            ),
             Effect.uninterruptible,
           );
           const sidecar = `${claim.currentPath}.txt`;
           if (yield* fileSystem.exists(sidecar).pipe(Effect.orElseSucceed(() => false))) {
             yield* fileSystem.copyFile(sidecar, `${claim.finalPath}.txt`).pipe(
-              Effect.andThen(Effect.sync(() => claimedPaths.push(`${claim.finalPath}.txt`))),
+              Effect.andThen(
+                Effect.sync(() => {
+                  claimedPaths.push(`${claim.finalPath}.txt`);
+                  sources.get(claim.finalPath)?.push(sidecar);
+                }),
+              ),
               Effect.onError(() =>
                 fileSystem.remove(`${claim.finalPath}.txt`, { force: true }).pipe(Effect.ignore),
               ),
@@ -167,6 +199,6 @@ export const claimPendingAttachments = Effect.fn("AttachmentClaims.claimPendingA
         }),
       { concurrency: 1 },
     ).pipe(Effect.onError(() => releaseClaimedAttachments(claimedPaths)));
-    return { attachments, claimedPaths } satisfies ClaimedAttachments;
+    return { attachments, claimedPaths, sources } satisfies ClaimedAttachments;
   },
 );

@@ -1,7 +1,7 @@
-// Deletion marks a thread and runs its cleanup effects; this sweep then removes every row keyed
-// by the thread, its events except a scrubbed tombstone, its search index tokens and its provider
-// logs. Threads a live fork still shows wait for that fork, and every thread waits until storage
-// cleanup has finished with it, because these rows are how it finds the thread's refs and worktree.
+// Deletion marks a thread and runs its cleanup effects; this sweep then removes its rows, its events
+// but a scrubbed tombstone, its search tokens, provider logs and browser screenshots. A thread a
+// live fork still shows waits for that fork, and every thread waits for storage cleanup, which
+// finds the thread's refs and worktree through these rows.
 import * as NodeSqliteClient from "@z9code/shared/nodeSqliteClient";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -263,18 +263,24 @@ export const make = Effect.gen(function* () {
       }),
     );
 
-  const purgeProviderLogs = Effect.fn("ThreadPurge.purgeProviderLogs")(function* (
+  /** Provider logs and browser screenshots name their thread by segment. */
+  const THREAD_FILES = [
+    { directory: config.providerLogsDir, pattern: /^[^.]+\.(.+)\.log(?:\.\d+)?$/u },
+    { directory: config.browserArtifactsDir, pattern: /^browser-screenshot\.([^.]+)\./u },
+  ];
+  const purgeThreadFiles = Effect.fn("ThreadPurge.purgeThreadFiles")(function* (
     segments: ReadonlySet<string>,
   ) {
     if (segments.size === 0) return;
-    const directory = config.providerLogsDir;
-    const entries = yield* fileSystem
-      .readDirectory(directory)
-      .pipe(Effect.catchCause(() => Effect.succeed([] as ReadonlyArray<string>)));
-    for (const entry of entries) {
-      const match = /^[^.]+\.(.+)\.log(?:\.\d+)?$/u.exec(entry);
-      if (match === null || !segments.has(match[1]!)) continue;
-      yield* fileSystem.remove(path.join(directory, entry)).pipe(Effect.ignore);
+    for (const { directory, pattern } of THREAD_FILES) {
+      const entries = yield* fileSystem
+        .readDirectory(directory)
+        .pipe(Effect.catchCause(() => Effect.succeed([] as ReadonlyArray<string>)));
+      for (const entry of entries) {
+        const match = pattern.exec(entry);
+        if (match === null || !segments.has(match[1]!)) continue;
+        yield* fileSystem.remove(path.join(directory, entry)).pipe(Effect.ignore);
+      }
     }
   });
 
@@ -322,12 +328,12 @@ export const make = Effect.gen(function* () {
     ),
   );
 
-  // The provider log store batches writes for about a second, so a late flush can recreate a
-  // purged thread's log after its sessions detached; the next sweep removes those files again.
+  // The provider log store batches writes for about a second, and a screenshot save can finish
+  // after its session detached, so the next sweep removes a purged thread's files again.
   let recentlyPurgedSegments: ReadonlySet<string> = new Set();
 
   const sweep = Effect.fn("ThreadPurge.sweep")(function* () {
-    yield* purgeProviderLogs(recentlyPurgedSegments);
+    yield* purgeThreadFiles(recentlyPurgedSegments);
     const purgedSegments = new Set<string>();
     let purged = 0;
     let tables: ReadonlyArray<ThreadKeyedTable> | undefined;
@@ -348,7 +354,7 @@ export const make = Effect.gen(function* () {
       }
       if (yield* purgeRows(threadIds, tables)) searchIndexNeedsOptimize = true;
       const segments = new Set(threadIds.map((threadId) => resolveThreadSegment(threadId)));
-      yield* purgeProviderLogs(segments);
+      yield* purgeThreadFiles(segments);
       for (const segment of segments) purgedSegments.add(segment);
       purged += threadIds.length;
       yield* Effect.yieldNow;

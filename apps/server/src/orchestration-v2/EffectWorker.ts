@@ -654,6 +654,18 @@ export const layerExecutor: Layer.Layer<
                   }),
               ),
             );
+          // Purging the thread drops the turn items that name its secret refs, so this runs first.
+          case "secrets.cleanup":
+            return resourceCleanup.cleanupSecrets(effect.threadId).pipe(
+              Effect.mapError(
+                (cause) =>
+                  new OrchestrationEffectExecutionError({
+                    effectId: effect.id,
+                    effectType: effect.request.type,
+                    cause,
+                  }),
+              ),
+            );
           case "attachment.cleanup": {
             const request = effect.request;
             return Effect.gen(function* () {

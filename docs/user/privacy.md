@@ -47,7 +47,7 @@ builds have none. The mobile app does not check for over-the-air updates.
   Deleting a thread from before 0.1.0 also deletes that version's `state.sqlite`, once the
   current database has all of its projects and threads. If an older version has it open, or it
   holds threads the current database lacks, it stays until the next start or `z9 doctor`.
-  Not yet covered: browser screenshots.
+  Not yet covered: browser screenshots saved by earlier versions.
 - Agent feedback reports, if enabled, are stored locally and never sent anywhere.
 - The resource monitor samples only z9code's own process tree, redacts secrets from command
   lines, and can be turned off with `Z9CODE_RESOURCE_MONITOR_DISABLED=1`.

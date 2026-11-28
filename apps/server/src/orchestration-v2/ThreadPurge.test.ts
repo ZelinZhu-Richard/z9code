@@ -310,6 +310,44 @@ it.effect("reports a thread as deleted before and after the purge, and nothing e
   }).pipe(Effect.provide(layerTest)),
 );
 
+it.effect("removes a deleted thread's browser screenshots", () =>
+  Effect.gen(function* () {
+    const fileSystem = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const config = yield* ServerConfig;
+    const now = yield* DateTime.now;
+    const thread = makeThread(ThreadId.make("thread:shot"), now);
+    // Shares the deleted thread's segment as a prefix, so a looser match would take it too.
+    const kept = makeThread(ThreadId.make("thread:shot-kept"), now);
+    yield* writeThread(thread, now);
+    yield* writeThread(kept, now);
+    yield* fileSystem.makeDirectory(config.browserArtifactsDir, { recursive: true });
+    const screenshot = (threadId: string) =>
+      path.join(
+        config.browserArtifactsDir,
+        `browser-screenshot.${resolveThreadSegment(threadId)}.example-com-abc-1234abcd.png`,
+      );
+    const legacy = path.join(
+      config.browserArtifactsDir,
+      "browser-screenshot-site-abc-1234abcd.png",
+    );
+    yield* fileSystem.writeFileString(screenshot(thread.id), SECRET);
+    yield* fileSystem.writeFileString(screenshot(kept.id), SECRET);
+    yield* fileSystem.writeFileString(legacy, SECRET);
+    yield* deleteThread(thread, now);
+
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+    assert.isFalse(yield* fileSystem.exists(screenshot(thread.id)));
+    assert.isTrue(yield* fileSystem.exists(screenshot(kept.id)));
+    assert.isTrue(yield* fileSystem.exists(legacy));
+    // A save that finishes after the purge is caught by the next sweep.
+    yield* fileSystem.writeFileString(screenshot(thread.id), SECRET);
+    assert.equal(yield* purge.sweep(), 0);
+    assert.isFalse(yield* fileSystem.exists(screenshot(thread.id)));
+  }).pipe(Effect.provide(layerTest)),
+);
+
 it.effect("keeps a deleted thread a live fork still shows until the fork is deleted", () =>
   Effect.gen(function* () {
     const now = yield* DateTime.now;

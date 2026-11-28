@@ -227,6 +227,12 @@ export const planThreadDeletion = Effect.fn("ThreadDeletion.planThreadDeletion")
     threadId: command.threadId,
     request: { type: "preview.cleanup" },
   });
+  effects.push({
+    id: `effect:${command.commandId}:secrets.cleanup`,
+    commandId: command.commandId,
+    threadId: command.threadId,
+    request: { type: "secrets.cleanup" },
+  });
   const attachmentIds = Array.from(new Set(input.attachmentIds));
   if (attachmentIds.length > 0) {
     effects.push({

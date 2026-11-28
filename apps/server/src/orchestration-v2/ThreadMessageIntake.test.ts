@@ -10,6 +10,7 @@ import {
   EventId,
   GuestMessageId,
   MessageId,
+  ProjectId,
   RunId,
   RuntimeRequestId,
   ThreadId,
@@ -438,6 +439,54 @@ it.effect("a retried response re-claims the preserved pending uploads", () =>
         entry.startsWith("thread-retry-"),
       ),
     ).toHaveLength(2);
+  }).pipe(Effect.provide(layerIntakeTest)),
+);
+
+it.effect("removes an accepted upload's pending source and sidecar", () =>
+  Effect.gen(function* () {
+    const config = yield* ServerConfig.ServerConfig;
+    const pendingId = ChatAttachmentId.make(createPendingAttachmentId("pdf")!);
+    const pendingPath = NodePath.join(config.attachmentsDir, `${pendingId}.pdf`);
+    NodeFS.writeFileSync(pendingPath, new Uint8Array([1, 2, 3]));
+    NodeFS.writeFileSync(`${pendingPath}.txt`, "extracted text");
+    const result = yield* ThreadMessageIntake.sendToThread({
+      projectId: ProjectId.make("project-accepted"),
+      commandId: CommandId.make("send-accepted"),
+      threadId: ThreadId.make("thread-accepted"),
+      messageId: MessageId.make("message-accepted"),
+      text: "see attached",
+      mode: "auto",
+      createdBy: "user",
+      creationSource: "web",
+      attachments: [
+        {
+          type: "file",
+          id: pendingId,
+          name: "notes.pdf",
+          mimeType: "application/pdf",
+          sizeBytes: 3,
+        },
+      ],
+    }).pipe(
+      Effect.provide(
+        Layer.mock(ThreadManagementService.ThreadManagementService)({
+          sendToThread: (input) =>
+            Effect.succeed({
+              message: { attachments: input.attachments },
+            } as unknown as Effect.Success<
+              ReturnType<ThreadManagementService.ThreadManagementServiceShape["sendToThread"]>
+            >),
+        }),
+      ),
+    );
+    const claimed = resolveAttachmentPath({
+      attachmentsDir: config.attachmentsDir,
+      attachment: result.message.attachments[0]!,
+    });
+    expect(NodeFS.readFileSync(claimed!)).toEqual(Buffer.from([1, 2, 3]));
+    expect(NodeFS.readFileSync(`${claimed!}.txt`, "utf8")).toBe("extracted text");
+    expect(NodeFS.existsSync(pendingPath)).toBe(false);
+    expect(NodeFS.existsSync(`${pendingPath}.txt`)).toBe(false);
   }).pipe(Effect.provide(layerIntakeTest)),
 );
 

@@ -100,6 +100,7 @@ import * as MessageHandlers from "./toolkits/message/handlers.ts";
 import { HtmlPreviewTool, HtmlPreviewToolkit, HtmlRenderToolkit } from "./toolkits/html/tools.ts";
 import { MCP_HTTP_PATH } from "../httpCors.ts";
 import { requestUrl } from "../requestUrl.ts";
+import { resolveThreadSegment } from "../provider/EventNdjsonLogger.ts";
 
 const mcpResourceMetadataUrl = (request: HttpServerRequest.HttpServerRequest) =>
   requestUrl(request).pipe(
@@ -580,6 +581,7 @@ const screenshotSiteSlug = (rawUrl: string): string => {
 const saveScreenshot = Effect.fn("McpHttpServer.saveScreenshot")(function* (
   pageUrl: string,
   data: Uint8Array,
+  threadId: string | undefined,
 ) {
   const config = yield* ServerConfig.ServerConfig;
   const fileSystem = yield* FileSystem.FileSystem;
@@ -587,7 +589,8 @@ const saveScreenshot = Effect.fn("McpHttpServer.saveScreenshot")(function* (
   const millis = yield* Clock.currentTimeMillis;
   const random = yield* SecureRandom.SecureRandom;
   const unique = (yield* random.uuidV4()).slice(0, 8);
-  const fileName = `browser-screenshot-${screenshotSiteSlug(pageUrl)}-${millis.toString(36)}-${unique}.png`;
+  // The thread segment lets ThreadPurge find a deleted thread's screenshots; `.` cannot occur in it.
+  const fileName = `browser-screenshot.${resolveThreadSegment(threadId)}.${screenshotSiteSlug(pageUrl)}-${millis.toString(36)}-${unique}.png`;
   const screenshotPath = path.join(config.browserArtifactsDir, fileName);
   yield* fileSystem.makeDirectory(config.browserArtifactsDir, { recursive: true }).pipe(
     Effect.andThen(fileSystem.writeFile(screenshotPath, data)),
@@ -756,6 +759,7 @@ const registerPreviewSnapshot = Effect.fn("McpHttpServer.registerPreviewSnapshot
                       fullScreenshot
                         ? new Uint8Array(Buffer.from(fullScreenshot.data, "base64"))
                         : png,
+                      invocation.thread?.threadId,
                     )
                   : undefined;
               // Providers replay images on later requests, and some reject them; include images only when requested.
