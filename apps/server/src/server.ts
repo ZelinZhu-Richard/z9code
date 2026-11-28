@@ -1,6 +1,7 @@
 import * as ProviderEventLoggers from "@z9code/provider-core/server/ProviderEventLoggers";
 import * as AssetSigner from "./assets/AssetSigner.ts";
 import * as WorkspacePreviewRevisions from "./assets/WorkspacePreviewRevisions.ts";
+import * as DatabaseMaintenance from "./persistence/DatabaseMaintenance.ts";
 import * as DatabaseStorage from "./persistence/DatabaseStorage.ts";
 import * as StorageCleanup from "./storageCleanup.ts";
 import * as PullRequestSyncReactor from "./orchestration-v2/PullRequestSyncReactor.ts";
@@ -617,6 +618,7 @@ const layerRuntimeCoreDependenciesBase = Layer.mergeAll(
   layerIdleCompactionWorker,
   ThreadPurge.layer.pipe(
     Layer.provideMerge(StorageCleanup.layer.pipe(Layer.provide(ProjectionStoreV2.layer))),
+    Layer.provide(DatabaseMaintenance.layer),
   ),
   DatabaseStorage.layer.pipe(
     Layer.provide(ProjectionMaintenance.layer),

@@ -12,6 +12,7 @@ import * as Schedule from "effect/Schedule";
 import * as SqlClient from "effect/sql/SqlClient";
 
 import { ServerConfig } from "../config.ts";
+import * as DatabaseMaintenance from "../persistence/DatabaseMaintenance.ts";
 import { resolveThreadSegment } from "../provider/EventNdjsonLogger.ts";
 import { StorageCleanup } from "../storageCleanup.ts";
 
@@ -93,6 +94,8 @@ export const make = Effect.gen(function* () {
   const path = yield* Path.Path;
   const config = yield* ServerConfig;
   const storageCleanup = yield* StorageCleanup;
+  const maintenance = yield* DatabaseMaintenance.DatabaseMaintenance;
+  const legacyDatabasePath = path.join(path.dirname(config.dbPath), "state.sqlite");
 
   // Discovered on each sweep so tables added by later migrations are covered without a list.
   const threadKeyedTables = Effect.gen(function* () {
@@ -283,6 +286,47 @@ export const make = Effect.gen(function* () {
 
   // Starts set so a startup sweep also clears tokens left by a crash or a failed optimize.
   let searchIndexNeedsOptimize = true;
+  // Starts set so the startup sweep catches V1 threads purged earlier. After that only purging a V1
+  // thread checks again, so a file that a pre-0.1.0 app holds open is not probed every sweep.
+  let legacyDatabaseNeedsCheck = true;
+
+  const legacyImported = (threadIds: ReadonlyArray<string>) =>
+    sql<{ readonly found: number }>`
+      SELECT EXISTS (
+        SELECT 1 FROM orchestration_v2_legacy_imports WHERE thread_id IN ${sql.in(threadIds)}
+      ) AS found
+    `.pipe(
+      NodeSqliteClient.readOnly,
+      Effect.map((rows) => rows[0]?.found === 1),
+    );
+
+  // The pre-0.1.0 database still holds a purged V1 thread's full content. Deleting the file is
+  // guarded like doctor's removal: only once no older app has it open and nothing in it is missing.
+  const removeLegacyDatabase = Effect.gen(function* () {
+    legacyDatabaseNeedsCheck = false;
+    if (!(yield* fileSystem.exists(legacyDatabasePath))) return;
+    const [purgedLegacyThread] = yield* sql<{ readonly found: number }>`
+      SELECT EXISTS (
+        SELECT 1 FROM orchestration_v2_legacy_imports AS legacy_import
+        WHERE NOT EXISTS (
+          SELECT 1 FROM orchestration_v2_projection_threads AS thread
+          WHERE thread.thread_id = legacy_import.thread_id
+        ) AND EXISTS (
+          SELECT 1 FROM orchestration_events AS event
+          WHERE event.aggregate_kind = 'thread'
+            AND event.stream_id = legacy_import.thread_id
+            AND event.event_type = 'thread.deleted'
+        )
+      ) AS found
+    `.pipe(NodeSqliteClient.readOnly);
+    if (purgedLegacyThread?.found !== 1) return;
+    yield* maintenance.removeLegacyDatabase(config.dbPath);
+    yield* Effect.logInfo("deleted the database from before 0.1.0, which held a deleted thread");
+  }).pipe(
+    Effect.catchCause((cause) =>
+      Effect.logWarning("kept the database from before 0.1.0 after a thread purge", { cause }),
+    ),
+  );
 
   // The provider log store batches writes for about a second, and a screenshot save can finish
   // after its session detached, so the next sweep removes a purged thread's files again.
@@ -305,6 +349,9 @@ export const make = Effect.gen(function* () {
       const threadIds = yield* deletedThreadIds("IN", cleanup.finished, BATCH_SIZE);
       if (threadIds.length === 0) break;
       tables ??= yield* threadKeyedTables;
+      if (!legacyDatabaseNeedsCheck && (yield* legacyImported(threadIds))) {
+        legacyDatabaseNeedsCheck = true;
+      }
       if (yield* purgeRows(threadIds, tables)) searchIndexNeedsOptimize = true;
       const segments = new Set(threadIds.map((threadId) => resolveThreadSegment(threadId)));
       yield* purgeThreadFiles(segments);
@@ -337,6 +384,7 @@ export const make = Effect.gen(function* () {
       yield* sql`PRAGMA wal_checkpoint(TRUNCATE)`.pipe(Effect.ignore);
       yield* Effect.logInfo("purged deleted threads", { count: purged });
     }
+    if (legacyDatabaseNeedsCheck) yield* removeLegacyDatabase;
     recentlyPurgedSegments = purgedSegments;
     return purged;
   });
