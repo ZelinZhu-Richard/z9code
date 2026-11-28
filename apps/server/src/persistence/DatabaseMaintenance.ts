@@ -199,6 +199,12 @@ const make = Effect.gen(function* () {
           WHERE legacy.deleted_at IS NULL AND NOT EXISTS (
             SELECT 1 FROM current_v2.orchestration_v2_projection_threads current
             WHERE current.thread_id = legacy.thread_id
+          ) AND NOT EXISTS (
+            -- A purged thread keeps only its deletion tombstone.
+            SELECT 1 FROM current_v2.orchestration_events event
+            WHERE event.aggregate_kind = 'thread'
+              AND event.stream_id = legacy.thread_id
+              AND event.event_type = 'thread.deleted'
           )) AS threads
     `;
     if (!counts) return yield* Effect.die(new Error("Missing result from legacy database counts"));

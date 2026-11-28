@@ -43,6 +43,13 @@ it.layer(DatabaseMaintenance.layer.pipe(Layer.provideMerge(NodeServices.layer)))
           const sql = yield* SqlClient.SqlClient;
           yield* sql`CREATE TABLE projection_projects (project_id TEXT PRIMARY KEY)`;
           yield* sql`CREATE TABLE orchestration_v2_projection_threads (thread_id TEXT PRIMARY KEY)`;
+          yield* sql`CREATE TABLE orchestration_events (
+            sequence INTEGER PRIMARY KEY, aggregate_kind TEXT, stream_id TEXT, event_type TEXT
+          )`;
+          // A purged thread keeps only its tombstone; any other event is no proof of import.
+          yield* sql`INSERT INTO orchestration_events (aggregate_kind, stream_id, event_type) VALUES
+            ('thread', 'purged-thread', 'thread.deleted'),
+            ('thread', 'legacy-thread', 'thread.created')`;
           yield* sql`CREATE TABLE retained_data (value TEXT)`;
           yield* sql`INSERT INTO retained_data VALUES ('keep')`;
         }).pipe(Effect.provide(NodeSqliteClient.layer({ filename: dbPath })));
@@ -57,7 +64,7 @@ it.layer(DatabaseMaintenance.layer.pipe(Layer.provideMerge(NodeServices.layer)))
           yield* sql`CREATE TABLE projection_projects (project_id TEXT PRIMARY KEY, deleted_at TEXT)`;
           yield* sql`CREATE TABLE projection_threads (thread_id TEXT PRIMARY KEY, deleted_at TEXT)`;
           yield* sql`INSERT INTO projection_projects VALUES ('legacy-project', NULL)`;
-          yield* sql`INSERT INTO projection_threads VALUES ('legacy-thread', NULL), ('deleted-thread', '2026-10-01')`;
+          yield* sql`INSERT INTO projection_threads VALUES ('legacy-thread', NULL), ('deleted-thread', '2026-10-01'), ('purged-thread', NULL)`;
         }).pipe(Effect.provide(openLegacy));
         assert.isAbove((yield* maintenance.inspect(dbPath)).legacyDatabaseBytes ?? 0, 0);
 
