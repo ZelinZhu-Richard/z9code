@@ -34,6 +34,7 @@ import * as ConnectionWakeups from "../connection/wakeups.ts";
 import { safeErrorLogAttributes } from "../errors/safeLog.ts";
 import * as Persistence from "../platform/persistence.ts";
 import { runCachePersistence } from "./cachePersistence.ts";
+import { pruneDeletedCachedThreads, removeDeletedThreadCaches } from "./deletedThreadCache.ts";
 import { subscribeDynamicWithSession, subscriptionRetryDelay } from "../rpc/client.ts";
 import type { RpcSession } from "../rpc/session.ts";
 import * as ShellSnapshotLoader from "./shellSnapshotHttp.ts";
@@ -309,6 +310,7 @@ export const makeEnvironmentShellState = Effect.fn("EnvironmentShellState.make")
   // Server items and deferred link fills both read the snapshot and write it back; one at a
   // time, so neither can overwrite what the other wrote in between.
   const snapshotWriteLock = yield* Semaphore.make(1);
+  const stateScope = yield* Effect.scope;
 
   const applyLocked = Effect.fnUntraced(function* (
     items: ReadonlyArray<OrchestrationV2ShellStreamItem>,
@@ -326,6 +328,7 @@ export const makeEnvironmentShellState = Effect.fn("EnvironmentShellState.make")
     let receivedAuthoritativeSnapshot = false;
     let snapshotRequired = false;
     let deltas: Array<ShellStreamEvent> = [];
+    const deletedThreadIds: Array<ThreadId> = [];
     const receivedAtMs = yield* Clock.currentTimeMillis;
     const flushDeltas = () => {
       if (deltas.length > 0 && Option.isSome(next.snapshot)) {
@@ -337,6 +340,7 @@ export const makeEnvironmentShellState = Effect.fn("EnvironmentShellState.make")
             case "thread.removed":
               removedAt ??= new Map(next.removedAt);
               removedAt.set(delta.threadId, delta.sequence);
+              if (delta.deleted === true) deletedThreadIds.push(delta.threadId);
               break;
             case "thread.updated":
               // Replayed catch-up deltas may predate a backward host clock correction.
@@ -409,6 +413,13 @@ export const makeEnvironmentShellState = Effect.fn("EnvironmentShellState.make")
       };
     }
     flushDeltas();
+    if (deletedThreadIds.length > 0) {
+      // A thread that is not open has no thread state to drop its cache.
+      yield* removeDeletedThreadCaches(environmentId, deletedThreadIds).pipe(
+        Effect.provideService(Persistence.EnvironmentCacheStore, cache),
+        Effect.forkIn(stateScope),
+      );
+    }
     yield* Ref.set(awaitingCompletion, waiting);
     let nextOrigin = yield* Ref.get(origin);
     if (snapshotRequired) {
@@ -452,7 +463,6 @@ export const makeEnvironmentShellState = Effect.fn("EnvironmentShellState.make")
     );
   }, snapshotWriteLock.withPermit);
 
-  const stateScope = yield* Effect.scope;
   // Each full snapshot supersedes the previous one's fill; links from an older snapshot must
   // not land on rows a newer snapshot reused.
 
@@ -671,6 +681,11 @@ export const makeEnvironmentShellState = Effect.fn("EnvironmentShellState.make")
             ? earlyExit.value
             : null;
         yield* Ref.set(activeSubscription, { session, identity });
+        yield* pruneDeletedCachedThreads(session, environmentId).pipe(
+          Effect.provideService(Persistence.EnvironmentCacheStore, cache),
+          Effect.provideService(EnvironmentSupervisor.EnvironmentSupervisor, supervisor),
+          Effect.forkIn(stateScope),
+        );
         yield* Ref.set(awaitingCompletion, true);
         yield* setSynchronizing;
 

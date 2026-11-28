@@ -75,7 +75,9 @@ layer("OrchestrationEventStore", (it) => {
           project: toShellApplicationEvent,
         }),
       );
-      assert.deepEqual(yield* pull, [{ sequence: replayed!.sequence, event: { threadId } }]);
+      assert.deepEqual(yield* pull, [
+        { sequence: replayed!.sequence, event: { threadId, type: event.type } },
+      ]);
       const [live] = yield* store.appendAgentEvents({
         events: [
           {
@@ -86,7 +88,9 @@ layer("OrchestrationEventStore", (it) => {
         ],
       });
       yield* store.publishCommitted([live!]);
-      assert.deepEqual(yield* pull, [{ sequence: live!.sequence, event: { threadId } }]);
+      assert.deepEqual(yield* pull, [
+        { sequence: live!.sequence, event: { threadId, type: event.type } },
+      ]);
       const durable = yield* store
         .readAgentEvents({ threadId, afterSequence })
         .pipe(Stream.runCollect);

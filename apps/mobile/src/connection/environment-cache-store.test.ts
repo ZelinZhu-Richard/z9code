@@ -258,6 +258,13 @@ function makeDatabase() {
           .filter(([key]) => key.split(":")[1] === kind)
           .map(([, payload]) => payload),
       ),
+    listCacheKeys: (environmentId, kind) =>
+      Effect.sync(() =>
+        [...values.keys()].flatMap((key) => {
+          const prefix = cacheId(environmentId, kind, "");
+          return key.startsWith(prefix) ? [key.slice(prefix.length)] : [];
+        }),
+      ),
     saveCache: (environmentId, kind, cacheKey, schemaVersion, payload) =>
       Effect.sync(() => {
         const id = cacheId(environmentId, kind, cacheKey);

@@ -128,6 +128,7 @@ const PERSISTENCE_FAILURE = {
   "load-thread": msg("Could not load thread: {cause}"),
   "save-thread": msg("Could not save thread: {cause}"),
   "remove-thread": msg("Could not remove thread: {cause}"),
+  "list-threads": msg("Could not list cached threads: {cause}"),
   "load-server-config": msg("Could not load server config: {cause}"),
   "save-server-config": msg("Could not save server config: {cause}"),
   "load-vcs-refs": msg("Could not load vcs refs: {cause}"),
@@ -376,6 +377,33 @@ function removeDatabaseValuesInRangeOnConnection(
   }).pipe(Effect.withSpan("web.connectionStorage.removeDatabaseValuesInRange"));
 }
 
+function readDatabaseKeysInRangeOnConnection(
+  database: IDBDatabase,
+  storeName: string,
+  range: IDBKeyRange,
+) {
+  return Effect.callback<ReadonlyArray<IDBValidKey>, ConnectionTransientError>((resume) => {
+    try {
+      const request = database
+        .transaction(storeName, "readonly")
+        .objectStore(storeName)
+        .getAllKeys(range);
+      request.addEventListener("error", () => {
+        resume(
+          Effect.fail(
+            catalogError("read", request.error ?? m(msg("Unknown IndexedDB read error"))),
+          ),
+        );
+      });
+      request.addEventListener("success", () => {
+        resume(Effect.succeed(request.result));
+      });
+    } catch (cause) {
+      resume(Effect.fail(catalogError("read", cause)));
+    }
+  }).pipe(Effect.withSpan("web.connectionStorage.readDatabaseKeysInRange"));
+}
+
 // Mirrors mobile's pull-request cache bounds, per environment.
 function saveQueryOnConnection(
   database: IDBDatabase,
@@ -475,6 +503,12 @@ function removeDatabaseValuesInRange(
 ) {
   return withDatabase(database, (opened) =>
     removeDatabaseValuesInRangeOnConnection(opened, storeName, range),
+  );
+}
+
+function readDatabaseKeysInRange(database: DatabaseHandle, storeName: string, range: IDBKeyRange) {
+  return withDatabase(database, (opened) =>
+    readDatabaseKeysInRangeOnConnection(opened, storeName, range),
   );
 }
 
@@ -1058,6 +1092,25 @@ export const layer = Layer.effectContext(
             THREAD_STORE_NAME,
             threadCacheKey(environmentId, threadId),
           ).pipe(Effect.mapError((cause) => persistenceError("remove-thread", cause)));
+        },
+      ),
+      listThreadIds: Effect.fn("Persistence.EnvironmentCacheStore.listThreadIds")(
+        function (environmentId) {
+          const prefix = `${environmentId}:`;
+          return readDatabaseKeysInRange(
+            database,
+            THREAD_STORE_NAME,
+            IDBKeyRange.bound(prefix, `${prefix}\uffff`),
+          ).pipe(
+            Effect.map((keys) =>
+              keys.flatMap((key) =>
+                typeof key === "string" && key.startsWith(prefix)
+                  ? [ThreadId.make(key.slice(prefix.length))]
+                  : [],
+              ),
+            ),
+            Effect.mapError((cause) => persistenceError("list-threads", cause)),
+          );
         },
       ),
       clear: Effect.fn("Persistence.EnvironmentCacheStore.clear")(function (environmentId) {
