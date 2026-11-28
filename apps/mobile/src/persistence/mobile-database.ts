@@ -47,6 +47,7 @@ const MobileDatabaseOperation = Schema.Literals([
   "migrate",
   "load-cache",
   "list-cache",
+  "list-cache-keys",
   "save-cache",
   "remove-cache",
   "clear-cache-kind",
@@ -82,6 +83,10 @@ export class MobileDatabase extends Context.Service<
       cacheKey: string,
     ) => Effect.Effect<Option.Option<string>, MobileDatabaseError>;
     readonly listCache: (
+      kind: ClientCacheKind,
+    ) => Effect.Effect<ReadonlyArray<string>, MobileDatabaseError>;
+    readonly listCacheKeys: (
+      environmentId: EnvironmentId,
       kind: ClientCacheKind,
     ) => Effect.Effect<ReadonlyArray<string>, MobileDatabaseError>;
     readonly saveCache: (
@@ -137,7 +142,10 @@ const makeAvailable = Effect.gen(function* () {
 
   yield* Effect.tryPromise({
     try: async () => {
-      await database.execAsync("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
+      // Deleted thread transcripts are overwritten rather than left in free pages.
+      await database.execAsync(
+        "PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA secure_delete = ON;",
+      );
       const schema = await database.getFirstAsync<{ readonly user_version: number }>(
         "PRAGMA user_version",
       );
@@ -198,6 +206,17 @@ const makeAvailable = Effect.gen(function* () {
           ),
         catch: databaseError("list-cache"),
       }).pipe(Effect.map((rows) => rows.map((row) => row.payload))),
+    ),
+    listCacheKeys: Effect.fn("MobileDatabase.listCacheKeys")((environmentId, kind) =>
+      Effect.tryPromise({
+        try: () =>
+          database.getAllAsync<{ readonly cache_key: string }>(
+            "SELECT cache_key FROM client_cache WHERE environment_id = ? AND kind = ?",
+            environmentId,
+            kind,
+          ),
+        catch: databaseError("list-cache-keys"),
+      }).pipe(Effect.map((rows) => rows.map((row) => row.cache_key))),
     ),
     saveCache: Effect.fn("MobileDatabase.saveCache")(
       (environmentId, kind, cacheKey, schemaVersion, payload) =>
@@ -341,6 +360,7 @@ function makeUnavailable(error: MobileDatabaseError): MobileDatabase["Service"] 
   return MobileDatabase.of({
     loadCache: Effect.fn("MobileDatabase.loadCache")(() => fail),
     listCache: Effect.fn("MobileDatabase.listCache")(() => fail),
+    listCacheKeys: Effect.fn("MobileDatabase.listCacheKeys")(() => fail),
     saveCache: Effect.fn("MobileDatabase.saveCache")(() => fail),
     removeCache: Effect.fn("MobileDatabase.removeCache")(() => fail),
     clearCacheKind: Effect.fn("MobileDatabase.clearCacheKind")(() => fail),

@@ -528,7 +528,7 @@ export type ShellApplicationEvent =
     >
   | {
       readonly sequence: number;
-      readonly event: Pick<OrchestrationV2StoredEvent["event"], "threadId">;
+      readonly event: Pick<OrchestrationV2StoredEvent["event"], "threadId" | "type">;
     };
 
 /** Focused subagents receive these updates through their thread subscription. */
@@ -569,7 +569,10 @@ export function toShellApplicationEvent(stored: ApplicationStoredEvent): ShellAp
         type: stored.type,
         sequence: stored.sequence,
       }
-    : { sequence: stored.sequence, event: { threadId: stored.event.threadId } };
+    : {
+        sequence: stored.sequence,
+        event: { threadId: stored.event.threadId, type: stored.event.type },
+      };
 }
 
 export function coalesceShellApplicationEvents<A extends ShellApplicationEvent>(
@@ -817,5 +820,6 @@ export function shellStreamItemFromThreadShell(input: {
     sequence: input.stored.sequence,
     location: "active",
     threadId: input.stored.event.threadId,
+    ...(input.stored.event.type === "thread.deleted" ? { deleted: true as const } : {}),
   };
 }

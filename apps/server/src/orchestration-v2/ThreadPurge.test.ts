@@ -287,6 +287,29 @@ it.effect("removes every trace of a deleted thread but a scrubbed tombstone", ()
   }).pipe(Effect.provide(layerTest)),
 );
 
+it.effect("reports a thread as deleted before and after the purge, and nothing else", () =>
+  Effect.gen(function* () {
+    const store = yield* ProjectionStore.ProjectionStoreV2;
+    const now = yield* DateTime.now;
+    const purged = makeThread(ThreadId.make("thread:purged"), now);
+    const pending = makeThread(ThreadId.make("thread:pending"), now);
+    const live = makeThread(ThreadId.make("thread:live"), now);
+    const unknown = ThreadId.make("thread:unknown");
+    yield* writeThread(purged, now);
+    yield* writeThread(live, now);
+    yield* deleteThread(purged, now);
+    const purge = yield* ThreadPurge.make;
+    assert.equal(yield* purge.sweep(), 1);
+    // Written after the sweep, so only its row says it was deleted.
+    yield* writeThread(pending, now);
+    yield* deleteThread(pending, now);
+
+    const deleted = yield* store.getDeletedThreadIds([purged.id, pending.id, live.id, unknown]);
+    assert.sameMembers([...deleted], [purged.id, pending.id]);
+    assert.deepEqual(yield* store.getDeletedThreadIds([]), []);
+  }).pipe(Effect.provide(layerTest)),
+);
+
 it.effect("keeps a deleted thread a live fork still shows until the fork is deleted", () =>
   Effect.gen(function* () {
     const now = yield* DateTime.now;

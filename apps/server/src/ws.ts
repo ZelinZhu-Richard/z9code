@@ -1837,6 +1837,7 @@ export const layerWsRpc = (
           shellResumeCompletionMarker: true,
           shellThreadFamilies: true,
           threadLinkMetadata: true,
+          deletedThreadLookup: true,
           shellOlderSettled: true,
           threadResumeCompletionMarker: true,
           threadSnapshotPagination: true,
@@ -2065,6 +2066,16 @@ export const layerWsRpc = (
               (cause) =>
                 new OrchestrationV2GetShellSnapshotError({
                   message: "Failed to load thread titles",
+                  cause,
+                }),
+            ),
+          ),
+        [ORCHESTRATION_V2_WS_METHODS.getDeletedThreadIds]: (input) =>
+          threadManagement.getDeletedThreadIds(input.threadIds).pipe(
+            Effect.mapError(
+              (cause) =>
+                new OrchestrationV2GetShellSnapshotError({
+                  message: "Failed to look up deleted threads",
                   cause,
                 }),
             ),

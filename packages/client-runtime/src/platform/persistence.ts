@@ -37,6 +37,7 @@ export class ConnectionPersistenceError extends Schema.TaggedError<ConnectionPer
       "load-thread",
       "save-thread",
       "remove-thread",
+      "list-threads",
       "load-server-config",
       "save-server-config",
       "load-vcs-refs",
@@ -111,6 +112,10 @@ export class EnvironmentCacheStore extends Context.Service<
       environmentId: EnvironmentId,
       threadId: ThreadId,
     ) => Effect.Effect<void, ConnectionPersistenceError>;
+    /** Ids of the threads whose snapshots this environment's cache holds. */
+    readonly listThreadIds: (
+      environmentId: EnvironmentId,
+    ) => Effect.Effect<ReadonlyArray<ThreadId>, ConnectionPersistenceError>;
     readonly loadServerConfig: (
       environmentId: EnvironmentId,
     ) => Effect.Effect<Option.Option<ServerConfig>, ConnectionPersistenceError>;

@@ -695,6 +695,10 @@ export interface ProjectionStoreV2Shape {
   readonly getThreadTitles: (
     threadIds: ReadonlyArray<ThreadId>,
   ) => Effect.Effect<Record<ThreadId, string>, ProjectionStoreV2Error>;
+  /** The given threads that are provably deleted, by their row or, once purged, their tombstone. */
+  readonly getDeletedThreadIds: (
+    threadIds: ReadonlyArray<ThreadId>,
+  ) => Effect.Effect<ReadonlyArray<ThreadId>, ProjectionStoreV2Error>;
   readonly getThreadWorktreePaths: (options?: {
     readonly includeArchived?: boolean;
   }) => Effect.Effect<
@@ -9741,6 +9745,30 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
       return Object.fromEntries(rows.map((row) => [row.thread_id, row.title]));
     }, Effect.mapError(shellSnapshotReadError));
 
+    const getDeletedThreadIds = Effect.fn("ProjectionStore.getDeletedThreadIds")(function* (
+      threadIds: ReadonlyArray<ThreadId>,
+    ) {
+      if (threadIds.length === 0) return [];
+      // A row decides while it exists, so a live thread is never reported; ThreadPurge removes
+      // the row and keeps only the `thread.deleted` tombstone event.
+      const rows = yield* sql<{ readonly thread_id: ThreadId }>`
+        SELECT thread_id
+        FROM orchestration_v2_projection_threads
+        WHERE deleted_at IS NOT NULL AND thread_id IN ${sql.in(threadIds)}
+        UNION
+        SELECT DISTINCT event.stream_id AS thread_id
+        FROM orchestration_events AS event
+        WHERE event.aggregate_kind = 'thread'
+          AND event.event_type = 'thread.deleted'
+          AND event.stream_id IN ${sql.in(threadIds)}
+          AND NOT EXISTS (
+            SELECT 1 FROM orchestration_v2_projection_threads AS thread
+            WHERE thread.thread_id = event.stream_id
+          )
+      `;
+      return rows.map((row) => row.thread_id);
+    }, Effect.mapError(shellSnapshotReadError));
+
     const findGuestShareThreadId = Effect.fn("ProjectionStore.findGuestShareThreadId")(function* (
       shareId: GuestShareId,
     ) {
@@ -9912,6 +9940,7 @@ export const layer: Layer.Layer<ProjectionStoreV2, never, SqlClient.SqlClient> =
       getSettlementCandidates: readOnReader(getSettlementCandidates),
       getThreadsWithPullRequests: readOnReader(getThreadsWithPullRequests),
       getThreadTitles: readOnReader(getThreadTitles),
+      getDeletedThreadIds: readOnReader(getDeletedThreadIds),
       getThreadLinkMetadata: readOnReader(getThreadLinkMetadata),
       getThreadWorktreePaths: readOnReader(getThreadWorktreePaths),
       getOpenRemoteDelegatedTasks: getOpenRemoteDelegatedTasks.pipe(NodeSqliteClient.readOnly),

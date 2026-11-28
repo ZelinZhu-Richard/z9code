@@ -43,11 +43,11 @@ builds have none. The mobile app does not check for over-the-air updates.
   stop. What another thread received from it, such as a merged-back summary or a subagent's
   result, belongs to that thread and goes when it is deleted.
   Command receipts stay, without their text, so a replayed command cannot recreate the thread.
+  Other clients drop their cached copy when they hear of the deletion, or when they next connect.
   Deleting a thread from before 0.1.0 also deletes that version's `state.sqlite`, once the
   current database has all of its projects and threads. If an older version has it open, or it
   holds threads the current database lacks, it stays until the next start or `z9 doctor`.
-  Not yet covered: browser screenshots, and threads cached on other clients that were offline
-  during the deletion.
+  Not yet covered: browser screenshots.
 - Agent feedback reports, if enabled, are stored locally and never sent anywhere.
 - The resource monitor samples only z9code's own process tree, redacts secrets from command
   lines, and can be turned off with `Z9CODE_RESOURCE_MONITOR_DISABLED=1`.

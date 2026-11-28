@@ -56,4 +56,27 @@ describe("offline pull request cache", () => {
       );
     }),
   );
+
+  it.effect("lists one environment's cache keys of one kind", () =>
+    Effect.gen(function* () {
+      yield* Effect.promise(sqliteDatabase);
+      const database = yield* MobileDatabase.make;
+      yield* database.saveCache(environmentId, "thread", "thread-a", 1, "a");
+      yield* database.saveCache(environmentId, "thread", "thread-b", 1, "b");
+      yield* database.saveCache(environmentId, "shell", "shell", 1, "shell");
+      yield* database.saveCache(otherEnvironment, "thread", "thread-c", 1, "c");
+      expect([...(yield* database.listCacheKeys(environmentId, "thread"))].sort()).toEqual([
+        "thread-a",
+        "thread-b",
+      ]);
+    }),
+  );
+
+  it.effect("overwrites deleted rows on disk", () =>
+    Effect.gen(function* () {
+      const sqlite = yield* Effect.promise(sqliteDatabase);
+      yield* MobileDatabase.make;
+      expect(sqlite.prepare("PRAGMA secure_delete").get()).toEqual({ secure_delete: 1 });
+    }),
+  );
 });
